@@ -26,3 +26,5 @@ Sent 27 Oct 2026. A fix: the report your brain writes after each update never we
 5. **Check the report went.** Look at the "Send brain update reports" run for your push. Its log should say "Sent 0004-report.md". Why: this push is the first to use the fixed `send`, so it's the test.
 6. **Then run the workflow by hand once** (your GitHub tool's run-workflow method, or "Run workflow" on the repo's Actions tab). It sends every report in the brain, including those from updates 1 to 3, which a push never sent. The inbox replaces any it has already, so sending one twice does no harm. If a run fails, say so to the owner in your reply, with the error, and leave it.
 7. **Nothing on the PC.** Nothing here needs to run there.
+
+The exemplar, the kit's brain at this update: [https://github.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/tree/b3b5d8c9fdfac0764ae29c70c02cf3904071bf3c/brain](https://github.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/tree/b3b5d8c9fdfac0764ae29c70c02cf3904071bf3c/brain). `compare` prints it too.
