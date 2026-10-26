@@ -18,6 +18,5 @@ Nothing runs on your PC.
 - **The brain's copy on the PC** (`skills/my-pc/SKILL.md`): the commands that name `C:\AI-Brain-Link\<repo name>` now say a brain cloned somewhere else uses the folder in its PC note.
 
 ## What to do beyond the files
-1. If update 1 dropped lines of this brain's own in a clash and they weren't put back then, put them back now. Both reports so far had already done it.
-2. If this brain worked around the link check its own way after update 1 (one pointed a line in its skills list at the "Copied skills" section instead of the list), it can stay as it is: the check now gives the same answer either way.
-3. Nothing needs to run on the PC.
+1. If this brain worked around the link check its own way after update 1 (one pointed a line in its skills list at the "Copied skills" section instead of the list), it can stay as it is: the check now gives the same answer either way.
+2. Nothing needs to run on the PC.
