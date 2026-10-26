@@ -29,8 +29,11 @@
   $token = "$(gh auth token --hostname github.com --user $tester 2>$null)".Trim()
   if (-not $token) {
     $before = "$(gh api user --jq .login 2>$null)".Trim()
-    Write-Host "Adding $tester to gh. Copy the code shown and press Enter. In the browser page that opens, be signed in to GitHub as $tester (a private window, if your browser is signed in as another account), then paste the code."
-    gh auth login --hostname github.com --git-protocol https --web
+    Write-Host "Adding $tester to gh. Press Enter when asked: an Edge private window opens on GitHub's device page."
+    Write-Host "Sign in there as $tester, paste the code gh shows (it's copied), and approve. Then close the private window."
+    Write-Host "If no private window opens, open one yourself (Ctrl+Shift+N in Edge) and go to github.com/login/device."
+    $env:GH_BROWSER = 'cmd /c start msedge --inprivate' # starts signed out, whatever account the browser is on
+    try { gh auth login --hostname github.com --git-protocol https --web } finally { Remove-Item Env:GH_BROWSER -ErrorAction SilentlyContinue }
     $token = "$(gh auth token --hostname github.com --user $tester 2>$null)".Trim()
     # Logging in makes the new account gh's active one; put back the one it was on.
     if ($before -and $before -ne $tester) { gh auth switch --hostname github.com --user $before 2>&1 | Out-Null }
