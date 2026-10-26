@@ -11,7 +11,9 @@ It reports:
 Skills copied in unchanged from another provider (the folders linked under "Copied
 skills" in skills/README.md, 18 Oct 2026, and in the lists it links in skills/lists/,
 19 Oct 2026) are kept as they came, so their own links, notes and asset files are
-counted in one line, not listed. The lists themselves are the brain's, and checked.
+counted in one line, not listed. The lists themselves are the brain's, and checked. A list
+linked under "Copied skills" stays a list of copied skills even if "The brain's own" links it
+too, say in a line on where its own skills came from (a friend's brain, 26 Oct 2026).
 
 Run it from anywhere: python3 skills/brain-spec/check_links.py
 It exits with 1 if any link is broken, so it can also run as a check.
@@ -60,17 +62,19 @@ def copied_skills():
         return ()
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
-    def links(heading):
-        """The links under a heading, and in the lists linked there."""
+    def links(heading, skip=()):
+        """The links under a heading, and in the lists linked there (but not the lists in skip)."""
         part = re.search(r"^## " + heading + r".*?(?=^## |\Z)", text, re.M | re.S)
         found = LINK.findall(part.group(0)) if part else []
-        for target in [t for t in found if t.startswith(LISTS) and t.split("#")[0].endswith(".md")]:
+        for target in [t for t in found if t.startswith(LISTS) and t.split("#")[0].endswith(".md") and t.split("#")[0] not in skip]:
             with open(os.path.join(ROOT, SKILLS, target.split("#")[0]), encoding="utf-8") as fh:
                 found += [os.path.normpath(os.path.join(LISTS, t)) for t in LINK.findall(fh.read()) if not re.match(r"^[a-z]+:", t)]
         return found
     def folders(targets):
         return {t.split("/")[0] for t in targets if re.match(r"^[\w-]+/", t)}
-    return tuple(SKILLS + f + "/" for f in folders(links("Copied")) - folders(links("The brain's own")) - {LISTS.rstrip("/")})
+    copied = links("Copied")
+    copied_lists = {t.split("#")[0] for t in copied if t.startswith(LISTS)}
+    return tuple(SKILLS + f + "/" for f in folders(copied) - folders(links("The brain's own", copied_lists)) - {LISTS.rstrip("/")})
 
 
 def finished(path):

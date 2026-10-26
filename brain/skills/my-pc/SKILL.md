@@ -53,7 +53,7 @@ The desktop shortcut "AI Brain Link - live jobs" opens [`watch-jobs.ps1`](watch-
 ```
 powershell -ExecutionPolicy Bypass -File "C:\AI-Brain-Link\<repo name>\skills\my-pc\setup-runner.ps1"
 ```
-It needs GitHub's `gh` tool signed in, which the installer did.
+It needs GitHub's `gh` tool signed in, which the installer did. `C:\AI-Brain-Link\<repo name>` is where the installer puts the brain's copy; a brain cloned somewhere else has its folder in [the PC's note](../../knowledge/systems/my-pc.md), so use that in this command and the ones below.
 
 ## If the runner stops picking up jobs
 1. **Runs sit in "queued":** the PC is off or asleep, or the service has stopped. Ask the owner to check the PC is on, then give them this to paste into PowerShell: `Get-Service actions.runner.* | Restart-Service` (it asks for admin rights; run PowerShell as administrator if it says access is denied).

@@ -17,8 +17,12 @@ The owner decides each update: the agent reads them its summary, and applies it 
 
 `apply` takes each file the update changed in brain/ and puts the change into this brain with a
 three-way merge (git merge-file), so the brain's own changes elsewhere in a file stay. Where both
-changed the same lines, the update's lines go in. A file the update adds is written, one it changed
-that this brain no longer has is written again, and one it deleted is deleted. Then it records the
+changed the same lines, the update's lines go in, and it prints both sides of each such place: git
+takes the whole clashing stretch, so a paragraph the brain added next to a line the update changed
+goes too, and the agent puts back what the update didn't mean to replace. Obsidian's settings files
+are the exception: there the brain's own lines stay, since the owner set them (two friends' brains,
+26 Oct 2026). A file the update adds is written, one it changed that this brain no longer has is
+written again, and one it deleted is deleted. Then it records the
 update in knowledge/systems/brain-updates/README.md and starts knowledge/systems/brain-updates/NNNN-report.md
 with what it did. A skipped update can still be applied later, if the owner asks. The rest, and when to
 use it: the brain spec's "Brain updates" section.
@@ -48,6 +52,13 @@ UPDATE = re.compile(r"^updates/(\d{4})-[a-z0-9-]+\.md$")
 REPORT = re.compile(r"^\d{4}-report\.md$")
 # The kit repo's date placeholders, spelt in two parts so the kit's build doesn't fill them in here.
 DATE_MARK, ISO_MARK = ("{" + "KIT_DATE}").encode(), ("{" + "KIT_ISO}").encode()
+MARK = 15  # conflict markers this long can't be mistaken for a Markdown line of seven = signs
+SHOW = 40  # lines of each side of a clash to print
+
+
+def owner_setting(rel):
+    """Obsidian's settings files, which the owner changes in Obsidian; a plugin's manifest is the plugin's own."""
+    return rel.startswith(".obsidian/") and rel.endswith(".json") and not rel.endswith("/manifest.json")
 
 
 def git(*args, repo=CACHE, check=True, text=True):
@@ -135,19 +146,49 @@ def blob(commit, path):
     return r.stdout if r.returncode == 0 else None
 
 
-def merge3(mine, base, theirs):
-    """Three-way merge with git merge-file; where both changed the same lines, the update's lines win."""
+def merge3(mine, base, theirs, keep="theirs"):
+    """Three-way merge with git merge-file. Where both changed the same lines, the update's lines win
+    (or this brain's, with keep="ours"). Returns the merged file and each clash as (brain's lines, update's lines)."""
     with tempfile.TemporaryDirectory() as tmp:
         paths = []
         for name, data in (("mine", mine), ("base", base), ("theirs", theirs)):
             p = os.path.join(tmp, name)
             open(p, "wb").write(data)
             paths.append(p)
-        r = subprocess.run(["git", "merge-file", "-p", "--theirs", *paths], capture_output=True)
+        r = subprocess.run(["git", "merge-file", "-p", f"--{keep}", *paths], capture_output=True)
         if r.returncode:
             sys.exit(f"brain_update: git merge-file failed: {r.stderr.decode(errors='replace')[:300]}")
-        clashed = subprocess.run(["git", "merge-file", "-p", *paths], capture_output=True).returncode > 0
-        return r.stdout, clashed
+        marked = subprocess.run(["git", "merge-file", "-p", "--diff3", f"--marker-size={MARK}", *paths], capture_output=True)
+        return r.stdout, clashes(marked.stdout) if marked.returncode > 0 else []
+
+
+def clashes(marked):
+    """The clashing places in a merge written with conflict markers: (this brain's lines, the update's lines)."""
+    found, side, ours, theirs = [], None, [], []
+    for line in marked.decode("utf-8", errors="replace").splitlines():
+        if line.startswith("<" * MARK):
+            side, ours, theirs = "ours", [], []
+        elif line.startswith("|" * MARK) and side == "ours":
+            side = "base"
+        elif line.startswith("=" * MARK) and side in ("ours", "base"):
+            side = "theirs"
+        elif line.startswith(">" * MARK) and side == "theirs":
+            found.append((ours, theirs))
+            side = None
+        elif side == "ours":
+            ours.append(line)
+        elif side == "theirs":
+            theirs.append(line)
+    return found
+
+
+def show(lines):
+    if not lines:
+        return "    (nothing)"
+    out = ["    | " + line for line in lines[:SHOW]]
+    if len(lines) > SHOW:
+        out.append(f"    ... and {len(lines) - SHOW} more lines")
+    return "\n".join(out)
 
 
 def do_check(_args):
@@ -180,7 +221,8 @@ def do_apply(args):
     base = found[n - 1][1] if n - 1 in found else git("rev-list", "--max-parents=0", head).split()[0]
     start = kit_start()
     changes = git("diff", "--name-status", "--no-renames", base, target, "--", "brain/").splitlines()
-    done = {"added": [], "merged": [], "clashed": [], "restored": [], "deleted": [], "same": []}
+    done = {"added": [], "merged": [], "clashed": [], "kept": [], "restored": [], "deleted": [], "same": []}
+    places = []  # (file, how, [(brain's lines, update's lines)])
     for line in changes:
         status, kit_path = line.split("\t", 1)
         rel = fill(kit_path[len("brain/"):].encode(), start).decode()
@@ -198,15 +240,19 @@ def do_apply(args):
         if mine == theirs:
             done["same"].append(rel)
             continue
+        setting = owner_setting(rel)
         if mine is None:
             new = theirs
             done["added" if status == "A" else "restored"].append(rel)
         elif old is None or b"\0" in theirs or b"\0" in mine:
-            new = theirs
-            done["clashed"].append(rel)
+            new = mine if setting else theirs
+            done["kept" if setting else "clashed"].append(rel)
+            places.append((rel, "whole", []))
         else:
-            new, clashed = merge3(mine, fill(old, start), theirs)
-            done["clashed" if clashed else "merged"].append(rel)
+            new, hunks = merge3(mine, fill(old, start), theirs, keep="ours" if setting else "theirs")
+            done[("kept" if setting else "clashed") if hunks else "merged"].append(rel)
+            if hunks:
+                places.append((rel, "ours" if setting else "theirs", hunks))
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         open(dest, "wb").write(new)
 
@@ -214,8 +260,29 @@ def do_apply(args):
     report = start_report(n, path, day, done)
     text = message(head, found, n)
     print(f"Update {n} ({day}): {len(done['added'])} added, {len(done['merged'])} merged, {len(done['clashed'])} with the update's lines "
-          f"over this brain's, {len(done['restored'])} brought back, {len(done['deleted'])} deleted, {len(done['same'])} already the same.")
+          f"over this brain's, {len(done['kept'])} Obsidian settings kept as this brain had them, {len(done['restored'])} brought back, "
+          f"{len(done['deleted'])} deleted, {len(done['same'])} already the same.")
+    if places:
+        print_places(places)
     print(f"Report started: {report}\n\nThe update's message, to do now:\n\n{text}")
+
+
+def print_places(places):
+    """Both sides of each place where this brain and the update changed the same lines."""
+    print("\nWhere this brain and the update changed the same lines. Git takes the whole clashing stretch, so read each one:\n"
+          "if this brain's side holds something the update didn't mean to replace (a paragraph of its own, a link, a note),\n"
+          "put it back beside the update's lines, and say so in the report. Leave the owner's own words out of the report.")
+    for rel, how, found in places:
+        if how == "whole":
+            print(f"\n{rel}: no earlier kit version to merge against, or not a text file, so "
+                  + ("this brain's copy was kept." if owner_setting(rel) else "the update's copy replaced this brain's.")
+                  + f" git diff HEAD -- {rel} shows the difference.")
+            continue
+        for i, (ours, theirs) in enumerate(found, 1):
+            print(f"\n{rel}, place {i} of {len(found)}"
+                  + (": this brain's lines were kept, since the owner sets these in Obsidian." if how == "ours" else ":"))
+            print("  This brain had:\n" + show(ours))
+            print(("  The update had:\n" if how == "ours" else "  The update put in:\n") + show(theirs))
 
 
 def do_skip(args):
@@ -246,6 +313,7 @@ def record(n, how):
     if has is None or n >= has:  # an older skipped update applied later leaves this line as it is
         line = f"**On kit update:** {n} ({how} {today})"
         text = ON.sub(lambda _: line, text, count=1) if m else text.rstrip() + f"\n\n{line}\n"
+    text = re.sub(r"(?m)^updated: .*$", f"updated: {today}", text, count=1)  # the card's date: the note changed today
     skips = skips | {n} if how == "skipped" else skips - {n}
     line = "**Skipped:** " + (", ".join(str(x) for x in sorted(skips)) or "none")
     if SKIPPED.search(text):
@@ -267,13 +335,14 @@ def start_report(n, path, day, done):
              "## What the script did"]
     names = {"added": "New files", "merged": "Merged with this brain's own changes",
              "clashed": "The update's lines over this brain's, where both changed the same place",
+             "kept": "This brain's Obsidian settings kept over the update's, where both changed the same place",
              "restored": "Brought back (the update changed them, and this brain had deleted them)", "deleted": "Deleted"}
     for key, label in names.items():
         if done[key]:
             lines.append(f"- **{label}:** " + ", ".join(f"`{p}`" for p in done[key]))
     if not any(done[k] for k in names):
         lines.append("- Nothing: every file was already the same.")
-    lines += ["", "## How it went", "*The agent that applied it fills this in.*", ""]
+    lines += ["", "## How it went", "*The agent that applied it fills this in, saying for each clash what this brain's side lost and what was put back.*", ""]
     report = os.path.join(FOLDER, f"{n:04d}-report.md")
     open(os.path.join(ROOT, report), "w", encoding="utf-8").write("\n".join(lines))
     return report
