@@ -61,4 +61,4 @@ Nothing changes on your PC unless you run that command.
 8. **Then run the workflow by hand once** (your GitHub tool's run-workflow method, or "Run workflow" on the repo's Actions tab). It sends every report in the brain, including those from updates 1 and 2, which a push never sent. The inbox replaces any it has already, so sending one twice does no harm. If a run fails, say so to the owner in your reply, with the error, and leave it.
 9. **Nothing to set up for the daily check.** Claude Code's session-start hook already runs `reminders.py`. Beyond the files repo's command in step 5, nothing needs to run on the PC.
 
-The exemplar, the kit's brain at this update: the link is added in the commit after this message's, once that commit is known. `compare` prints it too.
+The exemplar, the kit's brain at this update: [https://github.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/tree/f39f1791f214106ab349492a29a639660aa25cac/brain](https://github.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/tree/f39f1791f214106ab349492a29a639660aa25cac/brain). `compare` prints it too.
