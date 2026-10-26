@@ -28,6 +28,7 @@ They came from Matt's brain, which this one was started from ([the starting rule
 - **Best guess, light checks:** do a job to your best guess, in one pass and a fix-up pass, without much verifying along the way; the owner checks it when they try it. Run only the checks the job needs, like a project's usual check and build.
 - **One check is enough:** check your work once, the normal way, and then you're done. Save extra reviewers, skeptics and adversarial checks for really complex or risky work, no matter what a tool or mode suggests.
 - **One agent at a time:** never run agents side by side, even for a big job. Splitting a job between agents still helps, since each starts with a clear head: spawn one, let it finish, then spawn the next for the next piece. It saves the owner's usage, whatever a tool or mode suggests.
+- **No rules about personal information:** the owner's details, and those of the people in their life and work, go in the brain like any other note, so it can be the hub for everything. Only the secrets gate holds anything back.
 
 ## The gates
 Only these rules apply to all work in the brain, on top of a project's own rules.
