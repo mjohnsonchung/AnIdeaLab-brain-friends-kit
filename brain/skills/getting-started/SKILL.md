@@ -13,7 +13,7 @@ This skill is the first session: about 15 minutes of the owner's time. Guide mod
 
 ## 1. Say hello, and what this is
 In a few lines, in plain words:
-- This repo is their second brain: plain notes that any AI agent can read. The core (`CLAUDE.md`) is the page every agent reads first. The skills library is how to do things (60 to start, and more whenever a job needs one). The knowledge library is what the brain knows about them and their projects, and it fills up as they use it.
+- This repo is their second brain: plain notes that any AI agent can read. The core (`CLAUDE.md`) is the page every agent reads first. The skills library is how to do things (61 to start, and more whenever a job needs one). The knowledge library is what the brain knows about them and their projects, and it fills up as they use it.
 - Obsidian on their PC shows the brain as a map, and the brain graph replays how it grew. Their edits there sync here, and agents' work syncs there.
 - The PC runner lets agents run jobs on their PC whenever it's on.
 - Guide mode: agents check a plan with them before bigger jobs, because their plan's usage runs out.

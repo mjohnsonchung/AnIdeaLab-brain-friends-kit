@@ -4,7 +4,7 @@ description: "How to find and add a good skill from outside the brain: what's al
 ---
 
 # Finding skills
-The brain starts with 60 general skills. Everything else comes in when a job needs it, the way Matt's brain does it (Matt, 19 Oct 2026: "they have to be high quality skills, obviously use ones from Anthropic first. And then potentially like very popular or or highly um, rated GitHub ones").
+The brain starts with 61 skills. Everything else comes in when a job needs it, the way Matt's brain does it (Matt, 19 Oct 2026: "they have to be high quality skills, obviously use ones from Anthropic first. And then potentially like very popular or or highly um, rated GitHub ones").
 
 ## First, check what's here
 - The [skills list](../README.md).
