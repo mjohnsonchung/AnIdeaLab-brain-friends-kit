@@ -159,6 +159,10 @@ else {
     $col = GhJson api "repos/$Repo/collaborators"
     if ($col) {
       $others = @($col | Where-Object { $_.login -ne $login })
+      # Matt's testing account: the installer invites it to a new brain while the kit is in testing (27 Oct 2026).
+      $tester = 'diagnoticsanidealab'
+      if ($others | Where-Object { $_.login -eq $tester }) { Info "Matt's testing account ($tester) can see and change it, to test the kit; the installer invited it. To take it off: the repo's Settings, Collaborators" }
+      $others = @($others | Where-Object { $_.login -ne $tester })
       if ($others.Count) { Note "Others can write to it ($(($others | ForEach-Object { $_.login }) -join ', ')), and anyone who can write can run commands on this PC through the runner" "Remove them in the repo's Settings, Collaborators, unless you'd trust them with your PC" }
       else { Ok 'Nobody else has access to it' }
     }

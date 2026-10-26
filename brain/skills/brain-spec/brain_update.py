@@ -752,14 +752,33 @@ def do_notice(_args):
           "(the brain spec's \"Brain updates\"). Then carry on with what they asked. Ignore this if the owner didn't start this session.")
 
 
+def pushed(event):
+    """The reports a push added or changed, or None if git can't say. GitHub leaves the file lists out of a
+    push's commits for Actions (its changelog, 16 Oct 2019), so until 27 Oct 2026 no report went on a push
+    (Oscar's update 2 report). The commit before the push is fetched and compared with the one after."""
+    before, after = event.get("before") or "", event.get("after") or "HEAD"
+    if not before.strip("0"):
+        return None  # a new branch: nothing before it
+    try:
+        for args in (["fetch", "-q", "--depth=1", "--no-tags", "origin", before],
+                     ["diff", "--name-only", "--relative", before, after, "--", FOLDER]):
+            r = subprocess.run(["git", "-C", ROOT, *args], capture_output=True, text=True, timeout=120)
+            if r.returncode:
+                return None
+    except subprocess.TimeoutExpired:
+        return None
+    return sorted({os.path.basename(p) for p in r.stdout.splitlines() if os.path.dirname(p) == FOLDER})
+
+
 def do_send(_args):
     """Send reports to the inbox. On a push, the ones the push added or changed; run by hand, all of them."""
     folder = os.path.join(ROOT, FOLDER)
+    names = None
     if os.environ.get("GITHUB_EVENT_NAME") == "push":
-        event = json.load(open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8"))
-        paths = {p for c in event.get("commits", []) for p in c.get("added", []) + c.get("modified", [])}
-        names = sorted({os.path.basename(p) for p in paths if os.path.dirname(p) == FOLDER})
-    else:
+        names = pushed(json.load(open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8")))
+        if names is None:
+            print("Couldn't tell which reports this push changed, so sending them all.")
+    if names is None:
         names = sorted(os.listdir(folder)) if os.path.isdir(folder) else []
     names = [n for n in names if REPORT.match(n) and os.path.isfile(os.path.join(folder, n))]
     if not names:
