@@ -1,0 +1,46 @@
+# Deletes branches of this repo: a temporary transfer/ branch, or sessions' leftover claude/ branches.
+# A cloud session's git proxy refuses branch deletes (21 Oct 2026) and its GitHub tool has none, so it
+# starts this instead: the GitHub tool's run-workflow method, or gh workflow run delete-branch.yml -f branches="a b".
+# It runs on GitHub's machines, not the PC, and never deletes main. The log keeps each branch's last
+# commit, so one deleted by mistake comes back with: git push origin <sha>:refs/heads/<branch>
+name: Delete branches
+run-name: "Delete ${{ inputs.branches }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: "The branches to delete, separated by spaces, like transfer/a-file claude/an-old-session"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete them
+        env:
+          # The names come in through env vars, so nothing in them runs as a command.
+          GH_TOKEN: ${{ github.token }}
+          BRANCHES: ${{ inputs.branches }}
+          REPO: ${{ github.repository }}
+          MAIN: ${{ github.event.repository.default_branch }}
+        run: |
+          failed=0
+          for b in $BRANCHES; do
+            if [ "$b" = "$MAIN" ] || [ "$b" = main ]; then
+              echo "Skipped $b: it's the main branch."
+              failed=1
+            elif ! sha=$(gh api "repos/$REPO/git/ref/heads/$b" --jq .object.sha 2>/dev/null); then
+              echo "Skipped $b: there's no such branch."
+              failed=1
+            elif gh api -X DELETE "repos/$REPO/git/refs/heads/$b"; then
+              echo "Deleted $b, which was at $sha."
+            else
+              echo "Couldn't delete $b."
+              failed=1
+            fi
+          done
+          exit $failed

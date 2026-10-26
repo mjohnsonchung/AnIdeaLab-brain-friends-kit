@@ -61,15 +61,16 @@ def copied_skills():
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
     def links(heading):
+        """The links under a heading, and in the lists linked there."""
         part = re.search(r"^## " + heading + r".*?(?=^## |\Z)", text, re.M | re.S)
-        return LINK.findall(part.group(0)) if part else []
+        found = LINK.findall(part.group(0)) if part else []
+        for target in [t for t in found if t.startswith(LISTS) and t.split("#")[0].endswith(".md")]:
+            with open(os.path.join(ROOT, SKILLS, target.split("#")[0]), encoding="utf-8") as fh:
+                found += [os.path.normpath(os.path.join(LISTS, t)) for t in LINK.findall(fh.read()) if not re.match(r"^[a-z]+:", t)]
+        return found
     def folders(targets):
         return {t.split("/")[0] for t in targets if re.match(r"^[\w-]+/", t)}
-    copied = links("Copied")
-    for target in [t for t in copied if t.startswith(LISTS) and t.split("#")[0].endswith(".md")]:
-        with open(os.path.join(ROOT, SKILLS, target.split("#")[0]), encoding="utf-8") as fh:
-            copied += [os.path.normpath(os.path.join(LISTS, t)) for t in LINK.findall(fh.read()) if not re.match(r"^[a-z]+:", t)]
-    return tuple(SKILLS + f + "/" for f in folders(copied) - folders(links("The brain's own")) - {LISTS.rstrip("/")})
+    return tuple(SKILLS + f + "/" for f in folders(links("Copied")) - folders(links("The brain's own")) - {LISTS.rstrip("/")})
 
 
 def finished(path):
@@ -90,8 +91,11 @@ def finished(path):
 
 
 def tracked():
-    out = subprocess.check_output(["git", "-C", ROOT, "ls-files", "-z"])
-    return [p for p in out.decode("utf-8").split("\0") if p]
+    """The repo's files: tracked ones, and new ones not yet added that git doesn't ignore.
+
+    New ones count too, so a check before `git add` doesn't miss new notes (a friend's brain, Oct 2026)."""
+    out = subprocess.check_output(["git", "-C", ROOT, "ls-files", "-z", "--cached", "--others", "--exclude-standard"])
+    return sorted({p for p in out.decode("utf-8").split("\0") if p and os.path.isfile(os.path.join(ROOT, p))})
 
 
 def main():

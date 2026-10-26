@@ -29,15 +29,23 @@ jobs:
         run: python3 skills/brain-spec/library.py build
       - name: Commit any changed indexes
         run: |
-          if git diff --quiet; then
-            echo "Indexes already match the cards."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Rebuild knowledge indexes"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # If the push loses a race, it rebuilds on the newest main and tries again. A push that lands
+          # meanwhile can hold the same rebuild, so a rebase conflicted and the run went red (Oct 2026).
+          for try in 1 2 3; do
+            if git diff --quiet; then
+              echo "Indexes already match the cards."
+              exit 0
+            fi
+            git commit -qam "Rebuild knowledge indexes"
+            git push origin HEAD:main && exit 0
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            python3 skills/brain-spec/library.py build
+          done
+          echo "Couldn't push the rebuilt indexes in three tries."
+          exit 1
       - name: Check the library and the links
         if: always()
         run: |

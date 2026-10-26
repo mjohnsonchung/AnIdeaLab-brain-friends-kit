@@ -3,10 +3,11 @@
 # and Obsidian, and the PC's settings. It changes nothing, apart from saving its report. Each line
 # says OK, FIX (with what to do, as a command where there is one), NOTE or INFO. The report is saved
 # in C:\AI-Brain-Link (or your temp folder) and copied, so you can paste it into a Claude session on
-# your brain with: Fix what this setup check found.
-#   powershell -ExecutionPolicy Bypass -File check-setup.ps1 [-Repo owner/name] [-Vault folder]
+# your brain with: Fix what this setup check found. With -Send it also saves the report in the brain's
+# repo, as knowledge/systems/setup-check.md, so an agent can read it there, even before the runner works.
+#   powershell -ExecutionPolicy Bypass -File check-setup.ps1 [-Repo owner/name] [-Vault folder] [-Send]
 # Agents can run it through the runner too (skills/my-pc/SKILL.md). Works in Windows PowerShell 5.1.
-param([string]$Repo = '', [string]$Vault = '', [string]$Root = 'C:\AI-Brain-Link')
+param([string]$Repo = '', [string]$Vault = '', [string]$Root = 'C:\AI-Brain-Link', [switch]$Send)
 $ErrorActionPreference = 'Continue'
 $lines = New-Object System.Collections.Generic.List[string]
 $script:fixes = 0
@@ -56,6 +57,13 @@ $nvidia = @(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue 
 Section 'Tools'
 $script:git = Find-Git
 if ($git) { Ok "Git: $((& $git --version) -join ' ')" } else { Fix 'Git is not installed' 'winget install --id Git.Git -e' }
+if ($git) {
+  # Git's installer can leave it off the PATH, where gh, new windows and the runner's jobs look (a friend's PC, 22 Oct 2026).
+  $gitDir = Split-Path $git -Parent
+  $saved = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+  if (@($saved -split ';' | ForEach-Object { $_.TrimEnd('\') }) -contains $gitDir.TrimEnd('\')) { Ok "Git is on this PC's PATH" }
+  else { Fix "Git isn't on this PC's PATH, so gh, new windows and the runner's jobs can't find it" "Run setup-runner.ps1 again (my-pc skill): it adds Git to the PATH, finishes Git's first-run setup and restarts the runner" }
+}
 $script:gh = Find-Gh
 if ($gh) { Ok "GitHub's command line: $((& $gh --version) | Select-Object -First 1)" } else { Fix "GitHub's command line (gh) is not installed, so the repo can't be checked from here" 'winget install --id GitHub.cli -e   then: gh auth login --web --scopes workflow' }
 if (Find-Obsidian) { Ok 'Obsidian is installed' } else { Fix 'Obsidian is not installed' 'winget install --id Obsidian.Obsidian -e' }
@@ -216,7 +224,7 @@ if ($tree) {
   $core = GhJson api "repos/$Repo/contents/CLAUDE.md"
   if ($core) {
     $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($core.content -replace '\s', '')))
-    $rules = [ordered]@{ 'gate' = 'the gates (money, secrets, the sign-off, the owner''s voice)'; 'One check is enough' = '"one check is enough"'; 'Guide mode' = 'guide mode'; 'made with love by AnIdeaLab.com' = 'the AnIdeaLab sign-off'; 'command' = '"give the owner a command"'; 'pull --rebase' = 'committing straight to main' }
+    $rules = [ordered]@{ 'gate' = 'the gates (money, secrets, the sign-off, the owner''s voice)'; 'Best guess' = '"best guess, light checks"'; 'One check is enough' = '"one check is enough"'; 'No Claude artifacts' = '"no Claude artifacts"'; 'One agent at a time' = '"one agent at a time"'; 'Guide mode' = 'guide mode'; 'by AnIdeaLab.com' = 'the AnIdeaLab sign-off'; 'command' = '"give the owner a command"'; 'pull --rebase' = 'committing straight to main' }
     $gone = @($rules.Keys | Where-Object { $text -notmatch [regex]::Escape($_) })
     if ($gone.Count) { Note "The core doesn't have: $(($gone | ForEach-Object { $rules[$_] }) -join ', ')" "Fine if on purpose; the kit's core has them" } else { Ok "The core has the kit's rules" }
     if ($text.Length -gt 6144) { Note "The core is $([int]($text.Length / 1024)) KB; the kit keeps it under 6 KB, because every agent reads it first" }
@@ -274,6 +282,11 @@ $pol = Get-ExecutionPolicy -Scope CurrentUser
 if ($pol -in 'RemoteSigned', 'Unrestricted', 'Bypass') { Ok "Your account can run scripts ($pol), which the runner needs" }
 elseif ((Get-ExecutionPolicy -Scope LocalMachine) -in 'RemoteSigned', 'Unrestricted', 'Bypass' -and $pol -eq 'Undefined') { Ok "Scripts can run (set for the whole PC: $(Get-ExecutionPolicy -Scope LocalMachine))" }
 else { Fix "Your account can't run scripts ($pol), and the runner's own steps need to" 'Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force' }
+# A narrower scope overrides a wider one. Process is just this window's; MachinePolicy and UserPolicy come from Group Policy.
+$scopes = @(Get-ExecutionPolicy -List)
+Info "Script policy at each scope: $(($scopes | ForEach-Object { '{0} {1}' -f $_.Scope, $_.ExecutionPolicy }) -join ', ')"
+$gp = @($scopes | Where-Object { "$($_.Scope)" -match 'Policy$' -and "$($_.ExecutionPolicy)" -notin 'Undefined', 'RemoteSigned', 'Unrestricted', 'Bypass' })
+if ($gp.Count) { Fix "Group Policy sets the script policy ($(($gp | ForEach-Object { '{0} {1}' -f $_.Scope, $_.ExecutionPolicy }) -join ', ')), over your account's, so the runner's own steps can't run" 'Whoever manages this PC can change it (gpedit.msc, Administrative Templates, Windows Components, Windows PowerShell)' }
 $q = (& powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 2>$null) -join "`n"
 $hex = @([regex]::Matches($q, '0x[0-9a-fA-F]{8}') | ForEach-Object { $_.Value })
 if ($hex.Count -ge 2) {
@@ -298,6 +311,21 @@ $out = if (Test-Path $Root) { Join-Path $Root 'setup-check.txt' } else { Join-Pa
 try { [IO.File]::WriteAllText($out, $text, (New-Object Text.UTF8Encoding $false)); Write-Host "Saved to $out" } catch { }
 $copied = $false
 try { Set-Clipboard -Value $text; $copied = $true } catch { }
+if ($Send) {
+  # Into the repo through GitHub's API, so it needs gh signed in but not the runner or this PC's copy.
+  $path = 'knowledge/systems/setup-check.md'
+  $day = (Get-Date).ToString('d MMM yyyy', [Globalization.CultureInfo]::InvariantCulture)
+  $md = "---`nabout: `"The latest setup check of $env:COMPUTERNAME, sent by check-setup.ps1 -Send. Read when fixing the PC, the runner or Obsidian.`"`ntags: [the-brain]`nupdated: $day`n---`n# Setup check of $env:COMPUTERNAME`n`n```````n$($text -replace "`r`n", "`n")`n```````n"
+  $body = @{ message = "Setup check of $env:COMPUTERNAME"; content = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($md)) }
+  $old = if ($gh -and $Repo) { Gh api "repos/$Repo/contents/$path" --jq .sha } else { $null }
+  if ($old) { $body.sha = $old }
+  $req = Join-Path $env:TEMP 'brain-setup-check.json'
+  [IO.File]::WriteAllText($req, ($body | ConvertTo-Json -Compress), (New-Object Text.UTF8Encoding $false))
+  $sent = if ($gh -and $Repo) { Gh api -X PUT "repos/$Repo/contents/$path" --input $req --jq .commit.sha } else { $null }
+  Remove-Item $req -Force -ErrorAction SilentlyContinue
+  if ($sent) { Write-Host "Sent to the brain: $path in $Repo" -ForegroundColor Green }
+  else { Write-Host "Couldn't send it to the brain's repo (gh signed in? which repo?), so paste it instead." -ForegroundColor Yellow }
+}
 Write-Host ''
 if ($copied) { Write-Host 'The report is copied. To get help fixing it, start a Claude session on your brain at claude.ai/code, press Ctrl+V and add: Fix what this setup check found.' -ForegroundColor Cyan }
 exit 0

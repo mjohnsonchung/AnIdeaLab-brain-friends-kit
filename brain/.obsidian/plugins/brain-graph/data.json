@@ -1,7 +1,7 @@
 {
   "theme": "dark",
   "accent": "coral",
-  "speed": 0.125,
+  "speed": 2,
   "replayOnOpen": true,
   "startFrom": "beginning",
   "steady": false,

@@ -5,8 +5,10 @@ Matt, 18 Oct 2026: work that needs an AI or Matt can be a reminder instead of a
 scheduled AI job. When he starts a session after one is due and it hasn't been done,
 the agent tells him, and he decides whether to run it. Each reminder is a row in the
 table in knowledge/systems/routines.md whose Kind is "Reminder":
-- its When cell gives a weekday and a time in NZ time, like "Saturdays 05:00", and can
-  add "from 24 Oct 2026" for the first time it's due;
+- its When cell gives a weekday and a time in NZ time, like "Saturdays 05:00", or the
+  first of a weekday in each month, like "First Saturday of each month, 06:00" (added
+  25 Oct 2026 for the monthly deep audit), and can add "from 24 Oct 2026" for the first
+  time it's due;
 - its Log cell links to a note with one heading per run (or skipped week), newest
   first, starting "## <day> <month> <year>", like the audit log.
 
@@ -36,6 +38,7 @@ MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", 
 DATE = r"(\d{1,2})\s+([A-Za-z]{3})[A-Za-z]*\s+(\d{4})"
 HEADING = re.compile(r"^##\s+" + DATE, re.M)
 WHEN = re.compile(r"\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\s+(\d{1,2}):(\d{2})", re.I)
+MONTHLY = re.compile(r"\bfirst\s+(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b.*?(\d{1,2}):(\d{2})", re.I)
 FROM = re.compile(r"\bfrom\s+" + DATE, re.I)
 LINK = re.compile(r"\[([^\]]*)\]\(([^)\s#]*)[^)]*\)")
 
@@ -96,6 +99,20 @@ def latest_due(now, weekday, hour, minute):
     return nz_to_utc(due)
 
 
+def latest_due_monthly(now, weekday, hour, minute):
+    """The latest time at or before now when NZ clocks show the first of that weekday in a month, in UTC."""
+    local = nz_wall(now)
+    year, month = local.year, local.month
+    for _ in range(2):
+        first = date(year, month, 1)
+        day = first + timedelta(days=(weekday - first.weekday()) % 7)
+        due = datetime(day.year, day.month, day.day, hour, minute)
+        if due <= local:
+            return nz_to_utc(due)
+        year, month = (year, month - 1) if month > 1 else (year - 1, 12)
+    return nz_to_utc(due)
+
+
 def last_logged(path, today):
     """The newest date heading in a log note up to tomorrow (UTC), or None."""
     try:
@@ -136,7 +153,8 @@ def read_reminders():
         if len(cells) <= max(cols.values()) or plain(cells[cols["kind"]]).lower() != "reminder":
             continue
         name = plain(cells[cols["routine"]])
-        when = WHEN.search(cells[cols["when"]])
+        monthly = MONTHLY.search(cells[cols["when"]])
+        when = monthly or WHEN.search(cells[cols["when"]])
         start = FROM.search(cells[cols["when"]])
         log = LINK.search(cells[cols["log"]])
         if not when or not log or not log.group(2):
@@ -147,6 +165,7 @@ def read_reminders():
             "name": name,
             "owner": plain(cells[cols["owner"]]),
             "what": plain(cells[cols["what"]]),
+            "monthly": bool(monthly),
             "weekday": DAYS.index(when.group(1).lower()[:3]),
             "hour": int(when.group(2)),
             "minute": int(when.group(3)),
@@ -163,7 +182,7 @@ def main(argv):
     rows, problems = read_reminders()
     due_lines = []
     for r in rows:
-        due = latest_due(now, r["weekday"], r["hour"], r["minute"])
+        due = (latest_due_monthly if r["monthly"] else latest_due)(now, r["weekday"], r["hour"], r["minute"])
         nz = nz_wall(due)
         if r["start"] is not None and nz.date() < r["start"]:
             continue

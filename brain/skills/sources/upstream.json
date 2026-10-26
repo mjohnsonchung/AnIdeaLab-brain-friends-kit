@@ -1,5 +1,5 @@
 {
- "made": "2026-10-21",
+ "made": "2026-10-24",
  "how": "python3 skills/brain-spec/skill_updates.py map",
  "sources": [
   {
@@ -34,7 +34,7 @@
   },
   {
    "repo": "anthropics/knowledge-work-plugins",
-   "commit": "33eeda1e8fd856455b05479d13a0f85b5f803744",
+   "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -108,7 +108,7 @@
   },
   {
    "repo": "obra/superpowers",
-   "commit": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+   "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -124,7 +124,7 @@
   },
   {
    "repo": "pbakaus/impeccable",
-   "commit": "dad8dbb3aac21ad1fa236c110315ef4abece23e8",
+   "commit": "936867543ac2576920d663cc9803597f6044f3ac",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"

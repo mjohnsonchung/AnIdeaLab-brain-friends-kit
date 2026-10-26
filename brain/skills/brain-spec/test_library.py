@@ -66,7 +66,9 @@ class LibraryTest(unittest.TestCase):
             "knowledge/people/notes.txt": "not a note, and its folder has no README\n",
             "skills/README.md": "# Skills\n## The brain's own\n- [brain-spec](brain-spec/SKILL.md): the spec.\n"
                                 "- [other](other/SKILL.md), [long](long/SKILL.md): two more.\n"
+                                "- [The rest](lists/own.md): one more.\n"
                                 "## Copied skills\n- [copied](copied/SKILL.md): kept as it came.\n",
+            "skills/lists/own.md": "# The rest\n- [listed](../listed/SKILL.md): in a list.\n",
             "skills/brain-spec/SKILL.md": "# Spec\nLessons from using this skill in the brain: [LESSONS.md](LESSONS.md).\n"
                                           "[a task](../../knowledge/tasks/send-pack.md)\n",
             "skills/brain-spec/LESSONS.md": "# Lessons: brain-spec\n*Newest at the top.*\n\n- **19 Oct 2026:** two.\n"
@@ -156,13 +158,29 @@ class LibraryTest(unittest.TestCase):
             self.assertNotIn(fine, problems)
 
     def test_lessons(self):
-        self.assertEqual(library.own_skills(self.lib), ["brain-spec", "other", "long"])
+        self.assertEqual(library.own_skills(self.lib), ["brain-spec", "other", "long", "listed"])
         self.assertEqual(library.lessons(self.lib), [
             "skills/brain-spec/LESSONS.md: 2 lessons (fold in)",
             "skills/other/LESSONS.md: 1 lesson (fold in)",
             "skills/copied/LESSONS.md: 21 lessons (copied, keep short)",
             "skills/tidy/LESSONS.md: 1 lesson (copied, keep short)",
         ])
+
+    def test_one_way_decisions(self):
+        def write(rel, text):
+            with open(os.path.join(self.tmp.name, rel), "w", encoding="utf-8") as fh:
+                fh.write(text)
+        older = "knowledge/decisions/2026-10-17-older.md"
+        newer = "knowledge/decisions/2026-10-18-newer.md"
+        write(newer, note("A newer one.", status="current") + "It narrows [the older](2026-10-17-older.md).\n")
+        write("knowledge/decisions/2026-10-01-gone.md", note("Replaced.", status="superseded") + "[newer](2026-10-18-newer.md)\n")
+        self.assertEqual(library.one_way_decisions(self.lib), [(newer, older)])
+        write(os.path.join("skills", "brain-spec", "checked_links.txt"), f"# read by the audit\n{newer} -> {older}  # only a reference\n")
+        self.assertEqual(library.one_way_decisions(self.lib), [], "a checked pair isn't reported again")
+        os.remove(os.path.join(self.tmp.name, "skills", "brain-spec", "checked_links.txt"))
+        write(older, note("An older one.", status="current") + "Narrowed by [the newer](2026-10-18-newer.md).\n")
+        self.assertEqual(library.one_way_decisions(self.lib), [], "a link back answers it")
+
 
 if __name__ == "__main__":
     unittest.main()

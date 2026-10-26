@@ -1,0 +1,25 @@
+# Sends this brain's brain-update reports (knowledge/systems/brain-updates/NNNN-report.md) to
+# AnIdeaLab's inbox, so the starter kit gets better. On a push that adds or changes a report, it
+# sends that one; run by hand, it sends them all. It runs on GitHub's machines, never on the PC.
+# No key is needed: the inbox checks GitHub's own sign-in token for this run (OIDC), which says
+# which repo sent it. How brain updates work: skills/brain-spec/SKILL.md, "Brain updates".
+name: Send brain update reports
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "knowledge/systems/brain-updates/*-report.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send the reports
+        run: python3 skills/brain-spec/brain_update.py send

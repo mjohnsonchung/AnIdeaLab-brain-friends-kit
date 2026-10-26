@@ -20,8 +20,9 @@ Usage: python3 skills/brain-spec/library.py COMMAND [options]
                             one line per matching note, as path: about
   check [--strict]          report problems; exit 1 with --strict if there are any
   audit --since DATE        notes changed a lot since their card was checked, tasks
-                            finished since DATE, and every skill with a LESSONS.md
-                            (for the weekly audit)
+                            finished since DATE, every skill with a LESSONS.md, and
+                            later decisions pointing at an earlier one that doesn't
+                            point back (for the weekly audit)
 Any command takes --root PATH to work on another copy of the repo (the tests do).
 
 It uses Python 3.8 or later and the standard library only, so it runs anywhere.
@@ -42,7 +43,7 @@ FINISHED = {"done", "dropped", "superseded", "graduated"}
 STATUSES = {
     "tasks": {"open", "doing", "waiting", "done", "dropped"},
     "decisions": {"current", "superseded"},
-    "ideas": {"raw", "researching", "parked", "graduated"},
+    "ideas": {"raw", "researching", "parked", "graduated", "dropped"},
     "ventures": {"current", "parked", "done"},
 }
 OTHER_STATUSES = {"current", "done"}
@@ -58,6 +59,8 @@ LESSONS_LINK = re.compile(r"\]\((?:\./)?LESSONS\.md\)")
 IN_MATTS_BRAIN = re.compile(r"^#+ In this brain", re.M)  # skill_updates.py ignores this section of a copied skill
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 FENCE = re.compile(r"```.*?```", re.S)
+DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
+CHECKED_LINKS = "skills/brain-spec/checked_links.txt"  # one-way decision links an audit read and found to be plain references
 
 
 # Cards ------------------------------------------------------------------------
@@ -369,13 +372,22 @@ def skill_links(lib):
 
 
 def own_skills(lib):
-    """The brain's own skills: the folders linked under "The brain's own" in skills/README.md."""
+    """The brain's own skills: the folders linked under "The brain's own" in skills/README.md,
+    and in the lists in skills/lists/ linked there (22 Oct 2026)."""
     path = os.path.join(lib.root, "skills", "README.md")
     if not os.path.exists(path):
         return []
     with open(path, encoding="utf-8") as fh:
         m = re.search(r"^## The brain's own\n(.*?)(?=^## |\Z)", fh.read(), re.M | re.S)
-    return list(dict.fromkeys(re.findall(r"\]\(([a-z0-9-]+)/SKILL\.md\)", m.group(1)))) if m else []
+    if not m:
+        return []
+    text = m.group(1)
+    for name in re.findall(r"\]\(lists/([\w-]+\.md)\)", text):
+        listed = os.path.join(lib.root, "skills", "lists", name)
+        if os.path.exists(listed):
+            with open(listed, encoding="utf-8") as fh:
+                text += "\n" + fh.read().replace("](../", "](")
+    return list(dict.fromkeys(re.findall(r"\]\(([a-z0-9-]+)/SKILL\.md\)", text)))
 
 
 def skill_text(lib, name, file="SKILL.md"):
@@ -470,6 +482,45 @@ def history_links(lib):
     return out
 
 
+def one_way_decisions(lib):
+    """Pairs (later, earlier) of current decisions where the later links to the earlier, not back.
+
+    Added 25 Oct 2026, after the flat-copy test: agents stopped at the 22 Oct "no editing
+    rules" note, which said nothing of the six effects the 24 Oct note took off the table.
+    The 24 Oct note linked to the 22 Oct one, but not the other way. A later decision that
+    changes, narrows or adds to an earlier one should be named in it, so an agent who finds
+    the earlier one first isn't misled. Pairs read and found to be plain references are
+    listed in checked_links.txt as `later -> earlier`, and not reported again.
+    """
+    checked = set()
+    listed = os.path.join(lib.root, CHECKED_LINKS)
+    if os.path.exists(listed):
+        with open(listed, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.split("#")[0].strip()
+                if " -> " in line:
+                    checked.add(tuple(part.strip() for part in line.split(" -> ", 1)))
+    current = {}
+    for path, card in lib.all_notes():
+        name = os.path.basename(path)
+        if lib.top(path) == "decisions" and card.get("status") == "current" and DATED.match(name):
+            current[os.path.normpath(path)] = DATED.match(name).group(1)
+    links = {}
+    for path in current:
+        with open(path, encoding="utf-8") as fh:
+            text = FENCE.sub("", fh.read())
+        links[path] = {os.path.normpath(os.path.join(os.path.dirname(path), t.split("#")[0]))
+                       for t in LINK.findall(text) if not re.match(r"^[a-z][a-z0-9+.-]*:", t, re.I)}
+    out = []
+    for later, day in sorted(current.items()):
+        for earlier in sorted(links[later]):
+            if earlier in current and current[earlier] < day and later not in links[earlier]:
+                pair = (lib.rel(later), lib.rel(earlier))
+                if pair not in checked:
+                    out.append(pair)
+    return out
+
+
 # audit ------------------------------------------------------------------------
 
 def git(lib, *args):
@@ -481,6 +532,9 @@ def git(lib, *args):
 
 def audit(lib, since):
     """Notes changed by more than about 20 lines since their card's date, and tasks finished since `since`."""
+    if git(lib, "rev-parse", "--is-shallow-repository").strip() == "true":
+        # A shallow clone's oldest commit adds every file, so every note looks changed (24 Oct 2026 audit: 151 instead of 2).
+        sys.exit("This clone is shallow, so every note would look changed. Run `git fetch --unshallow origin main` first.")
     changed, finished = [], []
     for path, card in lib.all_notes():
         rel = lib.rel(path)
@@ -552,6 +606,12 @@ def main(argv=None):
         print(f"Skills with lessons: {len(waiting)}")
         for w in waiting:
             print("  " + w)
+        pairs = one_way_decisions(lib)
+        print(f"Later decisions linking to an earlier one that doesn't link back: {len(pairs)}")
+        for later, earlier in pairs:
+            print(f"  {later} -> {earlier}")
+        if pairs:
+            print(f"  If the later one changes or adds to the earlier, say so in the earlier; if it only refers to it, add the pair to {CHECKED_LINKS}.")
     return 0
 
 

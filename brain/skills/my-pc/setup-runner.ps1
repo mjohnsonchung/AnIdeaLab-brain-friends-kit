@@ -19,6 +19,14 @@ function Native([scriptblock]$Block) {
   try { & $Block } finally { $ErrorActionPreference = $old }
 }
 function Yes($q) { $a = Read-Host "$q [Y/n]"; return -not ($a -match '^\s*[Nn]') }
+# Adds a folder to the PATH Windows keeps for the whole PC, which the runner's jobs get, and to this window's.
+function Add-MachinePath($dir) {
+  $p = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+  if (@($p -split ';' | ForEach-Object { $_.TrimEnd('\') }) -contains $dir.TrimEnd('\')) { return $false }
+  [Environment]::SetEnvironmentVariable('Path', ($p.TrimEnd(';') + ';' + $dir), 'Machine')
+  $env:Path = "$env:Path;$dir"
+  return $true
+}
 
 if (-not $Repo) {
   $brain = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -43,8 +51,21 @@ try {
   if (-not $gh) { throw "GitHub's command line tool (gh) isn't installed. Run the brain's installer first, or: winget install --id GitHub.cli -e" }
   foreach ($d in $Root, $runner, (Join-Path $Root '_logs'), (Join-Path $Root 'Tools')) { New-Item -ItemType Directory -Force -Path $d | Out-Null }
 
+  # Git's installer can leave Git off the PC's PATH and its first-run setup undone, when it didn't run
+  # as admin ("cannot remove /etc/post-install/*.post"). Jobs and gh need Git, and the service only
+  # sees the PATH it starts with, so both are done here, before it starts; running the first-run setup
+  # again does no harm (a friend's PC, 22 Oct 2026).
+  $gitRoot = Join-Path $env:ProgramFiles 'Git'
+  if (Test-Path (Join-Path $gitRoot 'cmd\git.exe')) {
+    if (Add-MachinePath (Join-Path $gitRoot 'cmd')) { Write-Host "Added Git to this PC's PATH." }
+    Native { & (Join-Path $gitRoot 'bin\bash.exe') --login -c exit } | Out-Null
+  }
+
   Write-Host 'Letting your account run scripts (RemoteSigned), which the runner needs...'
-  Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force -ErrorAction SilentlyContinue
+  # It saves the setting, then throws "Security error." whenever a narrower scope overrides it, which
+  # this script's own -ExecutionPolicy Bypass always does; -ErrorAction can't stop that kind of error,
+  # so it's caught, and only the check below counts (a friend's PC, 22 Oct 2026).
+  try { Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force -ErrorAction Stop } catch { }
   if ((Get-ExecutionPolicy -Scope CurrentUser) -notin 'RemoteSigned', 'Unrestricted', 'Bypass') {
     Write-Host "  It didn't change (a policy on this PC may set it). If jobs fail with a script policy error, tell an agent." -ForegroundColor Yellow
   }
@@ -89,7 +110,7 @@ try {
     if (-not $token) { throw "GitHub didn't hand over a runner token for $Repo. Check the repo is yours and that gh is signed in (gh auth status)." }
     Write-Host ''
     Write-Host "The runner runs as you ($account), so it can reach your files and apps." -ForegroundColor Cyan
-    $sec = Read-Host -AsSecureString 'Your Windows password: what you type at the sign-in screen, not your PIN'
+    $sec = Read-Host -AsSecureString 'Your Windows password, not your PIN (with a Microsoft account, that account''s password)'
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
     $pw = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
@@ -121,11 +142,16 @@ try {
     Write-Host 'Done: it no longer sleeps while plugged in.'
   }
 
-  Start-Sleep -Seconds 8
-  $list = Native { & $gh api "repos/$Repo/actions/runners" } | Out-String | ConvertFrom-Json
-  $state = ($list.runners | Where-Object { $_.name -eq $name } | Select-Object -First 1).status
+  # Done only once GitHub sees the runner online, so nobody is told it worked when it didn't.
+  $state = ''
+  for ($i = 0; $i -lt 12 -and $state -ne 'online'; $i++) {
+    Start-Sleep -Seconds 5
+    try { $list = Native { & $gh api "repos/$Repo/actions/runners" } | Out-String | ConvertFrom-Json } catch { $list = $null }
+    $state = "$(($list.runners | Where-Object { $_.name -eq $name } | Select-Object -First 1).status)"
+  }
+  if ($state -ne 'online') { throw "The runner is installed, but GitHub doesn't see it online yet ($(if ($state) { "it says $state" } else { 'it isn''t listed' })). Run this again, or ask an agent, and say what this window showed." }
   Write-Host ''
-  Write-Host "The PC runner '$name' is set up, and GitHub sees it as $state." -ForegroundColor Green
+  Write-Host "The PC runner '$name' is set up, and GitHub sees it online." -ForegroundColor Green
   Write-Host 'It starts with Windows, so agents can run jobs whenever this PC is on.'
 } catch {
   Write-Host ''

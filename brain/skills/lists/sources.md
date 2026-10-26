@@ -19,7 +19,7 @@ From [anthropics/claude-plugins-official](https://github.com/anthropics/claude-p
 - [claude-md-management-claude-md-improver](../claude-md-management-claude-md-improver/SKILL.md)
 
 ## anthropics/knowledge-work-plugins
-From [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins), commit `33eeda1`, copied 19 Oct 2026. Licence: Apache 2.0.
+From [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins), commit `33d3dea`, copied 19 Oct 2026. Licence: Apache 2.0.
 
 - [data-analyze](../data-analyze/SKILL.md)
 - [product-management-write-spec](../product-management-write-spec/SKILL.md)
@@ -58,7 +58,7 @@ From [mattpocock/skills](https://github.com/mattpocock/skills), commit `5beb35b`
 - [mattpocock-writing-for-agents](../mattpocock-writing-for-agents/SKILL.md)
 
 ## obra/superpowers
-From [obra/superpowers](https://github.com/obra/superpowers), commit `bb92a77`, copied 19 Oct 2026. Licence: MIT.
+From [obra/superpowers](https://github.com/obra/superpowers), commit `2ce8aa1`, copied 19 Oct 2026. Licence: MIT.
 
 - [superpowers-brainstorming](../superpowers-brainstorming/SKILL.md)
 - [superpowers-systematic-debugging](../superpowers-systematic-debugging/SKILL.md)
@@ -67,7 +67,7 @@ From [obra/superpowers](https://github.com/obra/superpowers), commit `bb92a77`, 
 - [superpowers-writing-plans](../superpowers-writing-plans/SKILL.md)
 
 ## pbakaus/impeccable
-From [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit `dad8dbb`, copied 19 Oct 2026. Licence: Apache 2.0.
+From [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit `9368675`, copied 19 Oct 2026. Licence: Apache 2.0.
 
 - [impeccable](../impeccable/SKILL.md)
 

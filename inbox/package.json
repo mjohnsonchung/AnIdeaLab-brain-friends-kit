@@ -1,0 +1,11 @@
+{
+  "name": "anidealab-brain-inbox",
+  "private": true,
+  "description": "The inbox for brain update reports: friends' brains send one after each brain update, and it's saved in a private repo.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "jose": "6.1.0"
+  }
+}

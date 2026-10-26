@@ -9,13 +9,14 @@ Matt's brain, which this one was started from, has a weekly audit (Matt, 18 Oct 
 **Keep it light.** It uses the owner's plan. Read cards, not notes: the shelves' indexes and `library.py find` show every card; open a note only when a card or a script points at a problem. For "what happened this week", read commit messages, not the notes themselves.
 
 ## 1. Clean up
-1. Pull, then run `python3 skills/brain-spec/library.py check`, `python3 skills/brain-spec/check_links.py` and `python3 skills/brain-spec/library.py audit --since <the last tidy-up's date>`. Fix what they report.
-2. Reread the notes the audit lists as changed a lot since their card's `updated` date; fix any card that no longer matches, and set `updated` to today.
-3. Two cards that say nearly the same thing: merge the notes, and mark the merged-away one `dropped` or `superseded` with a link to the one that stays. Split a note doing two jobs.
-4. For each task finished since the last tidy-up, save anything learned that never became a note ([brain spec](../brain-spec/SKILL.md#saving-knowledge)).
-5. A decision a newer one contradicts gets `status: superseded` and a link to the newer one, and the old rule mustn't survive in the core or other notes.
-6. Ideas and parked projects nobody has touched for months go to the owner as "keep or drop?".
-7. Every folder in `skills/` has a line in the [skills list](../README.md). If the session can reach github.com, run `python3 skills/brain-spec/skill_updates.py check` and bring changed sets up to date ([find-skills](../find-skills/SKILL.md#keeping-them-up-to-date)).
+1. **Brain updates first.** Pull, and if the session can reach github.com, run `python3 skills/brain-spec/brain_update.py check` and apply any new update ([brain updates](../brain-spec/SKILL.md#brain-updates)).
+2. Run `python3 skills/brain-spec/library.py check`, `python3 skills/brain-spec/check_links.py` and `python3 skills/brain-spec/library.py audit --since <the last tidy-up's date>`. Fix what they report. The audit stops on a shallow clone, where every note would look changed; `git fetch --unshallow origin main` fixes that.
+3. Reread the notes the audit lists as changed a lot since their card's `updated` date; fix any card that no longer matches, and set `updated` to today.
+4. Two cards that say nearly the same thing: merge the notes, and mark the merged-away one `dropped` or `superseded` with a link to the one that stays. Split a note doing two jobs.
+5. For each task finished since the last tidy-up, save anything learned that never became a note ([brain spec](../brain-spec/SKILL.md#saving-knowledge)).
+6. A decision a newer one contradicts gets `status: superseded` and a link to the newer one, and the old rule mustn't survive in the core or other notes.
+7. Ideas and parked projects nobody has touched for months go to the owner as "keep or drop?".
+8. Every folder in `skills/` has a line in the [skills list](../README.md). If the session can reach github.com, run `python3 skills/brain-spec/skill_updates.py check` and bring changed sets up to date ([find-skills](../find-skills/SKILL.md#keeping-them-up-to-date)).
 
 ## 2. The friction log
 For each open row in the [friction log](../../knowledge/ideas/friction-log.md) added since the last tidy-up: would know-how that stays the same from job to job have saved the trouble? If yes, find or write a skill for it ([find-skills](../find-skills/SKILL.md)), and move the row to "Solved" naming the skill. If it needs the owner (an account, a key, a payment), a tool nobody has built, or something outside the brain's control, it stays open.

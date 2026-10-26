@@ -6,13 +6,13 @@ Every skill in the brain, one line each, so any agent can find the one its job n
 Written for this brain. Change them freely, and add a line here for a new one. Any skill can have a `LESSONS.md` beside it: what agents learned using it here ([how skills learn](brain-spec/SKILL.md#how-skills-learn)).
 - [getting-started](getting-started/SKILL.md): the first session in a new brain: who the owner is, their first notes, testing the PC runner, and a tour.
 - [guide-mode](guide-mode/SKILL.md): how to work with an owner new to AI agents: say the ask back, size it, agree a plan, check in.
-- [brain-spec](brain-spec/SKILL.md): where each kind of thing goes in the brain and what shape it takes.
+- [brain-spec](brain-spec/SKILL.md): where each kind of thing goes in the brain and what shape it takes, and how to apply a brain update from AnIdeaLab.
 - [brain-audit](brain-audit/SKILL.md): the weekly tidy-up, when the owner says yes to it.
 - [find-skills](find-skills/SKILL.md): find a good skill from outside the brain, copy it in, and keep copied skills up to date.
 - [my-pc](my-pc/SKILL.md): run commands and jobs on the owner's PC through the `my-pc` runner, and check or fix its setup.
 
 ## Copied skills
-Kept as they came, from Anthropic first, then the companies behind the tools, then very popular collections. All are under the MIT or Apache 2.0 licence. Their sources, commits and licences are in [lists/sources.md](lists/sources.md). What was changed, and nothing else: each folder's name (an Anthropic plugin's skill is `<plugin>-<skill>`, another source's `<source>-<skill>`), its `name:` line to match, and links to shared files, which are in [anthropic-plugins/](anthropic-plugins/) (Anthropic's plugins' notes and licences) and [sources/](sources/) (each other source's README and licence). Where a copied skill names a sibling as `superpowers:<name>`, the brain's copy is `superpowers-<name>`, and the same for the other sets. In Matt Pocock's skills, "Matt" means Matt Pocock. Where one asks for more reviewers or checks than the core's "one check is enough", the core wins.
+Kept as they came, from Anthropic first, then the companies behind the tools, then very popular collections. All are under the MIT or Apache 2.0 licence. Their sources, commits and licences are in [lists/sources.md](lists/sources.md). What was changed, and nothing else: each folder's name (an Anthropic plugin's skill is `<plugin>-<skill>`, another source's `<source>-<skill>`), its `name:` line to match, and links to shared files, which are in [anthropic-plugins/](anthropic-plugins/) (Anthropic's plugins' notes and licences) and [sources/](sources/) (each other source's README and licence). Where a copied skill names a sibling as `superpowers:<name>`, the brain's copy is `superpowers-<name>`, and the same for the other sets. In Matt Pocock's skills, "Matt" means Matt Pocock. Where one asks for more reviewers, tests or checks than the core's "best guess, light checks" and "one check is enough", or for agents running side by side against its "one agent at a time", the core wins. An email, reply, letter or other message a skill drafts for someone outside the brain ends with the core's sign-off, whatever the skill's own template says.
 
 A Claude session also has Anthropic's own skills for Word, PDF, Excel and PowerPoint files, deep research and a few more, without copies here.
 
@@ -21,7 +21,7 @@ Some of these skills were written for Claude's apps. Any agent can do the same w
 
 | When a skill says | Do this instead |
 |---|---|
-| Render or publish an artifact | Write the HTML file and open it in a browser, or send it to the owner |
+| Render or publish an artifact | Write the HTML file, save it where any agent can get it, and open it in a browser or send it to the owner. Never a Claude artifact |
 | Connectors, or "suggest a connector" | Use whatever tool you have for that app, and tell the owner in words which app to connect |
 | Ask with choice cards | Ask in plain text, with numbered options |
 | Spawn subagents | Do the steps yourself, one after another |

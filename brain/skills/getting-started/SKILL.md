@@ -21,7 +21,7 @@ In a few lines, in plain words:
 ## 2. Ask, in one message
 - Their first name.
 - What they'd like the brain to help with: projects, a business, study, life admin, learning to build things. A few words is fine.
-- Any business or project names, for the sign-off on messages agents send for them (the core explains it).
+- Any business or project names.
 - Their Claude plan (Pro, Max or another), and whether agents should check a plan with them before every job or only bigger ones (guide mode's default is bigger ones).
 
 ## 3. Write it down
