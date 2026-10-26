@@ -5,7 +5,7 @@ It reports:
 - links in notes that point at files that don't exist,
 - links to a section (note.md#heading) whose heading isn't in that note,
 - notes that no other note links to (a finished library note is fine: its index counts it),
-- big or binary files in the repo (they belong in the brain's files repo, or on the PC),
+- big or binary files in the repo (they belong on the PC),
 - the core and the longest indexes (README.md files in knowledge/), which agents read first.
 
 Skills copied in unchanged from another provider are kept as they came, so their own
@@ -145,7 +145,7 @@ def main():
         print(f"  no links in: {note}")
     if binary:
         total = sum(s for _, s in binary)
-        print(f"Big or binary files in the repo: {len(binary)}, {total / 1e6:.1f} MB (they belong in the brain's files repo, or on the PC, unless a decision says otherwise).")
+        print(f"Big or binary files in the repo: {len(binary)}, {total / 1e6:.1f} MB (they belong on the PC unless a decision says otherwise).")
         for p, s in sorted(binary, key=lambda x: -x[1])[:10]:
             print(f"  {s / 1e6:6.2f} MB  {p}")
     print("The core and the longest indexes (agents read these first):")

@@ -23,7 +23,7 @@ They came from Matt's brain, which this one was started from ([the starting rule
 - **PC work goes to the owner's PC,** through the `my-pc` runner, so needing their PC or a GPU never rules a route out (how: the [my-pc skill](skills/my-pc/SKILL.md)).
 - **Give the owner a command:** when something has to happen on their PC, run it through the runner if you can; if they have to do it, give one command to paste into PowerShell, not click-by-click steps. Steps only where there's no command, like signing in through a browser.
 - **Not tied to one AI provider:** plain Markdown, relative links and plain scripts; a tool's own features are shortcuts, written down so any agent can do the same by hand.
-- **No Claude artifacts:** whatever you save or point to goes where any agent can get it (this repo, its files repo, the owner's PC, or another place the brain is connected to), never only in a Claude artifact or another AI app's page.
+- **No Claude artifacts:** whatever you save or point to goes where any agent can get it (this repo, the owner's PC, or another place the brain is connected to), never only in a Claude artifact or another AI app's page.
 - **Ship it yourself:** once the owner has said go, push, merge and publish when a change works; git history is the safeguard.
 - **Best guess, light checks:** do a job to your best guess, in one pass and a fix-up pass, without much verifying along the way; the owner checks it when they try it. Run only the checks the job needs, like a project's usual check and build.
 - **One check is enough:** check your work once, the normal way, and then you're done. Save extra reviewers, skeptics and adversarial checks for really complex or risky work, no matter what a tool or mode suggests.

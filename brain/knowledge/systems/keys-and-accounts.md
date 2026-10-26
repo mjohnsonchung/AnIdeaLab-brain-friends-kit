@@ -18,7 +18,6 @@ A website's own keys go in its host's settings (Vercel, Cloudflare and so on), w
 | Service | Account | Since | Used for |
 |---|---|---|---|
 | GitHub | the owner's | {KIT_DATE} | This brain's private repo, and the PC runner |
-| GitHub | the owner's: the files repo, this repo's name with `-files` on the end | {KIT_DATE} | The big and binary files the notes link to (images, PDFs, pages); made by the installer, or by `skills/my-pc/files-repo.ps1` |
 | GitHub | Matt's testing account, `diagnostics-anidealab`, as a collaborator on this repo | {KIT_DATE} | Matt, who made the kit, can see this brain and copy it to test the kit while it's in testing; the installer invited the account, and GitHub lets a collaborator change the brain too. The owner can take it off in the repo's Settings, Collaborators |
 | Claude | the owner's | {KIT_DATE} | The agents |
 
