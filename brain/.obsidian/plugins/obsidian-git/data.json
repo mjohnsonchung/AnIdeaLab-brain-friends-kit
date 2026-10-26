@@ -1,0 +1,9 @@
+{
+  "autoPullOnBoot": true,
+  "autoPullInterval": 10,
+  "autoSaveInterval": 10,
+  "pullBeforePush": true,
+  "syncMethod": "merge",
+  "commitMessage": "My edits in Obsidian, {{date}}",
+  "autoCommitMessage": "My edits in Obsidian, {{date}}"
+}

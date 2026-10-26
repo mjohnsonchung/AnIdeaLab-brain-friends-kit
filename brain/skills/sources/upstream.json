@@ -1,0 +1,151 @@
+{
+ "made": "2026-10-21",
+ "how": "python3 skills/brain-spec/skill_updates.py map",
+ "sources": [
+  {
+   "repo": "addyosmani/agent-skills",
+   "commit": "aeac41d4d005999432bb7312f7ff06383a91d59d",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "addyosmani-code-review-and-quality": "skills/code-review-and-quality",
+    "addyosmani-context-engineering": "skills/context-engineering",
+    "addyosmani-idea-refine": "skills/idea-refine",
+    "addyosmani-incremental-implementation": "skills/incremental-implementation",
+    "addyosmani-security-and-hardening": "skills/security-and-hardening",
+    "addyosmani-shipping-and-launch": "skills/shipping-and-launch",
+    "addyosmani-source-driven-development": "skills/source-driven-development"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "anthropics/claude-plugins-official",
+   "commit": "ea10b213686c90bb1984b2016937310e05336cf3",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "claude-md-management-claude-md-improver": "plugins/claude-md-management/skills/claude-md-improver"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "anthropics/knowledge-work-plugins",
+   "commit": "33eeda1e8fd856455b05479d13a0f85b5f803744",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "data-analyze": "data/skills/analyze",
+    "product-management-write-spec": "product-management/skills/write-spec",
+    "small-business-cash-flow-snapshot": "small-business/skills/cash-flow-snapshot",
+    "small-business-invoice-chase": "small-business/skills/invoice-chase",
+    "small-business-proposal-builder": "small-business/skills/proposal-builder"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "anthropics/skills",
+   "commit": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "academy-guide": "skills/academy-guide",
+    "claude-api": "skills/claude-api",
+    "webapp-testing": "skills/webapp-testing"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "coreyhaines31/marketingskills",
+   "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "marketingskills-copywriting": "skills/copywriting",
+    "marketingskills-customer-research": "skills/customer-research",
+    "marketingskills-launch": "skills/launch",
+    "marketingskills-marketing-ideas": "skills/marketing-ideas",
+    "marketingskills-pricing": "skills/pricing"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "Leonxlnx/taste-skill",
+   "commit": "6010f91a9935f1c167dfc500fb1a475681892e6b",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "taste-skill": "skills/taste-skill"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "mattpocock/skills",
+   "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "mattpocock-grilling": "skills/productivity/grilling",
+    "mattpocock-prototype": "skills/engineering/prototype",
+    "mattpocock-teach": "skills/productivity/teach",
+    "mattpocock-wizard": "skills/engineering/wizard",
+    "mattpocock-writing-for-agents": "skills/productivity/writing-for-agents"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "obra/superpowers",
+   "commit": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "superpowers-brainstorming": "skills/brainstorming",
+    "superpowers-systematic-debugging": "skills/systematic-debugging",
+    "superpowers-test-driven-development": "skills/test-driven-development",
+    "superpowers-verification-before-completion": "skills/verification-before-completion",
+    "superpowers-writing-plans": "skills/writing-plans"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "pbakaus/impeccable",
+   "commit": "dad8dbb3aac21ad1fa236c110315ef4abece23e8",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "impeccable": "plugin/skills/impeccable"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "vercel-labs/agent-skills",
+   "commit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "vercel-deploy-to-vercel": "skills/deploy-to-vercel",
+    "vercel-web-design-guidelines": "skills/web-design-guidelines"
+   },
+   "not_found": []
+  }
+ ]
+}

@@ -1,0 +1,87 @@
+# Runs one command on the owner's PC, through the self-hosted runner labelled "my-pc".
+# Start it with the GitHub tool's run-workflow method on main, then read the job log.
+# How agents use it: skills/my-pc/SKILL.md. Set up by skills/my-pc/setup-runner.ps1.
+# Safety: this runs anything on the owner's PC as the owner. Keep the trigger to workflow_dispatch
+# (only people with write access can start it). Never add pull_request or other triggers.
+name: Run on my PC
+# Shows the command in the Actions list, so the owner can see what ran.
+run-name: "PC: ${{ inputs.command }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "The command or script to run"
+        required: true
+      shell:
+        description: "powershell (Windows PowerShell 5.1), cmd or bash (Git Bash)"
+        default: powershell
+      workdir:
+        description: "Folder to run in"
+        default: 'C:\AI-Brain-Link'
+      timeout:
+        description: "Minutes before the job is stopped (up to 4320, three days)"
+        default: "60"
+      checkout:
+        description: "Check out this brain first, so the command can run the repo's scripts from $env:GITHUB_WORKSPACE"
+        type: boolean
+        default: false
+      artifact:
+        description: "A file, folder or wildcard on the PC to attach to the run for 3 days (for example stills for an agent to look at). Empty for none."
+        default: ""
+
+# No concurrency group on purpose. The PC has one runner, so jobs already run one at a time and
+# queue for it in order. A concurrency group keeps only one waiting run and cancels the others
+# (learnt on Matt's PC, 17 Oct 2026).
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: [self-hosted, my-pc]
+    timeout-minutes: ${{ fromJSON(inputs.timeout) }}
+    steps:
+      - name: Check out this brain
+        if: inputs.checkout
+        uses: actions/checkout@v4
+
+      - name: Run
+        working-directory: ${{ inputs.workdir }}
+        env:
+          PC_COMMAND: ${{ inputs.command }}
+          PC_SHELL: ${{ inputs.shell }}
+          PC_RUN_ID: ${{ github.run_id }}
+          # A job that needs a key gets it here, from the repo's Actions secrets, never in the command:
+          # SOME_API_KEY: ${{ secrets.SOME_API_KEY }}
+        shell: powershell
+        run: |
+          # The command comes in through an env var, so quotes and $ signs in it reach the shell untouched.
+          # Continue, not Stop: in PowerShell 5.1 a program's stderr would otherwise end the step.
+          $ErrorActionPreference = 'Continue'
+          $log = "C:\AI-Brain-Link\_logs\pc-run-$env:PC_RUN_ID.log"
+          $script = Join-Path $env:RUNNER_TEMP "pc-run-$env:PC_RUN_ID"
+          switch ($env:PC_SHELL) {
+            'powershell' { Set-Content "$script.ps1" $env:PC_COMMAND -Encoding UTF8; $exe = 'powershell'; $argv = @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$script.ps1") }
+            'cmd'        { Set-Content "$script.cmd" $env:PC_COMMAND -Encoding ASCII; $exe = 'cmd'; $argv = @('/c',"$script.cmd") }
+            'bash'       { [IO.File]::WriteAllText("$script.sh", $env:PC_COMMAND.Replace("`r`n","`n")); $exe = 'bash'; $argv = @("$script.sh") }
+            default      { throw "Unknown shell '$env:PC_SHELL': use powershell, cmd or bash." }
+          }
+          "== $(Get-Date -Format u) | $env:PC_SHELL | $PWD" | Tee-Object $log
+          # The command goes in the log too, so the live window on the PC (skills/my-pc/watch-jobs.ps1) shows what's running.
+          "-- command:`n$env:PC_COMMAND`n-- output:" | Out-File $log -Append
+          & $exe @argv 2>&1 | ForEach-Object { "$_" } | Tee-Object $log -Append
+          $code = $LASTEXITCODE
+          "== exit $code | log kept at $log" | Tee-Object $log -Append
+          exit $code
+
+      # Lets an agent see a file from the PC (stills, small logs) without pasting it into the log.
+      # Kept 3 days only: these can show the owner's home or other people's things.
+      - name: Attach a file
+        if: inputs.artifact != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: pc-files-${{ github.run_id }}
+          path: ${{ inputs.artifact }}
+          retention-days: 3
+          if-no-files-found: warn

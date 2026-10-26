@@ -1,0 +1,69 @@
+/*
+  Brain graph colours (11 Oct 2026, HQ thread, at Matt's request).
+  What it does: calmer grey lines, a bright line highlight when you point at a note,
+  clearer arrows, and the open note shown in white instead of the default purple
+  (which looks too much like the Law Office's violet).
+
+  How it works: Obsidian draws the graph on a canvas, so CSS can't style dots or lines
+  directly. Instead the graph reads the `color` and `opacity` of these `.graph-view.color-*`
+  classes when a graph opens, and again when the app's CSS changes (checked in
+  Obsidian 1.14.4's own app.css and app.js). If an edit here doesn't show,
+  close the graph tab and open it again.
+
+  Sector colours are not set here. They are the colour groups in .obsidian/graph.json.
+  Notes on the whole setup: knowledge/systems/obsidian-setup.md.
+*/
+
+/* ---------- Dark theme (the vault's theme) ---------- */
+
+/* Every line, at rest: a soft grey so the coloured dots stand out. */
+.theme-dark .graph-view.color-line {
+  color: #5c5c5c;
+  opacity: 0.4;
+}
+
+/* Lines touching the note you point at: bright white. */
+.theme-dark .graph-view.color-line-highlight {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* The note you point at, and the ring drawn round it. */
+.theme-dark .graph-view.color-fill-highlight,
+.theme-dark .graph-view.color-circle {
+  color: #ffffff;
+}
+
+/* The note open in the editor. */
+.theme-dark .graph-view.color-fill-focused {
+  color: #ffffff;
+}
+
+/* Arrowheads (they show once you zoom in). */
+.theme-dark .graph-view.color-arrow {
+  color: #d0d0d0;
+  opacity: 0.75;
+}
+
+/* ---------- Light theme (same idea, dark ink on white) ---------- */
+
+.theme-light .graph-view.color-line {
+  color: #8c8c8c;
+  opacity: 0.35;
+}
+
+.theme-light .graph-view.color-line-highlight {
+  color: #1f1f1f;
+  opacity: 1;
+}
+
+.theme-light .graph-view.color-fill-highlight,
+.theme-light .graph-view.color-circle,
+.theme-light .graph-view.color-fill-focused {
+  color: #1f1f1f;
+}
+
+.theme-light .graph-view.color-arrow {
+  color: #3a3a3a;
+  opacity: 0.7;
+}

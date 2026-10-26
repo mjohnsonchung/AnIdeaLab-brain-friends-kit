@@ -1,0 +1,9 @@
+{
+  "id": "brain-graph",
+  "name": "Brain graph",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Replays the brain's git history: notes appear as dots when they're created, links form as they're written, and a chart shows lines of notes and code over time.",
+  "author": "Brain agents",
+  "isDesktopOnly": true
+}

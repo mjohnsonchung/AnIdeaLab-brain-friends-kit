@@ -1,0 +1,129 @@
+---
+name: brain-spec
+description: "How to add to or change this second brain so it stays cohesive and cheap for agents to read: the core, the skills library and the knowledge library's shelves; whether something is a skill or knowledge; cards and tags; the indexes and scripts; tasks and hand-offs; what to save; writing notes; skills, lessons and routines; and checks before you push. Use before making or moving any note, task, decision, idea, skill or routine, or when unsure where something goes."
+---
+
+# The brain spec
+Where each kind of thing goes in the brain, and what shape it takes. It comes from Matt's brain, which this one was started from, where it was written so that everything "it's all cohesive... in line with you know it being efficient for an agent to use" (Matt, 18 Oct 2026). The rules themselves, the owner's defaults and the gates, are in the core ([CLAUDE.md](../../CLAUDE.md)); this is how to apply them. Any agent can follow it; it's a plain file.
+
+## The shape
+```
+CLAUDE.md       the core: read by every agent, about a page
+skills/         the skills library: how to do things
+knowledge/      the knowledge library: what's true
+```
+Beside them: `README.md` (the owner's front door), `.github/` (the Actions), `.obsidian/` (Obsidian's shared settings) and `.claude/` (Claude Code's own settings). Nothing else goes at the top level.
+
+**Skill or knowledge?** Know-how that works for any project, the same from job to job, is a skill. How one project does things, and anything true about the owner, their projects, people, systems or decisions, is knowledge, kept with that project or on its shelf. So "how to run an ad campaign" is a skill, and "the shop's ads may spend $50 a week" is knowledge.
+
+**Links run one way.** Notes may point at skills, but skills don't point at notes, so skills stay general. The exceptions are the skills that run the brain's own machinery (brain-spec, brain-audit, getting-started, guide-mode, my-pc), the skills list itself, and a skill citing the decision it comes from. `library.py check` reports any other.
+
+## The shelves
+| Shelf | What goes there |
+|---|---|
+| `knowledge/tasks/` | What's in flight, who holds it, what waits on the owner. One note per task. |
+| `knowledge/ventures/` | Things with a goal: businesses, projects, client work. A note each, or a folder once it has several notes. |
+| `knowledge/areas/` | Ongoing things with no end: the brain itself (`the-brain/`), later money, health, home. |
+| `knowledge/decisions/` | What the owner decided, standing rules included, on a sub-shelf per project or area. |
+| `knowledge/people/` | The owner, customers, suppliers, contacts. One note per person. |
+| `knowledge/systems/` | Accounts, the PC, routines, Obsidian, the brain graph. |
+| `knowledge/ideas/` | Not started yet, the friction log included. |
+| `knowledge/subjects/` | The open library, one note or folder per field, kept when facts took effort to get. |
+
+- **A note's folder says what kind of thing it is; its tags say what it's about.** A tag is the name of a project, area or subject: its folder or file name (`the-brain`, `my-shop`).
+- **The working shelves are fixed. Subjects grow,** and so does everything inside a shelf. A new subject, project or area starts as one note, and becomes a folder with its own `README.md` once it has several.
+- **Every folder in `knowledge/` has a `README.md`:** its card, a few hand-written lines, and the index between `<!-- index:start -->` and `<!-- index:end -->`, which the script fills.
+- **Old history goes in a `history/` sub-shelf** of the project or area it's about, marked `status: done`. Obsidian hides every `history/` folder. Current notes don't link into `history/`: say where a retired note is in words.
+- **A new project** is a note (later a folder) in `ventures/`: what it is, its goal in the owner's words, where it stands, its code repo and its look; decisions, tasks and people about it are tagged with its name.
+
+## Cards
+Every note starts with a card in its front matter, which Obsidian shows as the note's properties:
+```
+---
+about: "What the shop's supplier charges and their rules. Read before ordering stock or quoting a price."
+tags: [my-shop]
+status: current
+updated: {KIT_DATE}
+---
+```
+| Field | What it says |
+|---|---|
+| `about` | One line, under 250 characters: what's in the note and **when you'd read it**. It's the line an agent picks by. Always in double quotes, with no double quotes or backslashes inside. |
+| `tags` | The projects, areas or subjects it's about, by their names. Optional. |
+| `status` | Tasks: `open`, `doing`, `waiting`, `done` or `dropped`. Decisions: `current` or `superseded`. Ideas: `raw`, `researching`, `parked` or `graduated`. Ventures: `current`, `parked` or `done`. Anything else: `current` (the default) or `done`. |
+| `updated` | When someone last made sure the note and its card are true, like `{KIT_DATE}`. |
+| `holder` | Tasks only: `owner`, `open`, or the session link of the agent holding it. |
+| `parent` | Tasks only, optional: the file name of the task it came from. |
+| `due` | Optional: a date. |
+
+The file name is the note's name, in lower-case words with hyphens. A decision's file name starts with its date (`{KIT_ISO}-...`). The body is free: a `# Title`, then dated, sourced writing.
+
+## The indexes and the scripts
+All in this folder, plain Python 3 with nothing to install:
+- **`library.py build`** fills each `README.md`'s index from the cards in its folder; tasks are grouped under "Waiting on the owner", "Doing", "Waiting" and "Open", and finished notes are counted, not listed. A GitHub Action ([library.yml](../../.github/workflows/library.yml)) runs it on every push and commits the indexes, so never edit an index by hand.
+- **`library.py find`** answers questions from the cards: `find --tag my-shop`, `find --shelf tasks --holder owner`, `find --text "supplier"`; add `--all` for finished notes.
+- **`library.py check`** reports missing cards and fields, bad statuses, unknown tags, folders with no `README.md`, an index past about 60 entries, the core over 6 KB, skills linking into notes, brain skills over 500 lines, and `LESSONS.md` files their skill doesn't link. `--strict` exits 1 if there's anything.
+- **`library.py audit --since <date>`**, for the weekly tidy-up: notes changed a lot since their card was checked, tasks finished since then, and skills with lessons.
+- **`check_links.py`**: broken links, notes nothing links to, big or binary files, and the core's and indexes' sizes.
+- **`move.py MAP`** moves files and folders and fixes every link to them (`--dry-run` first).
+- **`reminders.py`** prints the reminders that are due; the session-start hook runs it.
+- **`skill_updates.py`** checks copied skills against their sources ([find-skills](../find-skills/SKILL.md)).
+- `test_library.py` tests `library.py`.
+
+## Tasks and hand-offs
+- **A task note** is for work that will outlive the session, waits on someone, or is handed on. A job finished in one go needs none: git has the change, and anything learned goes to the library.
+- **Whoever hands a task out makes the note,** and closes it when the work comes back. The agent doing the work can add dated lines under `## Progress`.
+- **Something only the owner can do** is a task with `holder: owner`. Ask them in your thread as well.
+- **When a task closes,** set its status to `done` or `dropped`, add a dated line, and save what was learned that should outlive it.
+- **One note per task** keeps git conflicts rare.
+
+## Saving knowledge
+- **The test:** would an agent starting cold next month need this, and would it be hard to get again? If yes, save it.
+- **Don't save** what's already in code or git history, what a quick search would find again, or chatter.
+- **Update before you add.** Check the shelf's index first (or `library.py find`). If a card already covers it, update that note.
+- **One note per thing:** one person, one decision, one project.
+- **When:** save the owner's decisions straight away, so a dropped session can't lose them. Save everything else when a task closes, and whenever the owner says "remember this".
+- **A decision** gets its own note: its card, then "**Decided** <date>, by <who, where>", the decision with the owner's words in quotes, and what it means in practice. When it changes, write the new note and mark the old one `status: superseded` with a line linking the new one. Never delete a decision. A rule every agent must follow also gets one line in the core.
+- **An idea** gets its own note: what it is, why it might be worth it and what it would take, its status and where it came from.
+- **A blocker that slowed you down** is one row in the [friction log](../../knowledge/ideas/friction-log.md).
+
+## Writing notes
+- **Date every fact and say where it came from:** who said it and when, or which file. Mark guesses as guesses. Dates are written like "{KIT_DATE}".
+- **When something changes,** update the note and mark the old entry superseded rather than deleting it.
+- **Plain English,** short full sentences. Use the owner's own words for what they want.
+- **Link notes with relative Markdown links,** like the ones in this note, so they work for agents, on GitHub and in Obsidian's graph. To link a section, use `note.md#heading`, in lower case with hyphens for spaces.
+- **Big or binary files** (images, video, zips) don't go in the brain: keep them on the PC under `C:\AI-Brain-Link\`, or in a separate private repo for files if the owner makes one, and link to where they are. Keys go in neither.
+- **Code** for a project lives in the project's own repo, with its own `CLAUDE.md`.
+
+## A skill
+- **Look for one before writing one:** [find-skills](../find-skills/SKILL.md) says where, and how to copy one in.
+- **A folder,** `skills/<name>/`, in lower-case words with hyphens, holding `SKILL.md` and any files it needs.
+- **A line in the [skills list](../README.md),** in the right group, saying when to use it.
+- **Front matter** has `name` and `description`, in double quotes. The description is all an agent sees before opening the skill, so say exactly when to use it.
+- **Know-how only.** Jobs, customers and state go in the knowledge library.
+- **Under 500 lines.** Past that, move detail into a file in the skill's folder and link it ([skill-creator](../skill-creator/SKILL.md) helps write and test one).
+
+### How skills learn
+- **A lesson** is one dated line, saved when a skill let you down (a step that was wrong, missing or out of date) or when the owner corrected work done with it. Say what happened and what to do instead, kept general like the skill.
+- **`LESSONS.md`, in the skill's folder,** holds them, newest at the top. It exists once the skill has a lesson, and starts like this:
+  ```
+  # Lessons: <skill name>
+  *What agents learned using this skill in the brain, one dated line each, newest at the top.*
+
+  - **{KIT_DATE}:** what happened, and what to do instead.
+  ```
+- **The skill links it,** near the top of the brain's own skills, and in an `## In this brain` section at the very end of a copied skill, with this line:
+  ```
+  Lessons from using this skill in the brain: [LESSONS.md](LESSONS.md).
+  ```
+- **The weekly tidy-up** ([brain-audit](../brain-audit/SKILL.md)) folds a brain skill's lessons into its steps and keeps a copied skill's lessons short.
+
+## A routine
+Anything that runs or falls due on a beat gets a row in [routines](../../knowledge/systems/routines.md). The job is a script or skill in the repo; the trigger only says when and where. A reminder costs nothing until the owner says yes to it in a session; a scheduled AI job uses their plan by itself, so it needs their yes first.
+
+## Before you push
+1. `git pull --rebase`.
+2. `git add` your new files, then run `python3 skills/brain-spec/library.py build` and `python3 skills/brain-spec/library.py check`: no missing cards, bad fields or unknown tags.
+3. Run `python3 skills/brain-spec/check_links.py`: no broken links, nothing unlinked.
+4. If you changed code, run it or its tests (`python3 skills/brain-spec/test_library.py` for the library).
+5. Make small commits with plain messages saying what changed, and push to `main`. Never force-push.

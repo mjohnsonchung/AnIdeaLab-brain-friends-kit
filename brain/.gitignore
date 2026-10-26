@@ -1,0 +1,18 @@
+# Obsidian: keep shared settings, skip per-device layout
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.trash/
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+# Obsidian plugin code is installed per device; only plugin settings (data.json) are shared
+.obsidian/plugins/*/main.js
+.obsidian/plugins/*/manifest.json
+.obsidian/plugins/*/styles.css
+# ...except the brain graph, the brain's own viewer, which reaches every device through the repo (knowledge/systems/brain-graph.md)
+!.obsidian/plugins/brain-graph/main.js
+!.obsidian/plugins/brain-graph/manifest.json
+!.obsidian/plugins/brain-graph/styles.css
+# Images and files pasted in Obsidian land here and stay on that device: big or binary files don't go in the repo
+attachments/
+__pycache__/

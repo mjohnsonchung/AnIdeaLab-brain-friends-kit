@@ -1,0 +1,16 @@
+{
+  "theme": "dark",
+  "accent": "coral",
+  "speed": 0.125,
+  "replayOnOpen": true,
+  "startFrom": "beginning",
+  "steady": false,
+  "physics": true,
+  "hold": 0.3,
+  "hubLinks": "show",
+  "bridges": "hover",
+  "fadeDays": 0,
+  "hideExcluded": true,
+  "markMatt": true,
+  "quiet": true
+}

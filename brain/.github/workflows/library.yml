@@ -1,0 +1,53 @@
+# Keeps the knowledge library's indexes in step with the notes' cards.
+# On each push to main that touches knowledge/ or skills/, it runs
+# skills/brain-spec/library.py build and commits any README.md that changed. Then it
+# runs the library check and the link check and writes their reports into the run
+# summary. It never fails on them, so GitHub doesn't email the owner on every push.
+name: Build the knowledge indexes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "knowledge/**"
+      - "skills/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: library-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild the indexes from the cards
+        run: python3 skills/brain-spec/library.py build
+      - name: Commit any changed indexes
+        run: |
+          if git diff --quiet; then
+            echo "Indexes already match the cards."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Rebuild knowledge indexes"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Check the library and the links
+        if: always()
+        run: |
+          {
+            echo '### Library check'
+            echo '```'
+            python3 skills/brain-spec/library.py check 2>&1 || true
+            echo '```'
+            echo '### Link check'
+            echo '```'
+            python3 skills/brain-spec/check_links.py 2>&1 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

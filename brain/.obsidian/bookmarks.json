@@ -1,0 +1,96 @@
+{
+  "items": [
+    {
+      "type": "group",
+      "ctime": 1791676800000,
+      "title": "Map views",
+      "items": [
+        {
+          "type": "graph",
+          "ctime": 1791676800001,
+          "title": "Ventures (the ventures shelf)",
+          "options": {
+            "search": "path:\"knowledge/ventures/\"",
+            "showTags": false,
+            "showAttachments": false,
+            "hideUnresolved": true,
+            "showOrphans": true,
+            "showArrow": true,
+            "textFadeMultiplier": -3,
+            "nodeSizeMultiplier": 2,
+            "lineSizeMultiplier": 1.5,
+            "centerStrength": 0.5,
+            "repelStrength": 12,
+            "linkStrength": 0.6,
+            "linkDistance": 250,
+            "scale": 1
+          }
+        },
+        {
+          "type": "graph",
+          "ctime": 1791676800002,
+          "title": "Whole brain (every note)",
+          "options": {
+            "search": "",
+            "showTags": false,
+            "showAttachments": false,
+            "hideUnresolved": true,
+            "showOrphans": true,
+            "showArrow": true,
+            "textFadeMultiplier": -1,
+            "nodeSizeMultiplier": 1.2,
+            "lineSizeMultiplier": 1,
+            "centerStrength": 0.3,
+            "repelStrength": 15,
+            "linkStrength": 1,
+            "linkDistance": 90,
+            "scale": 0.45
+          }
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": 1791676800003,
+      "title": "Start here",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1791676800004,
+          "path": "README.md",
+          "title": "Front door"
+        },
+        {
+          "type": "file",
+          "ctime": 1791676800005,
+          "path": "CLAUDE.md",
+          "title": "The core"
+        },
+        {
+          "type": "file",
+          "ctime": 1791676800006,
+          "path": "knowledge/README.md",
+          "title": "The knowledge library"
+        },
+        {
+          "type": "file",
+          "ctime": 1791676800007,
+          "path": "knowledge/tasks/README.md",
+          "title": "What's in flight, and what waits on you"
+        },
+        {
+          "type": "file",
+          "ctime": 1791676800009,
+          "path": "skills/README.md",
+          "title": "The skills"
+        },
+        {
+          "type": "file",
+          "ctime": 1791676800008,
+          "path": "knowledge/systems/obsidian-setup.md",
+          "title": "How to read the map"
+        }
+      ]
+    }
+  ]
+}

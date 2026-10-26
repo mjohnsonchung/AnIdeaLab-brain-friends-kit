@@ -1,0 +1,10 @@
+{
+  "userIgnoreFilters": [
+    "/(^|\\/)history\\//"
+  ],
+  "newLinkFormat": "relative",
+  "useMarkdownLinks": true,
+  "alwaysUpdateLinks": true,
+  "showUnsupportedFiles": false,
+  "attachmentFolderPath": "attachments"
+}
