@@ -5,9 +5,10 @@
 # The kit's installer invites the testing account to each brain repo it makes, and big-brain's "Accept
 # brain invitations" workflow accepts them once a day (testing/auto-accept-setup.ps1 sets it up). This
 # installs GitHub's command line with winget if it's missing and adds the testing account to it the first
-# time, accepts any invitation still waiting (the account is only for friends' brains), and clones each
-# brain the account can reach into D:\AI-Brain-Link\Friend-Brains\<owner>\<repo>, every branch and the
-# whole history, or brings a copy it made before up to date.
+# time, accepts any invitation still waiting (the account is only for friends' brains, so it declines one
+# to Matt's own repos), and clones each brain the account can reach into
+# D:\AI-Brain-Link\Friend-Brains\<owner>\<repo>, every branch and the whole history, or brings a copy it
+# made before up to date.
 # It uses the testing account for this run only: gh and git stay on whatever account they were on, and
 # the account's token is never written to a file. Safe to run again.
 # Set $env:FRIEND_BRAINS first to use another folder. Kept to Windows PowerShell 5.1 and plain ASCII.
@@ -53,13 +54,19 @@
     if (-not $inv) { Write-Host 'None waiting.' }
     foreach ($line in $inv) {
       $id, $full = $line -split "`t", 2
+      # Matt's own repos are never the testing account's: it mustn't reach his brain, or his PC through its runner.
+      if ($full -like 'mjohnsonchung/*') {
+        gh api -X DELETE "user/repository_invitations/$id" --silent
+        Write-Host "Declined $full, one of Matt's own repos" -ForegroundColor Yellow
+        continue
+      }
       gh api -X PATCH "user/repository_invitations/$id" --silent
       if ($LASTEXITCODE -eq 0) { Write-Host "Accepted $full" -ForegroundColor Green } else { Write-Host "Couldn't accept $full" -ForegroundColor Yellow }
     }
 
     Write-Host "`n3. The brains"
     # A brain is a repo the account collaborates on with the kit's brain spec in it.
-    $repos = @(gh api 'user/repos?affiliation=collaborator&per_page=100' --paginate --jq '.[].full_name') | Where-Object { $_ }
+    $repos = @(gh api 'user/repos?affiliation=collaborator&per_page=100' --paginate --jq '.[].full_name') | Where-Object { $_ -and $_ -notlike 'mjohnsonchung/*' }
     $brains = @($repos | Where-Object { gh api "repos/$_/contents/skills/brain-spec/SKILL.md" --silent 2>$null; $LASTEXITCODE -eq 0 })
     if (-not $brains.Count) { Write-Host 'No brains to copy yet. An invitation shows up here once a friend runs the installer.'; return }
     New-Item -ItemType Directory -Force -Path $root | Out-Null

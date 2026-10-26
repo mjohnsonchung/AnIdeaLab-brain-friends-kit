@@ -3,52 +3,42 @@
 #   irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/main/testing/invite-matt.ps1 | iex
 #
 # Matt's testing account (GitHub: diagnoticsanidealab) can then see your brain and copy it, to test the kit
-# while it's in testing. GitHub lets a collaborator change the repo too; there's no read-only option for a
-# personal repo. It installs GitHub's command line with winget if it's missing and signs you in to GitHub
-# the first time, finds your brain among your repos, and invites the account. It changes nothing else.
-# To take the account off any time: your repo on GitHub, Settings, Collaborators. Safe to run again.
-# Kept to Windows PowerShell 5.1 and plain ASCII.
+# while it's in testing; Matt's brain accepts the invitation within a day. GitHub lets a collaborator change
+# the repo too; there's no read-only option for a personal repo. To take the account off any time: your repo
+# on GitHub, Settings, Collaborators. It installs GitHub's command line with winget if it's missing and signs
+# you in to GitHub the first time, finds your brain, and invites the account; it changes nothing else, and
+# prints only "Success", or what went wrong. Your brain is the repo of yours with the kit's update script,
+# skills/brain-spec/brain_update.py, which every brain from the kit has had since brain update 1 (Matt's
+# own brain has a brain spec too, but not that script). Safe to run again. Windows PowerShell 5.1, plain ASCII.
 & {
   $ErrorActionPreference = 'Continue'
   $tester = 'diagnoticsanidealab'
+  function Fail($t) { Write-Host $t -ForegroundColor Red }
 
-  Write-Host "`n1. GitHub's command line"
   if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-      Write-Host "winget (Windows' app installer) isn't on this PC. Install 'App Installer' from the Microsoft Store, then paste the same command again." -ForegroundColor Red
-      return
-    }
-    Write-Host 'Installing it (Windows may ask you to allow it)...'
-    winget install -e --id GitHub.cli --silent --accept-source-agreements --accept-package-agreements
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { Fail "winget (Windows' app installer) isn't on this PC. Install 'App Installer' from the Microsoft Store, then paste the same command again."; return }
+    winget install -e --id GitHub.cli --silent --accept-source-agreements --accept-package-agreements | Out-Null
     $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
-    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-      Write-Host "It installed, but this window can't see it yet. Close PowerShell, open it again, and paste the same command." -ForegroundColor Red
-      return
-    }
+    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Fail "GitHub's command line installed, but this window can't see it yet. Close PowerShell, open it again, and paste the same command."; return }
   }
   gh auth status --hostname github.com 2>&1 | Out-Null
   if ($LASTEXITCODE -ne 0) {
-    Write-Host 'Signing in to GitHub, as the account your brain is on. Copy the code shown, press Enter, and paste it into the page that opens.'
     gh auth login --hostname github.com --git-protocol https --web
-    if ($LASTEXITCODE -ne 0) { Write-Host "GitHub sign-in didn't finish. Paste the same command again to retry." -ForegroundColor Red; return }
+    if ($LASTEXITCODE -ne 0) { Fail "GitHub sign-in didn't finish. Paste the same command again to retry."; return }
   }
   $me = "$(gh api user --jq .login 2>$null)".Trim()
-  Write-Host "Signed in as $me"
+  # Matt's own accounts: his brain isn't a friend's, and the testing account mustn't reach it.
+  if ($me -in @('mjohnsonchung', $tester)) { Fail "This is for friends' brains: it's signed in as Matt's account $me, so it does nothing."; return }
 
-  Write-Host "`n2. Your brain"
-  # A brain is one of your repos with the kit's brain spec in it.
   $repos = @(gh repo list --limit 200 --json nameWithOwner --jq '.[].nameWithOwner') | Where-Object { $_ }
-  $brains = @($repos | Where-Object { gh api "repos/$_/contents/skills/brain-spec/SKILL.md" --silent 2>$null; $LASTEXITCODE -eq 0 })
-  if (-not $brains.Count) {
-    Write-Host "None of $me's repos looks like a brain. If your brain is on another GitHub account, run: gh auth login --web, sign in as that account, and paste the same command again." -ForegroundColor Red
-    return
-  }
+  $brains = @($repos | Where-Object { gh api "repos/$_/contents/skills/brain-spec/brain_update.py" --silent 2>$null; $LASTEXITCODE -eq 0 })
+  if (-not $brains.Count) { Fail "None of $me's repos is a brain from the kit. If your brain is on another GitHub account, run gh auth login --web, sign in as that account, and paste the same command again."; return }
 
-  Write-Host "`n3. Inviting Matt's testing account ($tester)"
+  $failed = @()
   foreach ($r in $brains) {
-    gh api -X PUT "repos/$r/collaborators/$tester" --silent
-    if ($LASTEXITCODE -eq 0) { Write-Host "Invited it to $r" -ForegroundColor Green } else { Write-Host "Couldn't invite it to $r. Paste the same command again to retry." -ForegroundColor Red }
+    gh api -X PUT "repos/$r/collaborators/$tester" --silent 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { $failed += $r }
   }
-  Write-Host "`nDone. Matt's brain accepts the invitation within a day. To take the account off any time: your repo on GitHub, Settings, Collaborators."
-  Write-Host "If your brain already has brain update 3, tell its agent: Matt's testing account is on this repo now, so put its row back in the accounts note."
+  if ($failed.Count) { Fail "Couldn't invite the account to $($failed -join ', '). Paste the same command again to retry." }
+  else { Write-Host 'Success' -ForegroundColor Green }
 }
