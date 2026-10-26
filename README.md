@@ -17,7 +17,7 @@ To check now, or in a brain started before 26 Oct 2026, tell the brain's agent:
 - **[brain/](brain/)**: the kit's brain as a new one gets it, with `{KIT_DATE}` and `{KIT_ISO}` where each brain has its own start date.
 - **[updates/](updates/)**: one message per update, newest last, each starting with a summary for the owner. The commit that added each one holds `brain/` as of that update, and `brain_update.py` merges the difference into a brain with a three-way merge, so the brain's own changes elsewhere stay.
 - **[inbox/](inbox/)**: after each update, a brain sends a report of how it went to AnIdeaLab's private inbox, so the kit gets better.
-- **[testing/](testing/)**: while the kit is in testing, the installer invites Matt's testing account to each new brain's repo (since 27 Oct 2026), so he can see it and copy it to find what's wrong; `copy-brains.ps1` gets him the copies. The owner can take the account off in the repo's Settings, Collaborators.
+- **[testing/](testing/)**: while the kit is in testing, the installer invites Matt's testing account to each new brain's repo (since 27 Oct 2026), so he can see it and copy it to find what's wrong. Matt's brain accepts the invitations once a day (`auto-accept-setup.ps1` sets that up), and `copy-brains.ps1` gets him the copies. A brain set up before then invites the account with `invite-matt.ps1`. The owner can take the account off in the repo's Settings, Collaborators.
 
 ## Licence
 MIT for the kit's own files ([LICENSE](LICENSE)). The copied skills in `brain/skills/` keep their own licences, MIT or Apache 2.0, listed in [brain/skills/lists/sources.md](brain/skills/lists/sources.md).

@@ -2,11 +2,12 @@
 # Windows PC, while the kit is in testing. Paste into PowerShell:
 #   irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/main/testing/copy-brains.ps1 | iex
 #
-# The kit's installer invites the testing account to each brain repo it makes. This installs GitHub's
-# command line with winget if it's missing and adds the testing account to it the first time, accepts
-# every invitation to a repo described as started from the starter kit, and clones each brain the
-# account can reach into D:\AI-Brain-Link\Friend-Brains\<owner>\<repo>, every branch and the whole
-# history, or brings a copy it made before up to date. Other invitations are listed and left alone.
+# The kit's installer invites the testing account to each brain repo it makes, and big-brain's "Accept
+# brain invitations" workflow accepts them once a day (testing/auto-accept-setup.ps1 sets it up). This
+# installs GitHub's command line with winget if it's missing and adds the testing account to it the first
+# time, accepts any invitation still waiting (the account is only for friends' brains), and clones each
+# brain the account can reach into D:\AI-Brain-Link\Friend-Brains\<owner>\<repo>, every branch and the
+# whole history, or brings a copy it made before up to date.
 # It uses the testing account for this run only: gh and git stay on whatever account they were on, and
 # the account's token is never written to a file. Safe to run again.
 # Set $env:FRIEND_BRAINS first to use another folder. Kept to Windows PowerShell 5.1 and plain ASCII.
@@ -45,16 +46,12 @@
 
     Write-Host "`n2. Invitations"
     # No double quotes inside the jq: Windows PowerShell 5.1 strips them on the way to gh.
-    $inv = @(gh api user/repository_invitations --paginate --jq '.[] | [(.id|tostring), .repository.full_name, (.repository.description // empty)] | @tsv') | Where-Object { $_ }
+    $inv = @(gh api user/repository_invitations --paginate --jq '.[] | [(.id|tostring), .repository.full_name] | @tsv') | Where-Object { $_ }
     if (-not $inv) { Write-Host 'None waiting.' }
     foreach ($line in $inv) {
-      $id, $full, $about = $line -split "`t", 3
-      if ($about -match 'starter kit') {
-        gh api -X PATCH "user/repository_invitations/$id" --silent
-        if ($LASTEXITCODE -eq 0) { Write-Host "Accepted $full" -ForegroundColor Green } else { Write-Host "Couldn't accept $full" -ForegroundColor Yellow }
-      } else {
-        Write-Host "Left for you: $full isn't described as a brain from the kit. Accept it on github.com, signed in as $tester, if it is one."
-      }
+      $id, $full = $line -split "`t", 2
+      gh api -X PATCH "user/repository_invitations/$id" --silent
+      if ($LASTEXITCODE -eq 0) { Write-Host "Accepted $full" -ForegroundColor Green } else { Write-Host "Couldn't accept $full" -ForegroundColor Yellow }
     }
 
     Write-Host "`n3. The brains"
