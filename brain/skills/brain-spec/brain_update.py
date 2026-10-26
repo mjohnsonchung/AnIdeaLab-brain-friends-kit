@@ -5,11 +5,14 @@ This brain was started from a starter kit made from Matt's brain. Matt sends upd
 (fixes, new rules, new parts) through the public repo AnIdeaLab-brain-friends-kit:
 - brain/ holds the kit's brain as a fresh one would get it, with its two date placeholders
   left in for each brain's own start date;
-- updates/NNNN-<words>.md is each update's message: what changed, why, and anything to do
-  beyond the files. The commit that added it holds brain/ as of that update.
+- updates/NNNN-<words>.md is each update's message: a summary for the owner, what changed and
+  why, and anything to do beyond the files. The commit that added it holds brain/ as of that update.
 
-    python3 skills/brain-spec/brain_update.py check        # which updates this brain hasn't had
-    python3 skills/brain-spec/brain_update.py apply 3      # bring update 3's files in, start its report, print its message
+The owner decides each update: the agent reads them its summary, and applies it only if they say go.
+
+    python3 skills/brain-spec/brain_update.py check        # updates this brain hasn't had, with each one's summary
+    python3 skills/brain-spec/brain_update.py apply 3      # the owner said go: bring update 3's files in, start its report, print its message
+    python3 skills/brain-spec/brain_update.py skip 3       # the owner said no: note it, so it doesn't come up again
     python3 skills/brain-spec/brain_update.py send         # the "Send brain update reports" workflow runs this
 
 `apply` takes each file the update changed in brain/ and puts the change into this brain with a
@@ -17,7 +20,8 @@ three-way merge (git merge-file), so the brain's own changes elsewhere in a file
 changed the same lines, the update's lines go in. A file the update adds is written, one it changed
 that this brain no longer has is written again, and one it deleted is deleted. Then it records the
 update in knowledge/systems/brain-updates/README.md and starts knowledge/systems/brain-updates/NNNN-report.md
-with what it did. The rest, and when to use it: the brain spec's "Brain updates" section.
+with what it did. A skipped update can still be applied later, if the owner asks. The rest, and when to
+use it: the brain spec's "Brain updates" section.
 
 It needs git and network access to github.com, and nothing outside Python's standard library.
 The kit repo is kept as a small partial clone in ~/.cache/brain-updates.
@@ -39,6 +43,7 @@ ROOT = os.path.dirname(os.path.dirname(HERE))  # skills/brain-spec/ is two folde
 FOLDER = "knowledge/systems/brain-updates"
 CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "brain-updates", "kit.git")
 ON = re.compile(r"\*\*On kit update:\*\* ([^\n]*)")
+SKIPPED = re.compile(r"\*\*Skipped:\*\* ([^\n]*)")
 UPDATE = re.compile(r"^updates/(\d{4})-[a-z0-9-]+\.md$")
 REPORT = re.compile(r"^\d{4}-report\.md$")
 # The kit repo's date placeholders, spelt in two parts so the kit's build doesn't fill them in here.
@@ -66,15 +71,16 @@ def fetch():
 
 
 def updates(head):
-    """Every update in the kit repo: {number: (file, commit, date)}, from the commits that added them."""
-    out = git("log", "--diff-filter=A", "--format=@%H %cs", "--name-only", head, "--", "updates/")
+    """Every update in the kit repo: {number: (file, commit, date)}, from the newest commit that added each."""
+    out = git("log", "--diff-filter=A", "--no-renames", "--format=@%H %cs", "--name-only", head, "--", "updates/")
     found, commit, day = {}, None, None
     for line in out.splitlines():
         if line.startswith("@"):
             commit, day = line[1:].split()
         elif UPDATE.match(line):
             found.setdefault(int(UPDATE.match(line).group(1)), (line, commit, day))
-    return found
+    there = set(git("ls-tree", "--name-only", head, "updates/").split())
+    return {n: f for n, f in found.items() if f[0] in there}  # one deleted from the kit since is withdrawn
 
 
 def kit_start():
@@ -96,6 +102,28 @@ def current(found):
             return int(m.group(1).split()[0])
     start = kit_start().isoformat()
     return max([n for n, (_, _, day) in found.items() if day < start], default=0)
+
+
+def skipped():
+    """The updates the owner said no to."""
+    readme = os.path.join(ROOT, FOLDER, "README.md")
+    m = SKIPPED.search(open(readme, encoding="utf-8").read()) if os.path.isfile(readme) else None
+    return {int(x) for x in re.findall(r"\d+", m.group(1))} if m else set()
+
+
+def message(head, found, n):
+    """An update's message as the kit has it now, so a fix to its wording reaches every brain."""
+    path, target, _ = found[n]
+    return (blob(head, path) or blob(target, path)).decode("utf-8", errors="replace")
+
+
+def summary(text):
+    """The message's "Summary for the owner" section, or its first paragraph if it has none."""
+    m = re.search(r"(?ms)^## Summary for the owner\n+(.*?)(?=^## |\Z)", text)
+    if m:
+        return m.group(1).strip()
+    paras = [p.strip() for p in text.split("\n\n") if p.strip() and not p.startswith("#")]
+    return paras[0] if paras else ""
 
 
 def fill(data, start):
@@ -130,11 +158,12 @@ def do_check(_args):
     if not new:
         print(f"Up to date: this brain has kit update {on}, the newest." if found else "The kit hasn't sent any updates yet.")
         return
-    print(f"This brain has kit update {on}. New:")
+    print(f"This brain has kit update {on}. New, oldest first:\n")
     for n in new:
         path, _, day = found[n]
-        print(f"  {n}  {day}  {path}")
-    print(f"Apply them oldest first: python3 skills/brain-spec/brain_update.py apply {new[0]}")
+        text = message(head, found, n)
+        print(f"Update {n}, sent {day}: {text.splitlines()[0].lstrip('# ')}\n\nSummary for the owner:\n{summary(text)}\n")
+    print(f"Read the owner update {new[0]}'s summary, and ask whether to go ahead. Go: brain_update.py apply {new[0]}. No: brain_update.py skip {new[0]}.")
 
 
 def do_apply(args):
@@ -144,8 +173,8 @@ def do_apply(args):
     if n not in found:
         sys.exit(f"brain_update: the kit has no update {n}.")
     on = current(found)
-    if n != on + 1:
-        sys.exit(f"brain_update: this brain has update {on}, so apply {on + 1} next." if n > on
+    if n != on + 1 and n not in skipped():
+        sys.exit(f"brain_update: this brain has update {on}, so {on + 1} comes next." if n > on
                  else f"brain_update: this brain already has update {n}.")
     path, target, day = found[n]
     base = found[n - 1][1] if n - 1 in found else git("rev-list", "--max-parents=0", head).split()[0]
@@ -181,25 +210,48 @@ def do_apply(args):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         open(dest, "wb").write(new)
 
-    record(n)
+    record(n, "applied")
     report = start_report(n, path, day, done)
-    message = blob(target, path).decode("utf-8", errors="replace")
+    text = message(head, found, n)
     print(f"Update {n} ({day}): {len(done['added'])} added, {len(done['merged'])} merged, {len(done['clashed'])} with the update's lines "
           f"over this brain's, {len(done['restored'])} brought back, {len(done['deleted'])} deleted, {len(done['same'])} already the same.")
-    print(f"Report started: {report}\n\nThe update's message, to do now:\n\n{message}")
+    print(f"Report started: {report}\n\nThe update's message, to do now:\n\n{text}")
 
 
-def record(n):
-    """Say in this brain's brain-updates note which update it has."""
+def do_skip(args):
+    head = fetch()
+    found = updates(head)
+    n = args.number
+    on = current(found)
+    if n not in found or n != on + 1:
+        sys.exit(f"brain_update: update {on + 1} is the next one to apply or skip." if n in found else f"brain_update: the kit has no update {n}.")
+    record(n, "skipped")
+    print(f"Update {n} skipped: noted in {FOLDER}/README.md. Commit that, and say so to the owner in a line. "
+          f"They can still have it later: brain_update.py apply {n}.")
+
+
+def record(n, how):
+    """Say in this brain's brain-updates note which update it has, and which the owner skipped."""
     readme = os.path.join(ROOT, FOLDER, "README.md")
     if not os.path.isfile(readme):
         os.makedirs(os.path.dirname(readme), exist_ok=True)
         open(readme, "w", encoding="utf-8").write(
             '---\nabout: "Brain updates from AnIdeaLab: which one this brain has, and a report of each."\n'
             f"tags: [the-brain]\nupdated: {date.today().day} {date.today():%b %Y}\n---\n# Brain updates\n")
+    skips = skipped()
     text = open(readme, encoding="utf-8").read()
-    line = f"**On kit update:** {n} (applied {date.today().day} {date.today():%b %Y})"
-    text = ON.sub(line, text, count=1) if ON.search(text) else text.rstrip() + f"\n\n{line}\n"
+    today = f"{date.today().day} {date.today():%b %Y}"
+    m = ON.search(text)
+    has = int(m.group(1).split()[0]) if m and m.group(1)[:1].isdigit() else None
+    if has is None or n >= has:  # an older skipped update applied later leaves this line as it is
+        line = f"**On kit update:** {n} ({how} {today})"
+        text = ON.sub(lambda _: line, text, count=1) if m else text.rstrip() + f"\n\n{line}\n"
+    skips = skips | {n} if how == "skipped" else skips - {n}
+    line = "**Skipped:** " + (", ".join(str(x) for x in sorted(skips)) or "none")
+    if SKIPPED.search(text):
+        text = SKIPPED.sub(lambda _: line, text, count=1)
+    elif skips:
+        text = ON.sub(lambda m: m.group(0) + "\n\n" + line, text, count=1)
     open(readme, "w", encoding="utf-8").write(text)
 
 
@@ -269,11 +321,13 @@ def main():
     p = argparse.ArgumentParser(description="Apply brain updates from AnIdeaLab, and send their reports.")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("check", help="which updates this brain hasn't had")
-    a = sub.add_parser("apply", help="bring an update's files in, start its report and print its message")
+    a = sub.add_parser("apply", help="the owner said go: bring an update's files in, start its report and print its message")
     a.add_argument("number", type=int)
+    k = sub.add_parser("skip", help="the owner said no: note the update as skipped, so it doesn't come up again")
+    k.add_argument("number", type=int)
     sub.add_parser("send", help="send update reports to AnIdeaLab's inbox (the workflow runs this)")
     args = p.parse_args()
-    {"check": do_check, "apply": do_apply, "send": do_send}[args.cmd](args)
+    {"check": do_check, "apply": do_apply, "skip": do_skip, "send": do_send}[args.cmd](args)
 
 
 if __name__ == "__main__":

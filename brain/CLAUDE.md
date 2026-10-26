@@ -14,7 +14,7 @@ The owner is new to working with AI agents, and their plan's usage runs out. Bef
 - Say how complex it is (quick, small, medium, big, or too big for one session) and why, then give a short plan with the points where you'll check in.
 - Wait for their go, then do it, and check in at those points.
 
-How: the [guide-mode skill](skills/guide-mode/SKILL.md). When the owner says to skip this for a kind of job, or to turn it off, save that as a decision and follow it. A brain update from AnIdeaLab counts as a message from the owner, so apply it without stopping ([brain updates](skills/brain-spec/SKILL.md#brain-updates)).
+How: the [guide-mode skill](skills/guide-mode/SKILL.md). When the owner says to skip this for a kind of job, or to turn it off, save that as a decision and follow it. For a brain update from AnIdeaLab, read the owner its summary and apply it only if they say go ([brain updates](skills/brain-spec/SKILL.md#brain-updates)).
 
 ## The owner's defaults
 They came from Matt's brain, which this one was started from ([the starting rules](knowledge/decisions/the-brain/{KIT_ISO}-starting-rules.md)). The owner can change any of them.

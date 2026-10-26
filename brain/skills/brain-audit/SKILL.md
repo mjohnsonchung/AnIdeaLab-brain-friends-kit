@@ -9,7 +9,7 @@ Matt's brain, which this one was started from, has a weekly audit (Matt, 18 Oct 
 **Keep it light.** It uses the owner's plan. Read cards, not notes: the shelves' indexes and `library.py find` show every card; open a note only when a card or a script points at a problem. For "what happened this week", read commit messages, not the notes themselves.
 
 ## 1. Clean up
-1. **Brain updates first.** Pull, and if the session can reach github.com, run `python3 skills/brain-spec/brain_update.py check` and apply any new update ([brain updates](../brain-spec/SKILL.md#brain-updates)).
+1. **Brain updates first.** Pull, and if the session can reach github.com, run `python3 skills/brain-spec/brain_update.py check`. For each new update, read the owner its summary and apply it if they say go ([brain updates](../brain-spec/SKILL.md#brain-updates)).
 2. Run `python3 skills/brain-spec/library.py check`, `python3 skills/brain-spec/check_links.py` and `python3 skills/brain-spec/library.py audit --since <the last tidy-up's date>`. Fix what they report. The audit stops on a shallow clone, where every note would look changed; `git fetch --unshallow origin main` fixes that.
 3. Reread the notes the audit lists as changed a lot since their card's `updated` date; fix any card that no longer matches, and set `updated` to today.
 4. Two cards that say nearly the same thing: merge the notes, and mark the merged-away one `dropped` or `superseded` with a link to the one that stays. Split a note doing two jobs.

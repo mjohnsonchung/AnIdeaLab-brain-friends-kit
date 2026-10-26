@@ -16,5 +16,5 @@ The **[tasks index](knowledge/tasks/README.md)** is the "now" page: everything i
 ## Working with it
 - **Start a session** at [claude.ai/code](https://claude.ai/code) with this repo selected, one session per job. Agents check a plan with me before bigger jobs (guide mode).
 - **My PC:** agents run jobs on it through a GitHub Actions runner whenever it's on ([the PC](knowledge/systems/my-pc.md)). The "AI Brain Link - live jobs" window on my desktop shows what's running.
-- **Brain updates:** Matt sends fixes and new parts from AnIdeaLab, and the weekly tidy-up applies them and tells me in a line ([brain updates](knowledge/systems/brain-updates/README.md)).
+- **Brain updates:** Matt sends fixes and new parts from AnIdeaLab. The weekly tidy-up tells me what each one does, and applies it only if I say go ([brain updates](knowledge/systems/brain-updates/README.md)).
 - **Keys** for services go in this repo's Actions secrets, never in a chat ([keys and accounts](knowledge/systems/keys-and-accounts.md)).

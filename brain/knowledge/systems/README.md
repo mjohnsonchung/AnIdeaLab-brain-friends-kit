@@ -7,7 +7,7 @@ updated: {KIT_DATE}
 What each system is and how it's set up. How to use one, when that's the same from job to job, is a skill.
 
 <!-- index:start -->
-- [brain-updates/](brain-updates/README.md): Brain updates from AnIdeaLab: which one this brain has, where they come from, and a report of each one applied. Read before applying a brain update. [the-brain]
+- [brain-updates/](brain-updates/README.md): Brain updates from AnIdeaLab: which one this brain has, which the owner skipped, where they come from, and a report of each one applied. Read before checking for or applying a brain update. [the-brain]
 
 - [brain-graph](brain-graph.md): The brain graph, the Obsidian view that replays the brain's growth from git history: opening it, reading it, its settings, and the rules for changing it. Read before touching its plugin or explaining it. [the-brain]
 - [keys-and-accounts](keys-and-accounts.md): The outside accounts and keys the brain uses, by name only, and how the owner adds a key. Read before using, connecting or closing an account, or when a job needs a key. [the-brain]
