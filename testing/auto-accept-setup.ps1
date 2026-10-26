@@ -3,18 +3,18 @@
 #
 # GitHub drops a repo invitation nobody accepts within 7 days, and an accepted one lasts until the owner
 # takes it off. So big-brain's "Accept brain invitations" workflow accepts every invitation to
-# diagnoticsanidealab once a day, on GitHub's machines. It needs a token of that account that can only
+# diagnostics-anidealab once a day, on GitHub's machines. It needs a token of that account that can only
 # accept invitations: a classic token with just the repo:invite scope and no expiry. This installs GitHub's
 # command line with winget if it's missing and signs it in as mjohnsonchung the first time (in an Edge
 # private window, whatever account the browser is on), opens the token form, filled in, for you to make
-# as diagnoticsanidealab, reads the token hidden, checks it's that account's and can read invitations,
+# as diagnostics-anidealab, reads the token hidden, checks it's that account's and can read invitations,
 # saves it as big-brain's DIAGNOSTICS_INVITE_TOKEN secret, and runs the workflow once. The token goes
 # straight to GitHub, never to a file. Safe to run again: it replaces the secret. Kept to Windows
 # PowerShell 5.1 and plain ASCII.
 & {
   $ErrorActionPreference = 'Continue'
   $main = 'mjohnsonchung'
-  $tester = 'diagnoticsanidealab'
+  $tester = 'diagnostics-anidealab'
   $brain = 'mjohnsonchung/big-brain'
   $secret = 'DIAGNOSTICS_INVITE_TOKEN'
   $form = 'https://github.com/settings/tokens/new?scopes=repo:invite&description=Accept+invitations+to+friends+brains'

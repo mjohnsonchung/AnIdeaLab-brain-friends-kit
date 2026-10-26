@@ -14,7 +14,7 @@
 # Set $env:FRIEND_BRAINS first to use another folder. Kept to Windows PowerShell 5.1 and plain ASCII.
 & {
   $ErrorActionPreference = 'Continue'
-  $tester = 'diagnoticsanidealab'
+  $tester = 'diagnostics-anidealab'
   $root = if ($env:FRIEND_BRAINS) { $env:FRIEND_BRAINS } else { 'D:\AI-Brain-Link\Friend-Brains' }
 
   Write-Host "`n1. GitHub's command line, signed in as $tester"

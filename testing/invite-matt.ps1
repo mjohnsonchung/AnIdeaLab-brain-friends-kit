@@ -2,7 +2,7 @@
 # the kit's installer started doing it. Paste into PowerShell on your PC:
 #   irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/main/testing/invite-matt.ps1 | iex
 #
-# Matt's testing account (GitHub: diagnoticsanidealab) can then see your brain and copy it, to test the kit
+# Matt's testing account (GitHub: diagnostics-anidealab) can then see your brain and copy it, to test the kit
 # while it's in testing; Matt's brain accepts the invitation within a day. GitHub lets a collaborator change
 # the repo too; there's no read-only option for a personal repo. To take the account off any time: your repo
 # on GitHub, Settings, Collaborators. It installs GitHub's command line with winget if it's missing and signs
@@ -12,7 +12,7 @@
 # own brain has a brain spec too, but not that script). Safe to run again. Windows PowerShell 5.1, plain ASCII.
 & {
   $ErrorActionPreference = 'Continue'
-  $tester = 'diagnoticsanidealab'
+  $tester = 'diagnostics-anidealab'
   function Fail($t) { Write-Host $t -ForegroundColor Red }
 
   if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
