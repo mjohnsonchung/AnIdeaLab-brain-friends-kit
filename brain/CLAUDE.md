@@ -1,7 +1,7 @@
 # The core
 
 A second brain: AI agents working on its owner's projects, and everything they know. This is the core, the one note every agent reads. Everything else is in two libraries:
-- **How to do things:** the skills. [skills/README.md](skills/README.md) has a line for each; open the one your job needs.
+- **How to do things:** the skills. [skills/README.md](skills/README.md) lists the brain's own and a list by topic for the copied ones; open the one your job needs.
 - **What the brain knows:** the knowledge library. [knowledge/README.md](knowledge/README.md) has a line for each shelf. It's the brain's memory, so read from it and add to it. The [brain-spec skill](skills/brain-spec/SKILL.md) says how.
 
 **A new brain.** This brain hasn't been set up yet: before anything else, open the [getting-started skill](skills/getting-started/SKILL.md) and follow it. It takes this paragraph out when it's done.

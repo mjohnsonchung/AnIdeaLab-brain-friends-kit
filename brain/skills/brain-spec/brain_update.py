@@ -13,18 +13,21 @@ The owner decides each update: the agent reads them its summary, and applies it 
     python3 skills/brain-spec/brain_update.py check        # updates this brain hasn't had, with each one's summary
     python3 skills/brain-spec/brain_update.py apply 3      # the owner said go: bring update 3's files in, start its report, print its message
     python3 skills/brain-spec/brain_update.py skip 3       # the owner said no: note it, so it doesn't come up again
+    python3 skills/brain-spec/brain_update.py finish 3     # after doing the message: run the checks, add them to the report
     python3 skills/brain-spec/brain_update.py send         # the "Send brain update reports" workflow runs this
 
 `apply` takes each file the update changed in brain/ and puts the change into this brain with a
 three-way merge (git merge-file), so the brain's own changes elsewhere in a file stay. Where both
 changed the same lines, the update's lines go in, and it prints both sides of each such place: git
 takes the whole clashing stretch, so a paragraph the brain added next to a line the update changed
-goes too, and the agent puts back what the update didn't mean to replace. Obsidian's settings files
+goes too, and the agent puts back what's the owner's own (but not the brain's own old fixes to kit parts,
+which give way to the kit's: the brain spec's "Brain updates" says why). Obsidian's settings files
 are the exception: there the brain's own lines stay, since the owner set them (two friends' brains,
 26 Oct 2026). A file the update adds is written, one it changed that this brain no longer has is
 written again, and one it deleted is deleted. Then it records the
 update in knowledge/systems/brain-updates/README.md and starts knowledge/systems/brain-updates/NNNN-report.md
-with what it did. A skipped update can still be applied later, if the owner asks. The rest, and when to
+with what it did and a section for each thing the agent must say. `finish` runs the brain's checks, adds
+them to the report, and won't finish while a section is still empty, so every report says enough. A skipped update can still be applied later, if the owner asks. The rest, and when to
 use it: the brain spec's "Brain updates" section.
 
 It needs git and network access to github.com, and nothing outside Python's standard library.
@@ -256,22 +259,26 @@ def do_apply(args):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         open(dest, "wb").write(new)
 
+    before = subprocess.run(["git", "-C", ROOT, "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip() or "unknown"
     record(n, "applied")
-    report = start_report(n, path, day, done)
+    report = start_report(n, path, day, done, on, start, before, places)
     text = message(head, found, n)
     print(f"Update {n} ({day}): {len(done['added'])} added, {len(done['merged'])} merged, {len(done['clashed'])} with the update's lines "
           f"over this brain's, {len(done['kept'])} Obsidian settings kept as this brain had them, {len(done['restored'])} brought back, "
           f"{len(done['deleted'])} deleted, {len(done['same'])} already the same.")
     if places:
         print_places(places)
-    print(f"Report started: {report}\n\nThe update's message, to do now:\n\n{text}")
+    print(f"Report started: {report}\n\nThe update's message, to do now:\n\n{text}\n\n"
+          f"Then fill in the report's sections in italics, and run: python3 skills/brain-spec/brain_update.py finish {n}")
 
 
 def print_places(places):
     """Both sides of each place where this brain and the update changed the same lines."""
-    print("\nWhere this brain and the update changed the same lines. Git takes the whole clashing stretch, so read each one:\n"
-          "if this brain's side holds something the update didn't mean to replace (a paragraph of its own, a link, a note),\n"
-          "put it back beside the update's lines, and say so in the report. Leave the owner's own words out of the report.")
+    print("\nWhere this brain and the update changed the same lines. Git takes the whole clashing stretch, so read each one.\n"
+          "If this brain's side is the owner's own (their notes, a skill or list they added, their PC's folders, a line\n"
+          "about their own setup), put it back beside the update's lines. If it's this brain's own earlier fix or\n"
+          "workaround for a kit part, leave it out: the kit's version is the one to keep (the brain spec's \"Brain updates\"\n"
+          "says why). Say in the report what you kept and what you let go, without the owner's own words.")
     for rel, how, found in places:
         if how == "whole":
             print(f"\n{rel}: no earlier kit version to merge against, or not a text file, so "
@@ -323,7 +330,19 @@ def record(n, how):
     open(readme, "w", encoding="utf-8").write(text)
 
 
-def start_report(n, path, day, done):
+SECTIONS = [  # what the agent must say in every report, and the line that stands in until it does
+    ("The owner's answer", "*Did the owner say go after hearing the summary, or ask for it some other way? Their words, if they said more.*"),
+    ("The message's steps", "*Each step in the message's \"What to do beyond the files\", and what you did for it.*"),
+    ("Clashes", "*For each clash listed above: what this brain's side had and what the update's had, in a few words, and what you kept, put back or let go, and why. \"None\" if there were none.*"),
+    ("What broke or puzzled you", "*Errors with their exact text, checks that failed and how you fixed them, and anything in the update that was unclear or seemed wrong. \"Nothing\" if nothing did.*"),
+    ("Code you changed", "*Any file you changed beyond what the script did, and why. \"None\" if none.*"),
+    ("How big a job", "*Quick, small, medium or big, and roughly how long it took.*"),
+]
+OLD_PLACEHOLDER = re.compile(r"^\*The agent that applied it fills this in[^\n]*\*$", re.M)  # reports started before update 2
+KIT_PATHS = ("skills/", ".github/", ".obsidian/", "CLAUDE.md", "README.md", f"{FOLDER}/")  # problems here aren't the owner's notes
+
+
+def start_report(n, path, day, done, on, start, before, places):
     today = f"{date.today().day} {date.today():%b %Y}"
     sent = date.fromisoformat(day)
     sent = f"{sent.day} {sent:%b %Y}"
@@ -331,8 +350,13 @@ def start_report(n, path, day, done):
              f'about: "How brain update {n} from AnIdeaLab went in this brain: what went in, what clashed, what broke. Sent to AnIdeaLab\'s inbox."',
              "tags: [the-brain]", f"updated: {today}", "---",
              f"# Brain update {n}: how it went", "",
-             f"Applied {today}. The update was sent on {sent} ([its message](https://github.com/{GITHUB_REPO}/blob/main/{path})).", "",
-             "## What the script did"]
+             f"Applied {today}, after update {on}. The update was sent on {sent} ([its message](https://github.com/{GITHUB_REPO}/blob/main/{path})). "
+             f"This brain was started from the kit of {start.day} {start:%b %Y}, and was at commit `{before}` before the update.", "",
+             "## What the script did",
+             f"{sum(len(v) for k, v in done.items() if k != 'same')} files changed: " + ", ".join(
+                 f"{len(done[k])} {label}" for k, label in (("added", "added"), ("merged", "merged"), ("clashed", "with the update's lines over this brain's"),
+                                                           ("kept", "Obsidian settings kept as the owner had them"), ("restored", "brought back"), ("deleted", "deleted"))
+                 if done[k]) + f"; {len(done['same'])} already the same.", ""]
     names = {"added": "New files", "merged": "Merged with this brain's own changes",
              "clashed": "The update's lines over this brain's, where both changed the same place",
              "kept": "This brain's Obsidian settings kept over the update's, where both changed the same place",
@@ -342,10 +366,68 @@ def start_report(n, path, day, done):
             lines.append(f"- **{label}:** " + ", ".join(f"`{p}`" for p in done[key]))
     if not any(done[k] for k in names):
         lines.append("- Nothing: every file was already the same.")
-    lines += ["", "## How it went", "*The agent that applied it fills this in, saying for each clash what this brain's side lost and what was put back.*", ""]
+    if places:
+        lines += ["", "Where both changed the same lines (how many lines each side had there; what each said is in the section below, in the agent's words):"]
+        for rel, how, hunks in places:
+            if how == "whole":
+                lines.append(f"- `{rel}`: the whole file, " + ("this brain's kept" if owner_setting(rel) else "the update's put in") + " (no earlier kit version to merge against, or not text)")
+            else:
+                sizes = "; ".join(f"{len(ours)} of this brain's against {len(theirs)} of the update's" for ours, theirs in hunks)
+                lines.append(f"- `{rel}`: {len(hunks)} place{'s' if len(hunks) > 1 else ''} ({sizes}), " + ("this brain's lines kept" if how == "ours" else "the update's lines put in"))
+    for title, placeholder in SECTIONS:
+        lines += ["", f"## {title}", placeholder]
+    lines.append("")
     report = os.path.join(FOLDER, f"{n:04d}-report.md")
     open(os.path.join(ROOT, report), "w", encoding="utf-8").write("\n".join(lines))
     return report
+
+
+def do_finish(args):
+    """After the message is done: make sure every section is filled in, run the checks, and add them to the report."""
+    n = args.number
+    rel = os.path.join(FOLDER, f"{n:04d}-report.md")
+    report = os.path.join(ROOT, rel)
+    if not os.path.isfile(report):
+        sys.exit(f"brain_update: there's no {rel}. Apply the update first: brain_update.py apply {n}.")
+    text = open(report, encoding="utf-8").read()
+    # A report started by an older copy of this script: drop its single empty section, add the ones it lacks.
+    text = re.sub(r"(?ms)^## How it went\n+" + OLD_PLACEHOLDER.pattern[1:-1] + r"\n*(?=^## |\Z)", "", text)
+    text = re.sub(r"(?ms)^## Checks\b.*?(?=^## |\Z)", "", text).rstrip() + "\n"
+    for title, placeholder in SECTIONS:
+        if not re.search(r"(?m)^## " + re.escape(title) + r"\s*$", text):
+            text += f"\n## {title}\n{placeholder}\n"
+    open(report, "w", encoding="utf-8").write(text)
+    empty = [title for title, placeholder in SECTIONS if placeholder in text] + (["How it went"] if OLD_PLACEHOLDER.search(text) else [])
+    if empty:
+        sys.exit(f"brain_update: {rel} still needs these sections filled in: " + "; ".join(empty) +
+                 ". Replace each line in italics with what happened, then run this again.")
+    checks = []
+    for script, cmd in (("library.py build", ["library.py", "build"]), ("library.py check", ["library.py", "check"]),
+                        ("check_links.py", ["check_links.py"]), ("test_library.py", ["test_library.py"])):
+        r = subprocess.run([sys.executable, os.path.join(HERE, cmd[0]), *cmd[1:]], cwd=ROOT, capture_output=True, text=True)
+        out = (r.stdout + r.stderr).strip().splitlines()
+        if script == "test_library.py":
+            summary = [l for l in out if l.startswith(("Ran ", "OK", "FAILED"))]
+            checks.append(f"- **{script}:** " + (" ".join(summary) or f"exit {r.returncode}"))
+            continue
+        first = out[0] if out else f"exit {r.returncode}"
+        detail = [l[2:] for l in out[1:] if re.match(r"^  \S", l)]  # a problem line; the link check's size list is indented further
+        mine = [l for l in detail if re.sub(r"^[a-z ]+: ", "", l).startswith(KIT_PATHS)]
+        line = f"- **{script}:** {first}"
+        if script != "library.py build":
+            if mine:
+                line += " " + "; ".join(f"`{l}`" for l in mine[:15])
+            if len(detail) > len(mine):
+                line += f" (and {len(detail) - len(mine)} in the owner's own notes, not listed)"
+        checks.append(line)
+    diff = subprocess.run(["git", "-C", ROOT, "diff", "--shortstat", "HEAD"], capture_output=True, text=True).stdout.strip()
+    today = f"{date.today().day} {date.today():%b %Y}"
+    text = text.rstrip() + f"\n\n## Checks\nRun by `brain_update.py finish` on {today}, before committing" + (f" ({diff})" if diff else "") + ":\n" + "\n".join(checks) + "\n"
+    text = re.sub(r"(?m)^updated: .*$", f"updated: {today}", text, count=1)
+    open(report, "w", encoding="utf-8").write(text)
+    print(f"Report finished: {rel}\n" + "\n".join(checks) +
+          f"\n\nIf a check found a problem in the brain's files, fix it and run this again. Then commit everything as one commit, "
+          f"\"Brain update {n} from AnIdeaLab: <what>\", and push: that sends the report.")
 
 
 def do_send(_args):
@@ -394,9 +476,11 @@ def main():
     a.add_argument("number", type=int)
     k = sub.add_parser("skip", help="the owner said no: note the update as skipped, so it doesn't come up again")
     k.add_argument("number", type=int)
+    f = sub.add_parser("finish", help="after doing the message: check the report is filled in, run the checks, add them to it")
+    f.add_argument("number", type=int)
     sub.add_parser("send", help="send update reports to AnIdeaLab's inbox (the workflow runs this)")
     args = p.parse_args()
-    {"check": do_check, "apply": do_apply, "skip": do_skip, "send": do_send}[args.cmd](args)
+    {"check": do_check, "apply": do_apply, "skip": do_skip, "finish": do_finish, "send": do_send}[args.cmd](args)
 
 
 if __name__ == "__main__":

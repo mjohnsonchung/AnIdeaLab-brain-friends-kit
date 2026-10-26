@@ -16,7 +16,7 @@ Matt's brain, which this one was started from, has a weekly audit (Matt, 18 Oct 
 5. For each task finished since the last tidy-up, save anything learned that never became a note ([brain spec](../brain-spec/SKILL.md#saving-knowledge)).
 6. A decision a newer one contradicts gets `status: superseded` and a link to the newer one, and the old rule mustn't survive in the core or other notes.
 7. Ideas and parked projects nobody has touched for months go to the owner as "keep or drop?".
-8. Every folder in `skills/` has a line in the [skills list](../README.md). If the session can reach github.com, run `python3 skills/brain-spec/skill_updates.py check` and bring changed sets up to date ([find-skills](../find-skills/SKILL.md#keeping-them-up-to-date)).
+8. Every folder in `skills/` has a line in the [skills list](../README.md) or a list it links, and no line names a skill that's gone. If the session can reach github.com, run `python3 skills/brain-spec/skill_updates.py check` and bring changed sets up to date ([find-skills](../find-skills/SKILL.md#keeping-them-up-to-date)).
 
 ## 2. The friction log
 For each open row in the [friction log](../../knowledge/ideas/friction-log.md) added since the last tidy-up: would know-how that stays the same from job to job have saved the trouble? If yes, find or write a skill for it ([find-skills](../find-skills/SKILL.md)), and move the row to "Solved" naming the skill. If it needs the owner (an account, a key, a payment), a tool nobody has built, or something outside the brain's control, it stays open.

@@ -23,7 +23,7 @@ If nothing passes the bar, write a skill from the tool's official docs, with [sk
 3. **Keep the source's README and licence** in `skills/sources/<owner>-<repo>/`.
 4. **Check the licence,** and tell the owner in a line: MIT, Apache 2.0 and BSD are fine for anything; CC BY-SA means credit the makers and share changes the same way; no licence at all means all rights reserved (fine to use in the brain, not to sell or hand on); GPL or AGPL needs the owner's say before it goes into anything sold (the core's "reuse before you build").
 5. **Read it once** for anything unsafe, and for anything that fights the core, such as extra reviewers on every change. The core wins; say so in its line in the list.
-6. **List it:** a line in the [skills list](../README.md) in the right group, saying when to use it, and under its source in [lists/sources.md](../lists/sources.md), like this:
+6. **List it:** a line in the right topic list in `skills/lists/` (the [skills list](../README.md) links them all under "Copied skills"), saying when to use it, and under its source in [lists/sources.md](../lists/sources.md), like this:
    ```
    ## owner/repo
    From [owner/repo](https://github.com/owner/repo), commit `abc1234`, copied 22 Oct 2026. Licence: MIT.
@@ -33,7 +33,7 @@ If nothing passes the bar, write a skill from the tool's official docs, with [sk
    Then run `python3 skills/brain-spec/skill_updates.py map`.
 7. **Commit** ("Copied <skills> from <owner/repo>") and push.
 
-A big set (more than about ten skills) gets its own list in `skills/lists/`, linked from the skills list under "Copied skills", rather than a line each there.
+No topic fits: start a new list in `skills/lists/`, with a heading and a line saying what's in it, and link it from the skills list under "Copied skills". A copied skill never goes on the skills list itself, which every agent reads and so stays short (`library.py check` flags it past 6 KB).
 
 ## Keeping them up to date
 `python3 skills/brain-spec/skill_updates.py check` lists copied skills that changed, moved or were deleted at their source since they were copied. `update --source owner/repo` (try `--dry-run` first) brings a set up to date and keeps the brain's own changes. Read the diff before committing. It needs git and github.com.

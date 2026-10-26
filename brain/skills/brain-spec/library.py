@@ -53,6 +53,7 @@ TASK_GROUPS = [("Waiting on the owner", None), ("Doing", "doing"), ("Waiting", "
 MAX_ABOUT = 250
 MAX_INDEX = 60   # entries in an index
 MAX_CORE = 6 * 1024
+MAX_SKILLS_LIST = 6 * 1024  # skills/README.md, which agents read next: past this, move skills into topic lists (26 Oct 2026)
 MAX_SKILL_LINES = 500  # Anthropic's skill-creator: "Keep SKILL.md under 500 lines"
 MAX_LESSONS = 20  # in a skill's LESSONS.md, before the audit must merge them
 LESSONS_LINK = re.compile(r"\]\((?:\./)?LESSONS\.md\)")
@@ -335,6 +336,10 @@ def check(lib):
     core = os.path.join(lib.root, "CLAUDE.md")
     if os.path.exists(core) and os.path.getsize(core) > MAX_CORE:
         problems.append(f"CLAUDE.md: the core is {os.path.getsize(core) / 1024:.1f} KB, over {MAX_CORE // 1024} KB")
+    skills_list = os.path.join(lib.root, "skills", "README.md")
+    if os.path.exists(skills_list) and os.path.getsize(skills_list) > MAX_SKILLS_LIST:
+        problems.append(f"skills/README.md: the skills list is {os.path.getsize(skills_list) / 1024:.1f} KB, over {MAX_SKILLS_LIST // 1024} KB; "
+                        "move skills into topic lists in skills/lists/, linked from it")
     problems += skill_links(lib)
     problems += skill_shape(lib)
     problems += history_links(lib)
