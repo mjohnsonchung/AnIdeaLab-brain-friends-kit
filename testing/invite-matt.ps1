@@ -50,4 +50,5 @@
     if ($LASTEXITCODE -eq 0) { Write-Host "Invited it to $r" -ForegroundColor Green } else { Write-Host "Couldn't invite it to $r. Paste the same command again to retry." -ForegroundColor Red }
   }
   Write-Host "`nDone. Matt's brain accepts the invitation within a day. To take the account off any time: your repo on GitHub, Settings, Collaborators."
+  Write-Host "If your brain already has brain update 3, tell its agent: Matt's testing account is on this repo now, so put its row back in the accounts note."
 }
