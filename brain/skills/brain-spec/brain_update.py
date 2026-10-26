@@ -13,7 +13,10 @@ The owner decides each update: the agent reads them its summary, and applies it 
     python3 skills/brain-spec/brain_update.py check        # updates this brain hasn't had, with each one's summary
     python3 skills/brain-spec/brain_update.py apply 3      # the owner said go: bring update 3's files in, start its report, print its message
     python3 skills/brain-spec/brain_update.py skip 3       # the owner said no: note it, so it doesn't come up again
-    python3 skills/brain-spec/brain_update.py finish 3     # after doing the message: run the checks, add them to the report
+    python3 skills/brain-spec/brain_update.py compare      # this brain against the kit's brain at the update it's on
+    python3 skills/brain-spec/brain_update.py compare --diff skills/brain-spec/library.py   # or --take, to put the kit's copy in
+    python3 skills/brain-spec/brain_update.py finish 3     # after doing the message: run the checks and compare, add them to the report
+    python3 skills/brain-spec/brain_update.py notice       # reminders.py runs this at session start: says if an update is waiting
     python3 skills/brain-spec/brain_update.py send         # the "Send brain update reports" workflow runs this
 
 `apply` takes each file the update changed in brain/ and puts the change into this brain with a
@@ -27,8 +30,18 @@ are the exception: there the brain's own lines stay, since the owner set them (t
 written again, and one it deleted is deleted. Then it records the
 update in knowledge/systems/brain-updates/README.md and starts knowledge/systems/brain-updates/NNNN-report.md
 with what it did and a section for each thing the agent must say. `finish` runs the brain's checks, adds
-them to the report, and won't finish while a section is still empty, so every report says enough. A skipped update can still be applied later, if the owner asks. The rest, and when to
-use it: the brain spec's "Brain updates" section.
+them to the report, and won't finish while a section is still empty, so every report says enough. A skipped update can still be applied later, if the owner asks.
+
+`compare` checks this brain against the exemplar, the kit's brain/ at the update this brain is on
+(26 Oct 2026, from update 3). Files that should match the kit exactly (the scripts, workflows, the
+kit's own skills, the copied skills, the brain graph) are listed where they differ; files the owner
+fills in (the core, the front door, the skills list and lists, the knowledge library) are checked for
+their shape, not their words. It prints counts and file names only, and only counts the owner's own
+notes and files. `finish` runs it and puts its summary in the report.
+
+`notice` is the daily check: reminders.py runs it when a session starts, it asks the kit repo at most
+once a day (and remembers the answer in ~/.cache/brain-updates), and it prints only when an update is
+waiting, so the agent tells the owner. The rest, and when to use it: the brain spec's "Brain updates" section.
 
 It needs git and network access to github.com, and nothing outside Python's standard library.
 The kit repo is kept as a small partial clone in ~/.cache/brain-updates.
@@ -36,6 +49,7 @@ The kit repo is kept as a small partial clone in ~/.cache/brain-updates.
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -57,6 +71,9 @@ REPORT = re.compile(r"^\d{4}-report\.md$")
 DATE_MARK, ISO_MARK = ("{" + "KIT_DATE}").encode(), ("{" + "KIT_ISO}").encode()
 MARK = 15  # conflict markers this long can't be mistaken for a Markdown line of seven = signs
 SHOW = 40  # lines of each side of a clash to print
+EXEMPLAR = "https://github.com/" + GITHUB_REPO + "/tree/{}/brain"  # the kit's brain as of an update's commit
+NOTICE = os.path.join(os.path.dirname(CACHE), "last-check.json")  # when the daily check last asked the kit repo, and what it found
+NOTICE_TIME = 6  # seconds the daily check gives git, inside the session-start hook's 10
 
 
 def owner_setting(rel):
@@ -64,23 +81,29 @@ def owner_setting(rel):
     return rel.startswith(".obsidian/") and rel.endswith(".json") and not rel.endswith("/manifest.json")
 
 
-def git(*args, repo=CACHE, check=True, text=True):
-    r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=text)
+def git(*args, repo=CACHE, check=True, text=True, timeout=None):
+    r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=text, timeout=timeout)
     if check and r.returncode:
         err = r.stderr if text else r.stderr.decode(errors="replace")
         sys.exit(f"brain_update: git {' '.join(args[:2])} failed: {err.strip()[:300]}")
     return r.stdout
 
 
-def fetch():
-    """Make or refresh the partial clone of the kit repo; return its newest commit on main."""
+def fetch(timeout=None):
+    """Make or refresh the partial clone of the kit repo; return its newest commit on main.
+    A new clone is made beside the cache and moved into place once it's whole, so one cut short
+    (the daily check gives git a few seconds) never leaves a broken cache."""
     if not os.path.isdir(CACHE):
         os.makedirs(os.path.dirname(CACHE), exist_ok=True)
-        r = subprocess.run(["git", "clone", "-q", "--bare", "--filter=blob:none", SOURCE, CACHE],
-                           capture_output=True, text=True)
+        part = CACHE + ".part"
+        if os.path.isdir(part):
+            shutil.rmtree(part, ignore_errors=True)
+        r = subprocess.run(["git", "clone", "-q", "--bare", "--filter=blob:none", SOURCE, part],
+                           capture_output=True, text=True, timeout=timeout)
         if r.returncode:
             sys.exit(f"brain_update: couldn't reach {SOURCE}: {r.stderr.strip()[:300]}")
-    git("fetch", "-q", "--filter=blob:none", "origin", "main")
+        os.rename(part, CACHE)
+    git("fetch", "-q", "--filter=blob:none", "origin", "main", timeout=timeout)
     return git("rev-parse", "FETCH_HEAD").strip()
 
 
@@ -392,7 +415,7 @@ def do_finish(args):
     text = open(report, encoding="utf-8").read()
     # A report started by an older copy of this script: drop its single empty section, add the ones it lacks.
     text = re.sub(r"(?ms)^## How it went\n+" + OLD_PLACEHOLDER.pattern[1:-1] + r"\n*(?=^## |\Z)", "", text)
-    text = re.sub(r"(?ms)^## Checks\b.*?(?=^## |\Z)", "", text).rstrip() + "\n"
+    text = re.sub(r"(?ms)^## (?:Checks|Compared with the kit)\b.*?(?=^## |\Z)", "", text).rstrip() + "\n"
     for title, placeholder in SECTIONS:
         if not re.search(r"(?m)^## " + re.escape(title) + r"\s*$", text):
             text += f"\n## {title}\n{placeholder}\n"
@@ -423,11 +446,310 @@ def do_finish(args):
     diff = subprocess.run(["git", "-C", ROOT, "diff", "--shortstat", "HEAD"], capture_output=True, text=True).stdout.strip()
     today = f"{date.today().day} {date.today():%b %Y}"
     text = text.rstrip() + f"\n\n## Checks\nRun by `brain_update.py finish` on {today}, before committing" + (f" ({diff})" if diff else "") + ":\n" + "\n".join(checks) + "\n"
+    try:  # this brain against the kit's brain at this update, in counts and the kit's file names
+        shown, compared = compare(n)
+    except (SystemExit, subprocess.SubprocessError, OSError) as e:
+        shown, compared = [], [f"Couldn't compare with the kit: {e}"]
+    text += "\n## Compared with the kit\n" + "\n".join(compared) + "\n"
     text = re.sub(r"(?m)^updated: .*$", f"updated: {today}", text, count=1)
     open(report, "w", encoding="utf-8").write(text)
-    print(f"Report finished: {rel}\n" + "\n".join(checks) +
-          f"\n\nIf a check found a problem in the brain's files, fix it and run this again. Then commit everything as one commit, "
+    print(f"Report finished: {rel}\n" + "\n".join(checks) + "\n\n" + "\n".join(shown) +
+          f"\n\nIf a check or the comparison found a problem in the brain's files, fix it and run this again. Then commit everything as one commit, "
           f"\"Brain update {n} from AnIdeaLab: <what>\", and push: that sends the report.")
+
+
+# What `compare` holds this brain to. The owner fills these in, so only their shape is checked.
+FILLED = ("CLAUDE.md", "README.md", "skills/README.md", "skills/lists/", "knowledge/")
+# The owner's settings, and the copied skills' map, which skill_updates.py rewrites when they add skills: counted, not held to the kit.
+SETTINGS = (".obsidian/", ".gitignore", "skills/sources/upstream.json")
+IN_THIS_BRAIN = re.compile(rb"(?m)^#+ In this brain")  # the section a brain adds at the end of a copied skill, for its lessons
+SKILL_LINK = re.compile(r"\]\(\.\./([a-z0-9-]+)/SKILL\.md\)")
+SOURCE_LINE = re.compile(r"From \[[^\]]+\]\(https://github\.com/[^)\s]+\), commit `[0-9a-f]{7,40}`")
+INDEX_MARKS = ("<!-" + "- index:start -->", "<!-" + "- index:end -->")
+
+
+def kind(rel):
+    """Which of compare's three kinds a kit file is: filled in by the owner, the owner's settings, or the kit's own."""
+    if rel in FILLED or rel.startswith(tuple(p for p in FILLED if p.endswith("/"))):
+        return "filled"
+    if (rel.startswith(SETTINGS) or rel in SETTINGS) and not rel.startswith(".obsidian/plugins/brain-graph/"):
+        return "settings"
+    return "kit"
+
+
+def kit_tree(commit, start):
+    """{this brain's path: blob id} for every file in the kit's brain/ at a commit, with the start date filled into names."""
+    out = {}
+    for entry in git("ls-tree", "-r", "-z", commit, "--", "brain/").split("\0"):
+        if entry:
+            meta, path = entry.split("\t", 1)
+            out[fill(path[len("brain/"):].encode(), start).decode()] = meta.split()[2]
+    return out
+
+
+def brain_files():
+    """This brain's files: tracked ones, and new ones git doesn't ignore."""
+    out = subprocess.run(["git", "-C", ROOT, "ls-files", "-z", "--cached", "--others", "--exclude-standard"], capture_output=True).stdout
+    return sorted({p for p in out.decode("utf-8", errors="replace").split("\0") if p and os.path.isfile(os.path.join(ROOT, p))})
+
+
+def hashes(paths):
+    """{path: the blob id git would give this brain's copy}, with its line-ending rules applied."""
+    paths = [p for p in paths if "\n" not in p]
+    r = subprocess.run(["git", "-C", ROOT, "hash-object", "--stdin-paths"], input="\n".join(paths) + "\n",
+                       capture_output=True, text=True, cwd=ROOT)
+    return dict(zip(paths, r.stdout.split())) if r.returncode == 0 else {}
+
+
+def blobs(oids):
+    """The kit's files by blob id, fetched in one request (the partial clone has only names until asked)."""
+    oids = sorted(set(oids))
+    if oids:
+        subprocess.run(["git", "-C", CACHE, "-c", "fetch.negotiationAlgorithm=noop", "fetch", "-q", "--no-tags", "--no-write-fetch-head",
+                        "--recurse-submodules=no", "--filter=blob:none", "--stdin", "origin"], input=("\n".join(oids) + "\n").encode(), capture_output=True)
+    out = {}
+    for oid in oids:
+        r = subprocess.run(["git", "-C", CACHE, "cat-file", "blob", oid], capture_output=True)
+        out[oid] = r.stdout if r.returncode == 0 else None
+    return out
+
+
+def headings(text):
+    return [line.lstrip("#").strip() for line in text.splitlines() if re.match(r"^#{1,6} ", line)]
+
+
+def topic_lines(text):
+    """(skill, the heading its line sits under) for each skill a list's lines name; a link in its prose isn't a line."""
+    out, heading = [], None
+    for line in re.sub(r"(?s)```.*?```", "", text).splitlines():
+        if re.match(r"^#{1,6} ", line):
+            heading = line.lstrip("#").strip()
+        elif line.lstrip().startswith("- "):
+            out += [(name, heading) for name in SKILL_LINK.findall(line)]
+    return out
+
+
+def exemplar(n=None):
+    """The kit's brain at update n (by default the one this brain is on): (n, its commit, this brain's start date, its files)."""
+    head = fetch()
+    found = updates(head)
+    on = current(found) if n is None else n
+    commit = found[on][1] if on in found else git("rev-list", "--max-parents=0", head).split()[0]
+    start = kit_start()
+    return on, commit, start, kit_tree(commit, start)
+
+
+def compare(n=None):
+    """This brain against the kit's brain/ at update n (by default the one it's on).
+    Returns (lines for the agent, lines for the report): file names from the kit, and counts for the owner's own."""
+    on, commit, start, kit = exemplar(n)
+    mine = brain_files()
+    have = set(mine)
+    mine_hash = hashes([p for p in kit if p in have])
+    differ = [p for p in kit if p in have and mine_hash.get(p) != kit[p]]
+    filled = [p for p in kit if kind(p) == "filled" and p.endswith(".md")] + ["skills/lists/sources.md"]
+    texts = blobs([kit[p] for p in set(differ) | set(filled) if p in kit])
+
+    def kit_text(p):
+        data = texts.get(kit.get(p))
+        return fill(data, start).decode("utf-8", errors="replace") if data is not None else ""
+
+    def mine_text(p):
+        try:
+            return open(os.path.join(ROOT, p), encoding="utf-8", errors="replace").read().replace("\r\n", "\n")
+        except OSError:
+            return ""
+
+    kit_copied = {skill for skill, _ in topic_lines(kit_text("skills/lists/sources.md"))}  # a line in the record, not a link in its prose
+    rows = {k: {"same": 0, "changed": [], "missing": []} for k in ("kit", "settings", "filled")}
+    for p in sorted(kit):
+        row = rows[kind(p)]
+        if p not in have:
+            row["missing"].append(p)
+            continue
+        if p not in differ:
+            row["same"] += 1
+            continue
+        theirs = texts.get(kit[p])
+        theirs = fill(theirs, start).replace(b"\r\n", b"\n") if theirs is not None else None
+        ours = open(os.path.join(ROOT, p), "rb").read().replace(b"\r\n", b"\n")
+        parts = p.split("/")
+        if len(parts) == 3 and parts[0] == "skills" and parts[2] == "SKILL.md" and parts[1] in kit_copied:
+            ours = IN_THIS_BRAIN.split(ours)[0]  # a copied skill's "In this brain" section is the brain's own
+        if theirs is not None and ours.rstrip() == theirs.rstrip():
+            row["same"] += 1
+        else:
+            row["changed"].append(p)
+
+    # What's in this brain and not the kit: the owner's own. Skill folders and lists are named; notes and other files are counted.
+    kit_skills = {p.split("/")[1] for p in kit if p.startswith("skills/") and p.count("/") >= 2}
+    extra = [p for p in mine if p not in kit]
+    own_skill_dirs = sorted({p.split("/")[1] for p in extra if p.startswith("skills/") and p.count("/") >= 2 and p.split("/")[1] not in kit_skills
+                             and os.path.isfile(os.path.join(ROOT, "skills", p.split("/")[1], "SKILL.md"))})
+    own_lists = sorted(p for p in extra if p.startswith("skills/lists/") and p.endswith(".md"))
+    lessons = [p for p in extra if os.path.basename(p) == "LESSONS.md"]
+    notes = [p for p in extra if p.startswith("knowledge/")]
+    other = [p for p in extra if not p.startswith("knowledge/") and p not in own_lists and p not in lessons
+             and not (p.startswith("skills/") and p.count("/") >= 2 and p.split("/")[1] in own_skill_dirs)]
+
+    # The shape of what the owner fills in.
+    shape, shape_owner = [], []  # problems in kit files (named), and in the owner's own (named for the agent, counted in the report)
+    for p in ("CLAUDE.md", "README.md", "skills/README.md"):
+        if p in have and p in kit:
+            gone = [h for h in headings(kit_text(p)) if h not in headings(mine_text(p))]
+            if gone:
+                shape.append(f"{p}: the kit's headings not here: " + "; ".join(f'"{h}"' for h in gone))
+    page = mine_text("skills/README.md")
+    if len(page.encode()) > 6 * 1024:
+        shape.append(f"skills/README.md: {len(page.encode()) / 1024:.1f} KB, over 6 KB; move lines into the topic lists")
+    lists_dir = os.path.join(ROOT, "skills", "lists")
+    copied = {skill for skill, _ in topic_lines(mine_text("skills/lists/sources.md"))}
+    skills_here = sorted(d for d in os.listdir(os.path.join(ROOT, "skills")) if os.path.isfile(os.path.join(ROOT, "skills", d, "SKILL.md")))
+    placed = {}
+    for name in sorted(os.listdir(lists_dir)) if os.path.isdir(lists_dir) else []:
+        rel = f"skills/lists/{name}"
+        if not name.endswith(".md") or name == "sources.md":
+            continue
+        text = mine_text(rel)
+        where = shape if rel in kit else shape_owner
+        if f"](lists/{name}" not in page:
+            where.append(f"{rel}: not linked from skills/README.md")
+        if SOURCE_LINE.search(text):
+            where.append(f"{rel}: a source's \"From\" line with its commit; it goes in skills/lists/sources.md")
+        for skill, heading in topic_lines(text):
+            placed.setdefault(skill, set()).add(name)
+            is_own = skill not in copied
+            if is_own and heading != "The brain's own":
+                (shape if skill in kit_skills else shape_owner).append(f"{rel}: {skill} is the brain's own (sources.md has no line for it), but its line isn't under \"The brain's own\"")
+            elif not is_own and heading == "The brain's own":
+                (shape if skill in kit_skills else shape_owner).append(f"{rel}: {skill} is copied (sources.md has a line for it), but its line is under \"The brain's own\"")
+    for skill in skills_here:
+        where = shape if skill in kit_skills else shape_owner
+        lists = placed.get(skill, set())
+        if not lists:
+            where.append(f"skills/{skill}: no line in a topic list")
+        elif len(lists) > 1:
+            where.append(f"skills/{skill}: a line in {len(lists)} topic lists ({', '.join(sorted(lists))}); one is enough")
+    for skill in sorted(kit_copied & set(skills_here) - copied):
+        shape.append(f"skills/{skill}: a copied skill from the kit with no line in skills/lists/sources.md, so the scripts take it for the brain's own")
+    for p in mine:
+        if p.startswith("knowledge/") and os.path.basename(p) == "README.md":
+            text = mine_text(p)
+            if not all(m in text for m in INDEX_MARKS):
+                (shape if p in kit else shape_owner).append(f"{p}: no index markers, so library.py build can't fill its index")
+
+    def files(paths, limit=40):
+        return ", ".join(f"`{p}`" for p in paths[:limit]) + (f" and {len(paths) - limit} more" if len(paths) > limit else "")
+
+    k, s, fl = rows["kit"], rows["settings"], rows["filled"]
+    url = EXEMPLAR.format(commit)
+    total = lambda r: r["same"] + len(r["changed"]) + len(r["missing"])
+    out = [f"Compared with the kit's brain at update {on}: {url}", "",
+           f"Should match the kit (the scripts, workflows, the kit's own skills, the copied skills, the brain graph): {total(k)} files, "
+           f"{k['same']} the same, {len(k['changed'])} changed, {len(k['missing'])} missing."]
+    if k["changed"]:
+        out.append("  changed: " + files(k["changed"]))
+    if k["missing"]:
+        out.append("  missing: " + files(k["missing"]))
+    out.append(f"The owner's settings (Obsidian's settings, .gitignore, the copied skills' map): {total(s)} files, {s['same']} the same, "
+               f"{len(s['changed'])} changed, {len(s['missing'])} missing. Differences here are expected.")
+    out.append(f"Filled in by the owner, checked for shape (the core, the front door, the skills list and lists, the knowledge library): "
+               f"{total(fl)} kit files, {len(fl['missing'])} missing" + (": " + files(fl["missing"]) if fl["missing"] else "") + ".")
+    report = list(out)
+    if shape or shape_owner:
+        out.append(f"  Shape: {len(shape) + len(shape_owner)} to look at:")
+        out += [f"  - {line}" for line in shape + shape_owner]
+        report.append(f"  Shape: {len(shape)} in the kit's files" + (":" if shape else ".") )
+        report += [f"  - {line}" for line in shape]
+        if shape_owner:
+            report.append(f"  And {len(shape_owner)} in the owner's own skills, lists or shelves (not named here).")
+    else:
+        out.append("  Shape: as the kit has it.")
+        report.append("  Shape: as the kit has it.")
+    def many(items, one, more):
+        return f"{len(items)} {one if len(items) == 1 else more}"
+    mine_line = (f"Not in the kit, so the owner's own: {many(own_skill_dirs, 'skill folder', 'skill folders')}, {many(own_lists, 'list', 'lists')}, "
+                 f"{many(lessons, 'LESSONS.md file', 'LESSONS.md files')}, {many(notes, 'file', 'files')} in knowledge/, "
+                 f"and {many(other, 'other file', 'other files')}.")
+    out.append(mine_line)
+    if own_skill_dirs or own_lists:
+        out.append("  skills and lists: " + ", ".join(own_skill_dirs + [os.path.basename(p) for p in own_lists]))
+    report.append(mine_line)
+    return out, report
+
+
+def do_compare(args):
+    if args.diff or args.take:
+        path = (args.diff or args.take).replace("\\", "/")
+        on, commit, start, kit = exemplar(args.number)
+        if path not in kit:
+            sys.exit(f"brain_update: the kit's brain at update {on} has no {path}.")
+        theirs = fill(blobs([kit[path]])[kit[path]] or b"", start)
+        dest = os.path.join(ROOT, path)
+        if args.take:
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            open(dest, "wb").write(theirs)
+            print(f"{path}: now the kit's copy, as at update {on}. Put back anything in it that's the owner's own, and say in the report what you let go.")
+            return
+        import difflib
+        ours = open(dest, "rb").read() if os.path.isfile(dest) else b""
+        lines = difflib.unified_diff(theirs.decode("utf-8", errors="replace").replace("\r\n", "\n").splitlines(),
+                                     ours.decode("utf-8", errors="replace").replace("\r\n", "\n").splitlines(),
+                                     f"the kit's {path} (update {on})", f"this brain's {path}", lineterm="")
+        print("\n".join(lines) or f"{path}: the same as the kit's.")
+        return
+    out, _ = compare(args.number)
+    print("\n".join(out))
+    print("\nWhere a file that should match the kit differs, the kit's copy is the one to keep, unless it holds the owner's own (the brain spec's "
+          "\"Brain updates\" says why). `compare --diff <file>` shows how this brain's differs, and `compare --take <file>` puts the kit's in. "
+          "Fix each shape problem, then run this again.")
+
+
+def do_notice(_args):
+    """At session start: say so if AnIdeaLab has sent an update this brain hasn't had. Asks the kit repo at most once a day,
+    and prints nothing when there's none, or when the kit repo can't be reached in a few seconds."""
+    readme = os.path.join(ROOT, FOLDER, "README.md")
+    if not os.path.isfile(readme) and not os.path.isdir(os.path.join(ROOT, "knowledge", "decisions", "the-brain")):
+        return  # not a brain started from the kit
+    today = date.today().isoformat()
+    try:
+        seen = json.load(open(NOTICE, encoding="utf-8"))
+    except (OSError, ValueError):
+        seen = {}
+    mine = seen.get(ROOT) or {}
+    if mine.get("checked") != today:
+        try:
+            head = fetch(timeout=NOTICE_TIME)
+            found = updates(head)
+            on = current(found)
+            known = {int(n): v[1] for n, v in mine.get("updates", {}).items() if v[1]}
+            titles = {n: known.get(n) or message(head, found, n).splitlines()[0].lstrip("# ").strip() for n in found if n > on}
+        except (SystemExit, subprocess.TimeoutExpired, OSError, ValueError, IndexError):
+            return  # try again at the next session
+        mine = {"checked": today, "updates": {str(n): [day, titles.get(n, "")] for n, (_, _, day) in found.items()}}
+        seen[ROOT] = mine
+        try:
+            os.makedirs(os.path.dirname(NOTICE), exist_ok=True)
+            with open(NOTICE, "w", encoding="utf-8") as fh:
+                json.dump(seen, fh, indent=1)
+        except OSError:
+            pass
+    found = {int(n): (None, None, day) for n, (day, _) in mine.get("updates", {}).items()}
+    try:
+        on = current(found)
+    except SystemExit:
+        return
+    waiting = sorted(n for n in found if n > on)
+    if not waiting:
+        return
+    def sent(day):
+        d = date.fromisoformat(day)
+        return f"{d.day} {d:%b %Y}"
+    lines = [f"- Update {n}, sent {sent(mine['updates'][str(n)][0])}" + (f": {mine['updates'][str(n)][1]}" if mine["updates"][str(n)][1] else "") for n in waiting]
+    print("A brain update from AnIdeaLab is waiting (brain_update.py checks the kit repo once a day):\n" + "\n".join(lines) + "\n"
+          "In your first reply, tell the owner in a line that it's there and ask whether they'd like to hear what it does. If they say yes, "
+          "run `python3 skills/brain-spec/brain_update.py check`, read them its summary, and apply it only if they say go "
+          "(the brain spec's \"Brain updates\"). Then carry on with what they asked. Ignore this if the owner didn't start this session.")
 
 
 def do_send(_args):
@@ -478,9 +800,15 @@ def main():
     k.add_argument("number", type=int)
     f = sub.add_parser("finish", help="after doing the message: check the report is filled in, run the checks, add them to it")
     f.add_argument("number", type=int)
+    c = sub.add_parser("compare", help="this brain against the kit's brain at the update it's on")
+    c.add_argument("number", type=int, nargs="?", help="another update to compare with")
+    c.add_argument("--diff", metavar="FILE", help="how this brain's copy of one file differs from the kit's")
+    c.add_argument("--take", metavar="FILE", help="put the kit's copy of one file into this brain")
+    sub.add_parser("notice", help="say if an update is waiting; reminders.py runs it at session start, and it asks the kit once a day")
     sub.add_parser("send", help="send update reports to AnIdeaLab's inbox (the workflow runs this)")
     args = p.parse_args()
-    {"check": do_check, "apply": do_apply, "skip": do_skip, "finish": do_finish, "send": do_send}[args.cmd](args)
+    {"check": do_check, "apply": do_apply, "skip": do_skip, "finish": do_finish, "compare": do_compare, "notice": do_notice,
+     "send": do_send}[args.cmd](args)
 
 
 if __name__ == "__main__":

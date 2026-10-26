@@ -2,8 +2,9 @@
 """Check which copied skills have changed where they came from, since the brain copied them.
 
 Matt, 20 Oct 2026: "how are you checking that these skills are out of date or not? Is
-there like an easy script to check?" This is it. Every set of copied skills has a line
-in skills/lists/*.md (or skills/README.md) like
+there like an easy script to check?" This is it. Every set of copied skills has a heading
+in skills/lists/sources.md, the record of copied skills (26 Oct 2026; before, these lines
+were spread through the topic lists), with a line like
 
     From [obra/superpowers](https://github.com/obra/superpowers), commit `bb92a77`, copied 19 Oct 2026.
 
@@ -22,11 +23,11 @@ commit. It compares the source with itself, so the brain's own changes to its co
 `update` puts each upstream change into the brain's copy with a three-way merge
 (git merge-file), so the brain's own changes stay. A skill whose file changed in the
 same place on both sides is left as it was and reported, to merge by hand. When every
-changed skill from a source is in, it moves the list's commit on and adds "updated
+changed skill from a source is in, it moves the source's commit on in sources.md and adds "updated
 <date>". Read the result with git diff before committing.
 
 `map` writes skills/sources/upstream.json, so `check` needn't redo the matching; run it
-again after copying in or updating a set (and after editing a list's commit). `check`
+again after copying in or updating a set (and after editing a commit in sources.md). `check`
 also compares the Anthropic skills copied on 18 Oct 2026, which have no commit, with
 Anthropic's current copies when the machine has them (/mnt/skills/ and
 ~/.claude/skills/synced/ in a claude.ai/code session).
@@ -48,6 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS = os.path.dirname(HERE)  # skills/brain-spec/ sits inside skills/
 ROOT = os.path.dirname(SKILLS)
 MANIFEST = os.path.join(SKILLS, "sources", "upstream.json")
+SOURCES = os.path.join(SKILLS, "lists", "sources.md")  # the record of copied skills and their commits
 CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "brain-skill-updates")
 LOCAL_ANTHROPIC = ["/mnt/skills/public", "/mnt/skills/examples", os.path.expanduser("~/.claude/skills/synced/*")]
 
@@ -126,9 +128,8 @@ def body(text):
 
 
 def read_sections():
-    """Every "From [owner/repo](...), commit `x`" line in the lists, with the skills listed under it."""
-    files = [os.path.join(SKILLS, "README.md")] + sorted(
-        os.path.join(SKILLS, "lists", f) for f in os.listdir(os.path.join(SKILLS, "lists")) if f.endswith(".md"))
+    """Every "From [owner/repo](...), commit `x`" line in skills/lists/sources.md, with the skills listed under it."""
+    files = [f for f in [SOURCES] if os.path.isfile(f)]
     sections, current = [], None
     for f in files:
         for line in open(f, encoding="utf-8"):

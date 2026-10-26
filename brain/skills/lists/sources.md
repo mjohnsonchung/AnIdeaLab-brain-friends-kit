@@ -2,6 +2,11 @@
 
 One heading per source: its commit, when Matt's brain copied it, its licence, and the skills this brain has from it. `python3 skills/brain-spec/skill_updates.py` reads the "From" lines to check for updates ([find-skills](../find-skills/SKILL.md)). Each source's README and licence are kept in `skills/sources/` or, for Anthropic's plugins, `skills/anthropic-plugins/`.
 
+This is the record of which skills are copied: a skill with a line here is kept as it came and updated from its source, and any other is the brain's own (a link in these paragraphs doesn't count). `check_links.py` and `library.py` read it to tell them apart. When to use each is in the topic lists. Shared files the copied skills use, kept as they came:
+
+- [anthropic-plugins/](../anthropic-plugins/): Anthropic's plugins' notes and licences.
+- [sources/](../sources/): each other source's README and licence.
+
 ## addyosmani/agent-skills
 From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), commit `aeac41d`, copied 19 Oct 2026. Licence: MIT.
 

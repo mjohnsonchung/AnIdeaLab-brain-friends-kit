@@ -58,6 +58,7 @@ MAX_SKILL_LINES = 500  # Anthropic's skill-creator: "Keep SKILL.md under 500 lin
 MAX_LESSONS = 20  # in a skill's LESSONS.md, before the audit must merge them
 LESSONS_LINK = re.compile(r"\]\((?:\./)?LESSONS\.md\)")
 IN_MATTS_BRAIN = re.compile(r"^#+ In this brain", re.M)  # skill_updates.py ignores this section of a copied skill
+SOURCE_LINE = re.compile(r"From \[[^\]]+\]\(https://github\.com/[^)\s]+\), commit `[0-9a-f]{7,40}`")  # skill_updates.py reads these in sources.md
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 FENCE = re.compile(r"```.*?```", re.S)
 DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
@@ -342,6 +343,7 @@ def check(lib):
                         "move skills into topic lists in skills/lists/, linked from it")
     problems += skill_links(lib)
     problems += skill_shape(lib)
+    problems += skill_lists(lib)
     problems += history_links(lib)
     return problems
 
@@ -376,23 +378,53 @@ def skill_links(lib):
     return out
 
 
-def own_skills(lib):
-    """The brain's own skills: the folders linked under "The brain's own" in skills/README.md,
-    and in the lists in skills/lists/ linked there (22 Oct 2026)."""
-    path = os.path.join(lib.root, "skills", "README.md")
+def copied_skills(lib):
+    """The folders in skills/ that the lines of skills/lists/sources.md link: every copied skill, and the
+    shared files they use. It's the record of what's copied (26 Oct 2026); before, the brain went by the
+    headings in skills/README.md, which a friend's brain tripped over. A link in its prose doesn't count."""
+    path = os.path.join(lib.root, "skills", "lists", "sources.md")
     if not os.path.exists(path):
-        return []
+        return set()
     with open(path, encoding="utf-8") as fh:
-        m = re.search(r"^## The brain's own\n(.*?)(?=^## |\Z)", fh.read(), re.M | re.S)
-    if not m:
+        lines = [l for l in FENCE.sub("", fh.read()).split("\n") if l.lstrip().startswith("- ")]
+    found = set()
+    for target in [t for l in lines for t in LINK.findall(l)]:
+        if re.match(r"^[a-z][a-z0-9+.-]*:", target, re.I):
+            continue
+        top = os.path.normpath(os.path.join("lists", target.split("#")[0])).split(os.sep)[0]
+        if top not in (".", "..", "lists"):
+            found.add(top)
+    return found
+
+
+def own_skills(lib):
+    """The brain's own skills: every skill folder the record of copied skills doesn't name."""
+    copied = copied_skills(lib)
+    return [n for n in all_skills(lib) if n not in copied]
+
+
+def skill_lists(lib):
+    """Every skill, the brain's own and copied, has a line in a topic list in skills/lists/ (26 Oct 2026),
+    and a source's "From" line with its commit is only in sources.md, where skill_updates.py reads it."""
+    folder = os.path.join(lib.root, "skills", "lists")
+    skills = all_skills(lib)
+    if not skills:
         return []
-    text = m.group(1)
-    for name in re.findall(r"\]\(lists/([\w-]+\.md)\)", text):
-        listed = os.path.join(lib.root, "skills", "lists", name)
-        if os.path.exists(listed):
-            with open(listed, encoding="utf-8") as fh:
-                text += "\n" + fh.read().replace("](../", "](")
-    return list(dict.fromkeys(re.findall(r"\]\(([a-z0-9-]+)/SKILL\.md\)", text)))
+    listed, out = set(), []
+    for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if not f.endswith(".md") or f == "sources.md":
+            continue
+        with open(os.path.join(folder, f), encoding="utf-8") as fh:
+            text = FENCE.sub("", fh.read())
+        for line in text.split("\n"):
+            if line.lstrip().startswith("- "):
+                listed |= set(re.findall(r"\]\(\.\./([a-z0-9-]+)/SKILL\.md\)", line))
+        if SOURCE_LINE.search(text):
+            out.append(f"skills/lists/{f}: a source's \"From\" line with its commit; it goes in skills/lists/sources.md, the record of copied skills")
+    for name in skills:
+        if name not in listed:
+            out.append(f"skills/{name}: no line in a topic list in skills/lists/; add one (under \"The brain's own\" if it's the brain's own)")
+    return out
 
 
 def skill_text(lib, name, file="SKILL.md"):

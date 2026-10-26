@@ -5,7 +5,7 @@ The starter kit for second brains shaped like Matt's, and the updates that brain
 A second brain is a private GitHub repo of plain Markdown that AI agents work from: a core every agent reads (`CLAUDE.md`), a library of skills for how to do things, and a knowledge library of what the brain knows, with Obsidian to see it and a runner on the owner's PC for jobs that need it. Friends get the kit from Matt as a zip with a Windows installer.
 
 ## Brain updates
-Matt sends fixes, new rules and new parts to brains started from the kit. A brain's weekly tidy-up checks for new ones, reads its owner a short summary of each, and applies it only if they say go.
+Matt sends fixes, new rules and new parts to brains started from the kit. A brain checks for new ones once a day, when its owner starts a session (since update 3), and its weekly tidy-up checks too; its agent reads the owner a short summary of each, and applies it only if they say go. After applying one, `brain_update.py compare` checks the whole brain against `brain/` as it is at that update, the exemplar.
 
 To check now, or in a brain started before 26 Oct 2026, tell the brain's agent:
 

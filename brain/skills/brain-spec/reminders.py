@@ -20,11 +20,15 @@ is ignored, so a typo can't switch a reminder off for weeks.
 Any agent can run it: python3 skills/brain-spec/reminders.py. Claude Code runs it at the start of a
 session through a SessionStart hook in .claude/settings.json, and what it prints goes
 into the session. It prints nothing when nothing is due. It reads only this repo and
-needs nothing outside Python's standard library.
+needs nothing outside Python's standard library. In a brain started from the friends' starter
+kit, it also runs brain_update.py notice beside it, which asks the kit repo at most once a day
+whether AnIdeaLab has sent an update, and prints only when one is waiting (Matt, 26 Oct 2026:
+"check daily for updates, but silently unless there is one").
 Try it: python3 skills/brain-spec/reminders.py --now 2026-10-24T03:00Z
 """
 import os
 import re
+import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
 
@@ -210,6 +214,14 @@ def main(argv):
         )
     for p in problems:
         print("skills/brain-spec/reminders.py: " + p)
+    update = os.path.join(HERE, "brain_update.py")
+    if os.path.isfile(update) and len(argv) == 1:  # a brain started from the kit: is a brain update waiting?
+        try:
+            r = subprocess.run([sys.executable, update, "notice"], capture_output=True, text=True, timeout=8)
+            if r.returncode == 0 and r.stdout.strip():
+                print(r.stdout.strip())
+        except (OSError, subprocess.SubprocessError):
+            pass  # silent: it asks again at the next session
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Planning, thinking and learning
 
-Copied skills, kept as they came; where each came from, its commit and its licence are in [sources.md](sources.md). Add a line here for a new one in this group, saying when to use it.
+Copied skills, kept as they came; where each came from, its commit and its licence are in [sources.md](sources.md). A new skill on this topic gets a line here saying when to use it; one of the brain's own goes at the top, under a "The brain's own" heading.
 
 - [superpowers-brainstorming](../superpowers-brainstorming/SKILL.md): shape a new project or feature before building it, one question at a time.
 - [addyosmani-idea-refine](../addyosmani-idea-refine/SKILL.md): turn a rough business or product idea into something worth trying.

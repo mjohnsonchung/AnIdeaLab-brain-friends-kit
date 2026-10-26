@@ -8,12 +8,12 @@ It reports:
 - big or binary files in the repo (they belong on the PC or in a files repo),
 - the core and the longest indexes (README.md files in knowledge/), which agents read first.
 
-Skills copied in unchanged from another provider (the folders linked under "Copied
-skills" in skills/README.md, 18 Oct 2026, and in the lists it links in skills/lists/,
-19 Oct 2026) are kept as they came, so their own links, notes and asset files are
-counted in one line, not listed. The lists themselves are the brain's, and checked. A list
-linked under "Copied skills" stays a list of copied skills even if "The brain's own" links it
-too, say in a line on where its own skills came from (a friend's brain, 26 Oct 2026).
+Skills copied in unchanged from another provider are kept as they came, so their own
+links, notes and asset files are counted in one line, not listed. Which they are comes
+from the record, skills/lists/sources.md: every folder its lines link (each copied skill,
+and the shared files they use) is copied, and every other skill is the brain's own (26 Oct
+2026; before, it went by the headings in the skills list, which a friend's brain tripped
+over). The lists themselves are the brain's, and checked.
 
 Run it from anywhere: python3 skills/brain-spec/check_links.py
 It exits with 1 if any link is broken, so it can also run as a check.
@@ -31,7 +31,8 @@ LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 FENCE = re.compile(r"```.*?```", re.S)
 TEXT = {".md", ".py", ".js", ".mjs", ".cjs", ".css", ".json", ".yml", ".yaml", ".txt", ".html", ".gitignore", ".sh", ".ps1", ".gyroflow", ".xml", ".xsd", ".dtd", ".ent"}
 SKILLS = "skills/"
-LISTS = "lists/"  # inside skills/: one list per big copied set, linked from its README
+LISTS = "lists/"  # inside skills/: the lists by topic, linked from its README
+SOURCES = LISTS + "sources.md"  # the record of every copied skill and where it came from
 TEMPLATES = ("skills/brain-starter/kit/",)  # a friend's brain in the making; its links point inside it, and make_starter.py checks them there
 BIG = 1_000_000  # bytes; text files over this are flagged too
 LONG = 12_000    # bytes; the core or an index over this is flagged
@@ -55,26 +56,23 @@ def anchors(path, cache={}):
 
 
 def copied_skills():
-    """The skill folders linked under "Copied skills" in skills/README.md, and in the
-    lists in skills/lists/ that it links to, minus the brain's own."""
-    path = os.path.join(ROOT, SKILLS, "README.md")
+    """The folders in skills/ that the lines of skills/lists/sources.md link: every copied skill, and
+    the shared files they use (anthropic-plugins/, sources/). It's the record of what's copied; a
+    link in its prose doesn't count."""
+    path = os.path.join(ROOT, SKILLS, SOURCES)
     if not os.path.exists(path):
         return ()
     with open(path, encoding="utf-8") as fh:
-        text = fh.read()
-    def links(heading, skip=()):
-        """The links under a heading, and in the lists linked there (but not the lists in skip)."""
-        part = re.search(r"^## " + heading + r".*?(?=^## |\Z)", text, re.M | re.S)
-        found = LINK.findall(part.group(0)) if part else []
-        for target in [t for t in found if t.startswith(LISTS) and t.split("#")[0].endswith(".md") and t.split("#")[0] not in skip]:
-            with open(os.path.join(ROOT, SKILLS, target.split("#")[0]), encoding="utf-8") as fh:
-                found += [os.path.normpath(os.path.join(LISTS, t)) for t in LINK.findall(fh.read()) if not re.match(r"^[a-z]+:", t)]
-        return found
-    def folders(targets):
-        return {t.split("/")[0] for t in targets if re.match(r"^[\w-]+/", t)}
-    copied = links("Copied")
-    copied_lists = {t.split("#")[0] for t in copied if t.startswith(LISTS)}
-    return tuple(SKILLS + f + "/" for f in folders(copied) - folders(links("The brain's own", copied_lists)) - {LISTS.rstrip("/")})
+        lines = [l for l in FENCE.sub("", fh.read()).split("\n") if l.lstrip().startswith("- ")]
+    targets = [t for l in lines for t in LINK.findall(l)]
+    found = set()
+    for t in targets:
+        if re.match(r"^[a-z]+:", t):
+            continue
+        top = os.path.normpath(os.path.join(LISTS, unquote(t.split("#")[0]))).split(os.sep)[0]
+        if top not in (".", "..", LISTS.rstrip("/")) and os.path.isdir(os.path.join(ROOT, SKILLS, top)):
+            found.add(top)
+    return tuple(sorted(SKILLS + f + "/" for f in found))
 
 
 def finished(path):
@@ -156,7 +154,7 @@ def main():
         print(f"  {s / 1000:5.1f} KB  {p}{flag}")
     if kept:
         size = sum(os.path.getsize(os.path.join(ROOT, p)) for p in kept)
-        print(f"Copied skills, kept as they came: {len(copied)} folders, {len(kept)} files, {size / 1e6:.1f} MB ({SKILLS}README.md).")
+        print(f"Copied skills, kept as they came: {len(copied)} folders, {len(kept)} files, {size / 1e6:.1f} MB ({SKILLS}{SOURCES}).")
     return 1 if broken or sections else 0
 
 

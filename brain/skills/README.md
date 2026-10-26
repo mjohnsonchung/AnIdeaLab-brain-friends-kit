@@ -1,29 +1,29 @@
 # Skills
 
-How to do things. The brain's own skills are listed here; the copied ones are in lists by topic, one line per skill, so open the list your job falls under, then the skill. Any agent, Claude Code included, reads this and opens the `SKILL.md` it needs, so keep it short: a new copied skill gets a line in a list, not here. How a skill is shaped and when to write one: the [brain spec](brain-spec/SKILL.md#a-skill). To find and add more: [find-skills](find-skills/SKILL.md).
+How to do things. Every skill, the brain's own and copied, has a line in a list by topic, one line per skill, so open the list your job falls under, then the skill. Any agent, Claude Code included, reads this and opens the `SKILL.md` it needs, so keep it short: a new skill gets a line in a list, and only one most jobs need goes here too. How a skill is shaped and when to write one: the [brain spec](brain-spec/SKILL.md#a-skill). To find and add more: [find-skills](find-skills/SKILL.md).
 
-## The brain's own
-Written for this brain. Change them freely, and add a line here for a new one. Once there are more than about ten, the rest go in a list linked from here, the way the copied ones are. Any skill can have a `LESSONS.md` beside it: what agents learned using it here ([how skills learn](brain-spec/SKILL.md#how-skills-learn)).
-- [getting-started](getting-started/SKILL.md): the first session in a new brain: who the owner is, their first notes, testing the PC runner, and a tour.
-- [guide-mode](guide-mode/SKILL.md): how to work with an owner new to AI agents: say the ask back, size it, agree a plan, check in.
+**The two kinds.** In each list the brain's own come first, under "The brain's own": written for this brain, and changed freely. Any skill can have a `LESSONS.md` beside it: what agents learned using it here ([how skills learn](brain-spec/SKILL.md#how-skills-learn)). The rest are copied and kept as they came, and [lists/sources.md](lists/sources.md) names each with its source, commit and licence. That list is how the scripts tell the two kinds apart: a skill with a line in it is copied, and any other is the brain's own.
+
+## The main ones
 - [brain-spec](brain-spec/SKILL.md): where each kind of thing goes in the brain and what shape it takes, and how to apply a brain update from AnIdeaLab.
-- [brain-audit](brain-audit/SKILL.md): the weekly tidy-up, when the owner says yes to it.
-- [find-skills](find-skills/SKILL.md): find a good skill from outside the brain, copy it in, and keep copied skills up to date.
+- [guide-mode](guide-mode/SKILL.md): how to work with an owner new to AI agents: say the ask back, size it, agree a plan, check in.
 - [my-pc](my-pc/SKILL.md): run commands and jobs on the owner's PC through the `my-pc` runner, and check or fix its setup.
+- [find-skills](find-skills/SKILL.md): find a good skill from outside the brain, copy it in, and keep copied skills up to date.
 
-## Copied skills
-Kept as they came, from Anthropic first, then the companies behind the tools, then very popular collections. All are under the MIT or Apache 2.0 licence. Their sources, commits and licences are in [lists/sources.md](lists/sources.md). What was changed, and nothing else: each folder's name (an Anthropic plugin's skill is `<plugin>-<skill>`, another source's `<source>-<skill>`), its `name:` line to match, and links to shared files, which are in [anthropic-plugins/](anthropic-plugins/) (Anthropic's plugins' notes and licences) and [sources/](sources/) (each other source's README and licence). Where a copied skill names a sibling as `superpowers:<name>`, the brain's copy is `superpowers-<name>`, and the same for the other sets. In Matt Pocock's skills, "Matt" means Matt Pocock. Where one asks for more reviewers, tests or checks than the core's "best guess, light checks" and "one check is enough", or for agents running side by side against its "one agent at a time", the core wins. An email, reply, letter or other message a skill drafts for someone outside the brain ends with the core's sign-off, whatever the skill's own template says.
-
-The lists, by topic, each with a line per skill saying when to use it:
+## The lists by topic
+- [The brain and your PC](lists/the-brain.md): the first session, guide mode, the brain spec, the weekly tidy-up and the PC runner.
 - [Planning, thinking and learning](lists/planning.md): shaping an idea, planning a change, specs, and learning a topic.
 - [Building and fixing code](lists/code.md): building, testing, debugging, reviewing and shipping code.
 - [Websites and design](lists/web-and-design.md): how a site looks, its words, testing it, and putting it live.
-- [AI, Claude and skills](lists/ai-and-claude.md): building on Claude, MCP servers, making skills, and writing for agents.
+- [AI, Claude and skills](lists/ai-and-claude.md): finding and making skills, building on Claude, MCP servers, and writing for agents.
 - [Obsidian](lists/obsidian.md): Obsidian's Markdown, bases, canvases, and web pages into notes.
 - [Business, marketing and money](lists/business.md): marketing, customers, prices, proposals, invoices, data and sums.
 - [Life admin](lists/life-admin.md): planning an event.
 
 A Claude session also has Anthropic's own skills for Word, PDF, Excel and PowerPoint files, deep research and a few more, without copies here.
+
+## How the copied ones are kept
+Kept as they came, from Anthropic first, then the companies behind the tools, then very popular collections. All are under the MIT or Apache 2.0 licence. What was changed, and nothing else: each folder's name (an Anthropic plugin's skill is `<plugin>-<skill>`, another source's `<source>-<skill>`), its `name:` line to match, and links to shared files, which are in [anthropic-plugins/](anthropic-plugins/) (Anthropic's plugins' notes and licences) and [sources/](sources/) (each other source's README and licence). Where a copied skill names a sibling as `superpowers:<name>`, the brain's copy is `superpowers-<name>`, and the same for the other sets. In Matt Pocock's skills, "Matt" means Matt Pocock. Where one asks for more reviewers, tests or checks than the core's "best guess, light checks" and "one check is enough", or for agents running side by side against its "one agent at a time", the core wins. An email, reply, letter or other message a skill drafts for someone outside the brain ends with the core's sign-off, whatever the skill's own template says.
 
 ## Claude-only parts, and the plain way
 Some of these skills were written for Claude's apps. Any agent can do the same with these swaps.

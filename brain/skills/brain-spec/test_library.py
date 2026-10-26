@@ -64,11 +64,16 @@ class LibraryTest(unittest.TestCase):
             "knowledge/ideas/no-card.md": "# No card here\n",
             "knowledge/ideas/odd.md": note("A strange status.", status="current"),
             "knowledge/people/notes.txt": "not a note, and its folder has no README\n",
-            "skills/README.md": "# Skills\n## The brain's own\n- [brain-spec](brain-spec/SKILL.md): the spec.\n"
-                                "- [other](other/SKILL.md), [long](long/SKILL.md): two more.\n"
-                                "- [The rest](lists/own.md): one more.\n"
-                                "## Copied skills\n- [copied](copied/SKILL.md): kept as it came.\n",
-            "skills/lists/own.md": "# The rest\n- [listed](../listed/SKILL.md): in a list.\n",
+            "skills/README.md": "# Skills\n## The main ones\n- [brain-spec](brain-spec/SKILL.md): the spec.\n"
+                                "## The lists by topic\n- [Work](lists/work.md): everything.\n",
+            "skills/lists/work.md": "# Work\n## The brain's own\n- [brain-spec](../brain-spec/SKILL.md): the spec.\n"
+                                    "- [other](../other/SKILL.md), [long](../long/SKILL.md): two more.\n"
+                                    "Not a line: [plain](../plain/SKILL.md).\n"
+                                    "## Copied\nFrom [a/b](https://github.com/a/b), commit `abc1234`, copied 1 Oct 2026.\n"
+                                    "- [copied](../copied/SKILL.md): kept as it came. [tidy](../tidy/SKILL.md), [ghost](../ghost/SKILL.md).\n",
+            "skills/lists/sources.md": "# Where they came from\nSee [brain-spec](../brain-spec/SKILL.md).\n## a/b\n"
+                                       "From [a/b](https://github.com/a/b), commit `abc1234`, copied 1 Oct 2026.\n\n"
+                                       "- [copied](../copied/SKILL.md)\n- [tidy](../tidy/SKILL.md)\n- [ghost](../ghost/SKILL.md)\n",
             "skills/brain-spec/SKILL.md": "# Spec\nLessons from using this skill in the brain: [LESSONS.md](LESSONS.md).\n"
                                           "[a task](../../knowledge/tasks/send-pack.md)\n",
             "skills/brain-spec/LESSONS.md": "# Lessons: brain-spec\n*Newest at the top.*\n\n- **19 Oct 2026:** two.\n"
@@ -154,11 +159,14 @@ class LibraryTest(unittest.TestCase):
         self.assertIn("skills/copied/SKILL.md: a copied skill links LESSONS.md outside", problems)
         self.assertIn("skills/copied/LESSONS.md: 21 lessons, past 20", problems)
         self.assertIn("skills/ghost/SKILL.md: links LESSONS.md, but there isn't one", problems)
-        for fine in ("skills/tidy", "skills/plain", "skills/copied/SKILL.md: 2"):
+        self.assertIn("skills/plain: no line in a topic list", problems, "a link outside a list item isn't a line")
+        self.assertIn("skills/lists/work.md: a source's \"From\" line", problems)
+        for fine in ("skills/tidy", "skills/plain/", "skills/copied/SKILL.md: 2", "skills/lists/sources.md:", "skills/other:"):
             self.assertNotIn(fine, problems)
 
     def test_lessons(self):
-        self.assertEqual(library.own_skills(self.lib), ["brain-spec", "other", "long", "listed"])
+        self.assertEqual(library.own_skills(self.lib), ["brain-spec", "long", "other", "plain"], "every skill sources.md doesn't name")
+        self.assertEqual(library.copied_skills(self.lib), {"copied", "tidy", "ghost"})
         self.assertEqual(library.lessons(self.lib), [
             "skills/brain-spec/LESSONS.md: 2 lessons (fold in)",
             "skills/other/LESSONS.md: 1 lesson (fold in)",

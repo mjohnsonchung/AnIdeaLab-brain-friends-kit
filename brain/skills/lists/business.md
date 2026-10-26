@@ -1,6 +1,6 @@
 # Business, marketing and money
 
-Copied skills, kept as they came; where each came from, its commit and its licence are in [sources.md](sources.md). Add a line here for a new one in this group, saying when to use it.
+Copied skills, kept as they came; where each came from, its commit and its licence are in [sources.md](sources.md). A new skill on this topic gets a line here saying when to use it; one of the brain's own goes at the top, under a "The brain's own" heading.
 
 - [marketingskills-marketing-ideas](../marketingskills-marketing-ideas/SKILL.md): marketing ideas that fit a product. [marketingskills-customer-research](../marketingskills-customer-research/SKILL.md): learn what customers want.
 - [marketingskills-copywriting](../marketingskills-copywriting/SKILL.md): words that sell, for pages and ads. [marketingskills-pricing](../marketingskills-pricing/SKILL.md): set and test prices. [marketingskills-launch](../marketingskills-launch/SKILL.md): plan a launch.

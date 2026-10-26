@@ -1,5 +1,5 @@
 {
- "made": "2026-10-24",
+ "made": "2026-10-26",
  "how": "python3 skills/brain-spec/skill_updates.py map",
  "sources": [
   {
@@ -75,6 +75,21 @@
     "marketingskills-launch": "skills/launch",
     "marketingskills-marketing-ideas": "skills/marketing-ideas",
     "marketingskills-pricing": "skills/pricing"
+   },
+   "not_found": []
+  },
+  {
+   "repo": "kepano/obsidian-skills",
+   "commit": "3ccff5338ea700537839b21900aa5358a0402c98",
+   "copied": "19 Oct 2026",
+   "lists": [
+    "skills/lists/sources.md"
+   ],
+   "skills": {
+    "obsidian-bases": "skills/obsidian-bases",
+    "obsidian-defuddle": "skills/defuddle",
+    "obsidian-json-canvas": "skills/json-canvas",
+    "obsidian-markdown": "skills/obsidian-markdown"
    },
    "not_found": []
   },
