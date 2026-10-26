@@ -6,7 +6,7 @@
 # brain invitations" workflow accepts them once a day (testing/auto-accept-setup.ps1 sets it up). This
 # installs GitHub's command line with winget if it's missing and adds the testing account to it the first
 # time, accepts any invitation still waiting (the account is only for friends' brains, so it declines one
-# to Matt's own repos), and clones each brain the account can reach into
+# to Matt's own repos), and clones each brain the account can reach, and its files repo, into
 # D:\AI-Brain-Link\Friend-Brains\<owner>\<repo>, every branch and the whole history, or brings a copy it
 # made before up to date.
 # It uses the testing account for this run only: gh and git stay on whatever account they were on, and
@@ -70,7 +70,9 @@
     $brains = @($repos | Where-Object { gh api "repos/$_/contents/skills/brain-spec/SKILL.md" --silent 2>$null; $LASTEXITCODE -eq 0 })
     if (-not $brains.Count) { Write-Host 'No brains to copy yet. An invitation shows up here once a friend runs the installer.'; return }
     New-Item -ItemType Directory -Force -Path $root | Out-Null
-    foreach ($full in $brains) {
+    # Each brain's files repo too, where the account can reach it (27 Oct 2026)
+    $all = @(foreach ($b in $brains) { $b; if ($repos -contains "$b-files") { "$b-files" } })
+    foreach ($full in $all) {
       $dir = Join-Path $root ($full -replace '/', '\')
       if (Test-Path (Join-Path $dir '.git')) {
         git -c $auth -C $dir fetch --all --prune --quiet 2>&1 | Out-Null
