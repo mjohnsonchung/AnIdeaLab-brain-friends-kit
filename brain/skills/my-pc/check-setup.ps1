@@ -35,7 +35,15 @@ function Find-Gh {
   if ($c) { return $c.Source }
   return Find-First @("$env:ProgramFiles\GitHub CLI\gh.exe", "$env:LOCALAPPDATA\Programs\GitHub CLI\gh.exe")
 }
-function Find-Obsidian { return Find-First @("$env:LOCALAPPDATA\Programs\Obsidian\Obsidian.exe", "$env:LOCALAPPDATA\Obsidian\Obsidian.exe", "$env:ProgramFiles\Obsidian\Obsidian.exe") }
+function Find-Obsidian {
+  $p = Find-First @("$env:LOCALAPPDATA\Programs\Obsidian\Obsidian.exe", "$env:LOCALAPPDATA\Obsidian\Obsidian.exe", "$env:ProgramFiles\Obsidian\Obsidian.exe")
+  if ($p) { return $p }
+  # It can be elsewhere (one PC had it under D:\Users); its uninstall entry says where.
+  $u = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
+    Where-Object { $_.DisplayName -match '^Obsidian' -and "$($_.UninstallString)" -match '"?([^"]+)\\Uninstall Obsidian\.exe' } | Select-Object -First 1
+  if ($u -and "$($u.UninstallString)" -match '"?([^"]+)\\Uninstall Obsidian\.exe') { return Find-First @(Join-Path $Matches[1] 'Obsidian.exe') }
+  return $null
+}
 # gh's output as text, or $null if gh isn't there or the call failed.
 function Gh {
   if (-not $script:gh) { return $null }

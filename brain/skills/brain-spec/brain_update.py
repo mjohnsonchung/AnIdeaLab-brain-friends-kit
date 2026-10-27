@@ -463,6 +463,7 @@ FILLED = ("CLAUDE.md", "README.md", "skills/README.md", "skills/lists/", "knowle
 # The owner's settings, and the copied skills' map, which skill_updates.py rewrites when they add skills: counted, not held to the kit.
 SETTINGS = (".obsidian/", ".gitignore", "skills/sources/upstream.json")
 IN_THIS_BRAIN = re.compile(rb"(?m)^#+ In this brain")  # the section a brain adds at the end of a copied skill, for its lessons
+LESSONS_LINK = re.compile(rb"(?m)^Lessons from using this skill in (?:the|this) brain: \[LESSONS\.md\]\(LESSONS\.md\)\.?[ \t]*\n")  # the line the brain spec gives
 SKILL_LINK = re.compile(r"\]\(\.\./([a-z0-9-]+)/SKILL\.md\)")
 SOURCE_LINE = re.compile(r"From \[[^\]]+\]\(https://github\.com/[^)\s]+\), commit `[0-9a-f]{7,40}`")
 INDEX_MARKS = ("<!-" + "- index:start -->", "<!-" + "- index:end -->")
@@ -576,6 +577,9 @@ def compare(n=None):
         parts = p.split("/")
         if len(parts) == 3 and parts[0] == "skills" and parts[2] == "SKILL.md" and parts[1] in kit_copied:
             ours = IN_THIS_BRAIN.split(ours)[0]  # a copied skill's "In this brain" section is the brain's own
+        if len(parts) == 3 and parts[0] == "skills" and parts[2] == "SKILL.md" and theirs is not None:
+            ours = re.sub(rb"\n{3,}", b"\n\n", LESSONS_LINK.sub(b"", ours))  # so is the line linking its LESSONS.md
+            theirs = re.sub(rb"\n{3,}", b"\n\n", theirs)
         if theirs is not None and ours.rstrip() == theirs.rstrip():
             row["same"] += 1
         else:

@@ -119,7 +119,7 @@ All in this folder, plain Python 3 with nothing to install:
   ```
   Lessons from using this skill in the brain: [LESSONS.md](LESSONS.md).
   ```
-- **The weekly tidy-up** ([brain-audit](../brain-audit/SKILL.md)) folds a brain skill's lessons into its steps and keeps a copied skill's lessons short.
+- **The weekly tidy-up** ([brain-audit](../brain-audit/SKILL.md)) folds a brain skill's lessons into its steps and keeps a copied skill's lessons short. The kit's own skills keep theirs in `LESSONS.md`, since an update brings the kit's text back over them.
 
 ## A routine
 Anything that runs or falls due on a beat gets a row in [routines](../../knowledge/systems/routines.md). The job is a script or skill in the repo; the trigger only says when and where. A reminder costs nothing until the owner says yes to it in a session; a scheduled AI job uses their plan by itself, so it needs their yes first.
