@@ -73,17 +73,10 @@
     foreach ($full in $brains) {
       $dir = Join-Path $root ($full -replace '/', '\')
       if (Test-Path (Join-Path $dir '.git')) {
-        # A copy is a mirror: take exactly what the friend's brain has now, even if their history was rewritten
-        # (an update sent again), and never leave a copy behind on an old commit.
-        git config --global --add safe.directory ($dir -replace '\\', '/') 2>&1 | Out-Null
-        $out = git -c $auth -C $dir fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune --tags --force 2>&1
-        if ($LASTEXITCODE -ne 0) { Write-Host "Couldn't fetch $full : $out" -ForegroundColor Red; continue }
-        $head = "$(git -C $dir symbolic-ref --short refs/remotes/origin/HEAD 2>$null)".Trim()
-        if (-not $head) { git -c $auth -C $dir remote set-head origin --auto 2>&1 | Out-Null; $head = "$(git -C $dir symbolic-ref --short refs/remotes/origin/HEAD 2>$null)".Trim() }
-        if (-not $head) { $head = 'origin/main' }
-        git -C $dir checkout -f -B ($head -replace '^origin/', '') $head 2>&1 | Out-Null
-        if ($LASTEXITCODE -eq 0) { Write-Host "Up to date: $full in $dir ($(git -C $dir rev-parse --short HEAD))" -ForegroundColor Green }
-        else { Write-Host "Fetched $full, but couldn't move the copy in $dir to $head. Delete the folder and paste the command again." -ForegroundColor Yellow }
+        git -c $auth -C $dir fetch --all --prune --quiet 2>&1 | Out-Null
+        git -c $auth -C $dir pull --ff-only --quiet 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { Write-Host "Up to date: $full in $dir" -ForegroundColor Green }
+        else { Write-Host "Fetched $full, but your copy in $dir has changes of its own, so it wasn't moved on. To start it over: delete the folder and paste the command again." -ForegroundColor Yellow }
       } else {
         git -c $auth -c core.longpaths=true clone --quiet "https://github.com/$full.git" $dir 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) { git -C $dir config core.longpaths true; Write-Host "Copied $full to $dir" -ForegroundColor Green } else { Write-Host "Couldn't copy $full" -ForegroundColor Red }
