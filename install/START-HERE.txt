@@ -1,0 +1,49 @@
+Your own second brain, started from Matt's starter kit.
+
+What you'll have at the end:
+- Your brain: a private GitHub repo of plain notes. A core page every AI agent reads, 62 skills
+  (how to do things) and a knowledge library that fills up as you use it.
+- Obsidian on your PC, showing your brain as a map, and the brain graph replaying how it grew.
+- The PC runner: it lets Claude run jobs on your PC whenever it's on.
+
+You need: a Windows PC, a Claude plan, and about 30 minutes, mostly waiting for installs.
+
+1. OPEN POWERSHELL: press the Windows key, type powershell, press Enter.
+
+2. PASTE THIS LINE into the blue window and press Enter:
+
+irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/main/install.ps1 | iex
+
+   It installs Git, GitHub's command line and Obsidian, and Windows may ask you to allow each.
+   Then it asks you to:
+   - sign in to GitHub in your browser, copying a code from the window (no account yet? make
+     one on that page, it's free);
+   - name your brain (press Enter for my-brain). Your brain's repo is private, and Matt's
+     testing account (GitHub: diagnostics-anidealab) is invited to it, so Matt can see it and
+     copy it to test the kit while it's in testing. To take it off any time: your repo on
+     GitHub, Settings, Collaborators;
+   - in Obsidian, choose "Trust author and enable plugins";
+   - say yes to the PC runner. A second window asks for admin rights, then your Windows
+     password: the one you type at the sign-in screen, NOT your PIN. With a Microsoft account,
+     it's that account's password;
+   - say yes to keeping the PC awake while it's plugged in (jobs can't run while it sleeps).
+
+   If it stops partway, paste the same line again: it skips what's already done.
+
+3. CONNECT CLAUDE:
+   - Go to https://claude.ai/code. If it asks, connect GitHub and let Claude see your brain repo.
+   - Start a new session with your brain repo selected, and send:
+
+       This is my new second brain. Read CLAUDE.md and get me set up.
+
+   Claude asks you a few questions, tests the PC runner and shows you around.
+
+Later:
+- Keys for services never go in a chat. Claude tells you the name, and you add the key on
+  GitHub: your brain repo, then Settings, Secrets and variables, Actions, New repository secret.
+- To check your setup any time, paste this into PowerShell. It changes nothing, and copies a
+  report you can paste into Claude with "Fix what this setup check found":
+
+powershell -ExecutionPolicy Bypass -File "C:\AI-Brain-Link\my-brain\skills\my-pc\check-setup.ps1"
+
+  (Put your brain's name in place of my-brain if you named it something else.)
