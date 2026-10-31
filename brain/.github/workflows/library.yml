@@ -1,5 +1,6 @@
 # Keeps the knowledge library's indexes in step with the notes' cards.
-# On each push to main that touches knowledge/ or skills/, it runs
+# On each push to main that touches knowledge/ or skills/ (apart from the upload point's list on its
+# own, which the owner's Upload point window writes often and which changes no index), it runs
 # skills/brain-spec/library.py build and commits any README.md that changed. Then it
 # runs the library check and the link check and writes their reports into the run
 # summary. It never fails on them, so GitHub doesn't email the owner on every push.
@@ -11,6 +12,7 @@ on:
     paths:
       - "knowledge/**"
       - "skills/**"
+      - "!knowledge/systems/upload-point.md"
   workflow_dispatch:
 
 permissions:

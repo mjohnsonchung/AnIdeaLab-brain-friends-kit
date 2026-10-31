@@ -1,6 +1,6 @@
 ---
 name: guide-mode
-description: "How agents work with an owner who is new to AI agents and whose plan's usage runs out: say the ask back, ask only the questions that matter, push back when it's worth it, size the job (quick, small, medium, big, too big for one session), agree a short plan, check in along the way, explain in plain words, and ease off when the owner says. Use before any job bigger than a quick answer, while the core says guide mode is on."
+description: "How agents work with an owner who is new to AI agents and whose plan's usage runs out: say the ask back, ask only the questions that matter, push back when it's worth it, size the job (quick, small, medium, big, too big for one session), agree a short plan, check in along the way, explain in plain words, and tune it down, never off, when the owner says: sizing, stages and hand-offs without the explaining. Use before any job bigger than a quick answer."
 ---
 
 # Guide mode
@@ -16,7 +16,7 @@ A question, an explanation or one small edit: just answer or do it. No plan, no 
 2. **Ask what matters:** only the questions whose answers would change what you do, at most three, in one message, each with your suggested answer so they can just say yes. Don't ask what you can find out yourself from the brain, the code or a quick look.
 3. **Push back when it's worth it.** If the idea is likely to fail, cost money, take far longer than they think, or there's a much simpler way to get most of it, say so plainly and offer the smaller version. Then it's their call.
 4. **Size it** (below), and say what makes it that size.
-5. **A short plan:** numbered steps in plain words, the check-in points marked, and what they'll have at the end of each stage.
+5. **A short plan:** numbered steps in plain words, the check-in points marked, and what they'll have at the end of each stage. If you'd hand pieces to agents, one or two at a time is your call; more at once needs their yes, so say how many and why here ([handing work to an agent](../brain-spec/SKILL.md#handing-work-to-an-agent)).
 6. **Wait for their go.** Then work without asking again until the next check-in, under the core's defaults.
 
 ## Sizing a job
@@ -54,5 +54,23 @@ Ways to keep a job smaller, worth telling the owner when they fit:
 ## After a job
 If it turned out much bigger or smaller than you said, add a dated line to [job sizes](../../knowledge/areas/the-brain/job-sizes.md): the job, the size you gave, what it really was, and why. Read its newest lines before sizing a job, so the sizes get closer to the truth for this owner.
 
-## Easing off
-Guide mode is a starting point, not a cage. When the owner says something like "just do these without asking" or "you don't need a plan for small stuff", save it as a decision note in their words ([brain spec](../brain-spec/SKILL.md#saving-knowledge)) and follow it from then on. When they say to turn guide mode off, also change its section in the core to say so. Nothing else is restricted: the gates in the core are all the rules there are, and an agent's own judgement does the rest.
+## Tuned down
+When the owner has found their feet and wants less guiding (Matt, 31 Oct 2026: "maybe instead of turning it off, it's like it tunes it down, like the tutorial kind of vibe"), keep what saves their usage and keeps big jobs on track, and drop the rest. Matt's own brain runs this way: "I just need it to size up tasks properly and then obviously make handoffs at the end of each one main task".
+
+What stays:
+- **Sizing:** size every job bigger than a quick answer, as the table says, and give the size and why in a line.
+- **Stages:** split a big job into stages that are each useful on their own, say them, and get their go on the stages before you start.
+- **A hand-off at the end of each stage:** save where things stand, in the task note's progress line (what's done, where it is, what's next, what you learned), and commit it, so the next stage can start clean: in this session, with an agent you hand it to with a brief, or in a fresh session when this one is long.
+- **Saying when it grows:** if a job turns out bigger than you said, say so at the next sensible point, and what it's likely to take.
+- **More than two agents at once** still needs their yes.
+- **Job sizes,** as in "After a job".
+
+What goes: saying the ask back, questions they don't need, waiting for a go on small and medium jobs, check-ins in the middle of a stage, and the explaining (terms in plain words, walking through steps, teaching), unless they ask for it.
+
+## Turning it down
+When the owner says something like "just do these without asking" or "you don't need a plan for small stuff", save it as a decision note in their words ([brain spec](../brain-spec/SKILL.md#saving-knowledge)) and follow it from then on. When they say to turn guide mode off, or that they don't need the tutorial, tune it down instead: tell them in a line what stays and why, save the decision, and change the core's guide mode section to:
+```
+## Guide mode
+It's tuned down (the owner's ask, <the date>): before anything bigger than a quick answer, size it and say why; split a big job into stages, agree them, and hand off at the end of each (how: the [guide-mode skill](skills/guide-mode/SKILL.md#tuned-down)). For a brain update from AnIdeaLab, read the owner its summary and apply it only if they say go ([brain updates](skills/brain-spec/SKILL.md#brain-updates)).
+```
+To turn it back up, put the kit's section back. Nothing else is restricted: the gates in the core are all the rules there are, and an agent's own judgement does the rest.

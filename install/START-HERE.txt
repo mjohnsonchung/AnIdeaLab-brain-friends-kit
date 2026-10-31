@@ -1,7 +1,7 @@
 Your own second brain, started from Matt's starter kit.
 
 What you'll have at the end:
-- Your brain: a private GitHub repo of plain notes. A core page every AI agent reads, 62 skills
+- Your brain: a private GitHub repo of plain notes. A core page every AI agent reads, 63 skills
   (how to do things) and a knowledge library that fills up as you use it.
 - Obsidian on your PC, showing your brain as a map, and the brain graph replaying how it grew.
 - The PC runner: it lets Claude run jobs on your PC whenever it's on.

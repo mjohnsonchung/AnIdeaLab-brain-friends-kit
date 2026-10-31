@@ -8,7 +8,7 @@ updated: {KIT_DATE}
 The accounts the brain uses and the keys agents reach them with, by name only. Keys and passwords never go here, in any file, or in a chat (the secrets gate in the [core](../../CLAUDE.md)). When an account or key is added or closed, change its row.
 
 ## Adding a key
-When a job needs a key (an API key for a service), the agent says which service, where to get the key, and the name to save it under, in capitals with underscores, like `OPENAI_API_KEY`. Then the owner:
+When a job needs a key (an API key for a service), the agent gives the owner one command to paste into PowerShell, which opens the page that makes the key, reads it in hidden, checks it and saves it in this repo's GitHub Actions secrets ([add-a-key](../../skills/add-a-key/SKILL.md)). Then the agent adds its row below. By hand instead, the agent says which service, where to get the key, and the name to save it under, in capitals with underscores, like `OPENAI_API_KEY`, and the owner:
 1. **On GitHub:** opens this brain's repo, then Settings, then Secrets and variables, then Actions, then New repository secret; types the name, pastes the key, and saves. Jobs that run through GitHub Actions, the PC runner's included, can use it from then on. This is the key's home.
 2. **In Claude, if a session needs it directly** (optional): the environment menu in the session's title bar, then Edit, then the secrets or environment variables section, with the same name. A new session picks it up.
 

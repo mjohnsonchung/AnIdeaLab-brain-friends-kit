@@ -44,6 +44,25 @@ if (-not $me.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
   exit $p.ExitCode
 }
 
+# Clicking inside the admin window would start a selection and pause the setup until a key is pressed,
+# with only "Select" in its title bar to say so, so QuickEdit is off in it (the window closes at the end).
+if ($Elevated) {
+  try {
+    Add-Type -Namespace KitConsole -Name Mode -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetStdHandle(int n);
+[DllImport("kernel32.dll")] public static extern bool GetConsoleMode(IntPtr h, out uint m);
+[DllImport("kernel32.dll")] public static extern bool SetConsoleMode(IntPtr h, uint m);
+'@
+    $h = [KitConsole.Mode]::GetStdHandle(-10)
+    $m = [uint32]0
+    if ([KitConsole.Mode]::GetConsoleMode($h, [ref]$m)) {
+      $n = [int64]$m
+      if ($n -band 0x40) { $n -= 0x40 }
+      [void][KitConsole.Mode]::SetConsoleMode($h, [uint32]($n -bor 0x80))
+    }
+  } catch { }
+}
+
 $code = 0
 $runner = Join-Path $Root '_runner'
 try {

@@ -129,9 +129,18 @@ if ($runnerDir) {
 }
 
 # Which repo is the brain --------------------------------------------------------------------------
+# What you gave first, then the brain this script is in (the copy in C:\AI-Brain-Link\<brain>\skills\my-pc),
+# then the runner's repo, then Obsidian's vaults, those in C:\AI-Brain-Link first. On Zak's PC (31 Oct 2026)
+# an older vault came first in Obsidian's list, and the check looked at that brain instead.
 $obsVaults = @()
 $obsCfg = Join-Path $env:APPDATA 'obsidian\obsidian.json'
 if (Test-Path $obsCfg) { try { $obsVaults = @((Get-Content $obsCfg -Raw | ConvertFrom-Json).vaults.PSObject.Properties | ForEach-Object { $_.Value.path }) } catch { } }
+$inRoot = $Root.TrimEnd('\') + '\'
+$obsVaults = @($obsVaults | Where-Object { $_ -and $_.StartsWith($inRoot, [StringComparison]::OrdinalIgnoreCase) }) + @($obsVaults | Where-Object { $_ -and -not $_.StartsWith($inRoot, [StringComparison]::OrdinalIgnoreCase) })
+if (-not $Repo -and -not $Vault -and $PSScriptRoot) {
+  $own = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+  if ($own -and (Test-Path (Join-Path $own 'CLAUDE.md')) -and (Test-Path (Join-Path $own '.git'))) { $Vault = $own }
+}
 if (-not $Repo -and $Vault -and $git) { $u = Origin $Vault; if ($u -match 'github\.com[/:]([^/\s]+/[^/\s]+?)(\.git)?$') { $Repo = $Matches[1] } }
 if (-not $Repo) { $Repo = $runnerRepo }
 if (-not $Repo -and $git) {
@@ -229,6 +238,11 @@ if ($tree) {
   $missing = @($parts.Keys | Where-Object { -not $paths.Contains($_) })
   if ($missing.Count) { Note "It has $($parts.Count - $missing.Count) of the kit's $($parts.Count) parts. Missing: $(($missing | ForEach-Object { $parts[$_] + ' (' + $_ + ')' }) -join '; ')" 'Fine if it was set up differently on purpose; an agent can copy them in from the kit' }
   else { Ok "It has all $($parts.Count) of the kit's parts" }
+  # AnIdeaLab's sign-off links, which a kit brain refreshes by itself from the kit repo once it has them.
+  if ($paths.Contains('skills/brain-spec/brain_update.py')) {
+    if ($paths.Contains('knowledge/systems/sign-off-links.md')) { Ok "It has AnIdeaLab's sign-off links (knowledge/systems/sign-off-links.md), which refresh by themselves" }
+    else { Note "It doesn't have AnIdeaLab's sign-off links yet (knowledge/systems/sign-off-links.md)" 'They come with the next brain update from AnIdeaLab' }
+  }
   $pcSkill = @($paths | Where-Object { $_ -match '^skills/[^/]*pc[^/]*/SKILL\.md$' })
   if ($pcSkill.Count) { Ok "Agents have a skill for using the PC ($($pcSkill -join ', '))" } else { Note "No skill tells agents how to use the PC runner" "Copy the kit's skills/my-pc in" }
   $skills = @($paths | Where-Object { $_ -match '^skills/[^/]+/SKILL\.md$' }).Count
@@ -236,7 +250,7 @@ if ($tree) {
   $core = GhJson api "repos/$Repo/contents/CLAUDE.md"
   if ($core) {
     $text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($core.content -replace '\s', '')))
-    $rules = [ordered]@{ 'gate' = 'the gates (money, secrets, the sign-off, the owner''s voice)'; 'Best guess' = '"best guess, light checks"'; 'One check is enough' = '"one check is enough"'; 'No Claude artifacts' = '"no Claude artifacts"'; 'One agent at a time' = '"one agent at a time"'; 'Guide mode' = 'guide mode'; 'by AnIdeaLab.com' = 'the AnIdeaLab sign-off'; 'command' = '"give the owner a command"'; 'pull --rebase' = 'committing straight to main' }
+    $rules = [ordered]@{ 'gate' = 'the gates (money, secrets, the sign-off, the owner''s voice)'; 'Best guess' = '"best guess, light checks"'; 'One check is enough' = '"one check is enough"'; 'No Claude artifacts' = '"no Claude artifacts"'; 'agents at a time' = '"one or two agents at a time"'; 'Guide mode' = 'guide mode'; 'by AnIdeaLab.com' = 'the AnIdeaLab sign-off'; 'command' = '"give the owner a command"'; 'pull --rebase' = 'committing straight to main' }
     $gone = @($rules.Keys | Where-Object { $text -notmatch [regex]::Escape($_) })
     if ($gone.Count) { Note "The core doesn't have: $(($gone | ForEach-Object { $rules[$_] }) -join ', ')" "Fine if on purpose; the kit's core has them" } else { Ok "The core has the kit's rules" }
     if ($text.Length -gt 6144) { Note "The core is $([int]($text.Length / 1024)) KB; the kit keeps it under 6 KB, because every agent reads it first" }
@@ -286,6 +300,31 @@ if (-not $Vault) {
   else { Ok 'The Obsidian Git plugin is installed and on, so edits sync' }
   if (Test-Path (Join-Path $obs 'plugins\brain-graph\main.js')) { if ($on -contains 'brain-graph') { Ok 'The brain graph is installed and on' } else { Note 'The brain graph is installed but switched off' 'In Obsidian: Settings, Community plugins, and switch on Brain graph' } }
   if (@($obsVaults | Where-Object { $_ -ieq $Vault }).Count) { Ok 'Obsidian has it as a vault' } else { Fix "Obsidian hasn't opened this folder as a vault" "In Obsidian: Manage vaults (bottom left), Open folder as vault, and pick $Vault" }
+}
+
+# The installer's last run ---------------------------------------------------------------------------
+# It keeps a log of each step in _logs\install.log (since 31 Oct 2026), so a setup that stopped partway shows here.
+$installLog = Join-Path $Root '_logs\install.log'
+$all = @(); if (Test-Path $installLog) { $all = @(Get-Content $installLog -ErrorAction SilentlyContinue) }
+if ($all.Count) {
+  Section "The installer's last run"
+  $from = 0
+  for ($i = 0; $i -lt $all.Count; $i++) { if ($all[$i] -match '^\S+ \S+  == ') { $from = $i } }
+  $state = [ordered]@{}; $why = $null; $when = $null
+  foreach ($l in $all[$from..($all.Count - 1)]) {
+    if (-not $when -and $l -match '^(\S+ \d\d:\d\d)') { $when = $Matches[1] }
+    if ($l -match '^\S+ \S+  (started|done|skipped|not done)  (.+)$') { $state[$Matches[2]] = $Matches[1] }
+    elseif ($l -match '^\S+ \S+  stopped: (.+)$') { $why = $Matches[1] }
+  }
+  Info "It last ran $when"
+  $left = @($state.Keys | Where-Object { $state[$_] -in 'started', 'not done' })
+  if (-not $left.Count) { Ok 'It finished every step (skipped ones aside)' }
+  foreach ($k in $left) {
+    $what = if ($state[$k] -eq 'started') { "It stopped at this step: $k" + $(if ($why) { " ($why)" } else { ', with no error, so its window was probably closed while it waited' }) } else { "This step didn't finish: $k" }
+    $runnerCmd = if ($Vault) { "powershell -ExecutionPolicy Bypass -File `"$(Join-Path $Vault 'skills\my-pc\setup-runner.ps1')`"" } else { 'Run setup-runner.ps1 from your brain (my-pc skill)' }
+    $todo = if ($k -match 'runner') { $runnerCmd } else { 'Paste the install line from START-HERE again: it skips what is already done' }
+    Note $what $todo
+  }
 }
 
 # PC settings ----------------------------------------------------------------------------------------

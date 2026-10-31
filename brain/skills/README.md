@@ -11,7 +11,7 @@ How to do things. Every skill, the brain's own and copied, has a line in a list 
 - [find-skills](find-skills/SKILL.md): find a good skill from outside the brain, copy it in, and keep copied skills up to date.
 
 ## The lists by topic
-- [The brain and your PC](lists/the-brain.md): the first session, guide mode, the brain spec, the weekly tidy-up and the PC runner.
+- [The brain and your PC](lists/the-brain.md): the first session, guide mode, the brain spec, the weekly tidy-up, the PC runner, the upload point and keys.
 - [Planning, thinking and learning](lists/planning.md): shaping an idea, planning a change, specs, and learning a topic.
 - [Building and fixing code](lists/code.md): building, testing, debugging, reviewing and shipping code.
 - [Websites and design](lists/web-and-design.md): how a site looks, its words, testing it, and putting it live.
@@ -33,7 +33,7 @@ Some of these skills were written for Claude's apps. Any agent can do the same w
 | Render or publish an artifact | Write the HTML file, save it where any agent can get it, and open it in a browser or send it to the owner. Never a Claude artifact |
 | Connectors, or "suggest a connector" | Use whatever tool you have for that app, and tell the owner in words which app to connect |
 | Ask with choice cards | Ask in plain text, with numbered options |
-| Spawn subagents | Do the steps yourself, one after another |
+| Spawn subagents | Do the steps yourself, keeping long output short, or hand a big piece to a fresh session with a task note as its brief |
 | Set up a scheduled task | A row in [routines](../knowledge/systems/routines.md); a scheduled AI job needs the owner's yes |
 | Claude's memory, a `CLAUDE.md` memory or `TASKS.md` | The brain's own notes: the [knowledge library](../knowledge/README.md), with tasks on its tasks shelf |
 | Claude in Chrome, the built-in browser, computer use | Your own browser or desktop tool, or a job on the owner's PC ([my-pc](my-pc/SKILL.md)) |

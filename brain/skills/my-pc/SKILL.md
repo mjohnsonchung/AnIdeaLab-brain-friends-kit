@@ -65,3 +65,5 @@ It needs GitHub's `gh` tool signed in, which the installer did. `C:\AI-Brain-Lin
    ```
    powershell -ExecutionPolicy Bypass -File "C:\AI-Brain-Link\<repo name>\skills\my-pc\check-setup.ps1" -Send
    ```
+   It checks the brain it's in, even when Obsidian lists an older vault first (a friend's PC, 31 Oct 2026, before it did).
+7. **No runner at all, after the installer:** the setup stopped before its runner step. The installer keeps each step in `C:\AI-Brain-Link\_logs\install.log`, and the setup check's "The installer's last run" part says where it stopped. Give the owner the `setup-runner.ps1` command (above) to paste.

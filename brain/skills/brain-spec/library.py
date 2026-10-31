@@ -48,7 +48,7 @@ STATUSES = {
 }
 OTHER_STATUSES = {"current", "done"}
 TAG_SHELVES = ("ventures", "areas", "subjects")
-MACHINERY = {"brain-spec", "brain-audit", "getting-started", "guide-mode", "my-pc"}  # skills that run the brain's own machinery, so may link into notes
+MACHINERY = {"brain-spec", "brain-audit", "getting-started", "guide-mode", "my-pc", "upload-point", "add-a-key"}  # skills that run the brain's own machinery, so may link into notes
 TASK_GROUPS = [("Waiting on the owner", None), ("Doing", "doing"), ("Waiting", "waiting"), ("Open", "open")]
 MAX_ABOUT = 250
 MAX_INDEX = 60   # entries in an index

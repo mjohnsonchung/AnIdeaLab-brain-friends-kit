@@ -13,10 +13,10 @@ This skill is the first session: about 15 minutes of the owner's time. Guide mod
 
 ## 1. Say hello, and what this is
 In a few lines, in plain words:
-- This repo is their second brain: plain notes that any AI agent can read. The core (`CLAUDE.md`) is the page every agent reads first. The skills library is how to do things (61 to start, and more whenever a job needs one). The knowledge library is what the brain knows about them and their projects, and it fills up as they use it.
+- This repo is their second brain: plain notes that any AI agent can read. The core (`CLAUDE.md`) is the page every agent reads first. The skills library is how to do things (63 to start, and more whenever a job needs one). The knowledge library is what the brain knows about them and their projects, and it fills up as they use it.
 - Obsidian on their PC shows the brain as a map, and the brain graph replays how it grew. Their edits there sync here, and agents' work syncs there.
 - The PC runner lets agents run jobs on their PC whenever it's on.
-- Guide mode: agents check a plan with them before bigger jobs, because their plan's usage runs out.
+- Guide mode: agents check a plan with them before bigger jobs, because their plan's usage runs out. Once they've found their feet they can tune it down: agents still size each job and hand off between stages, without the explaining ([guide-mode](../guide-mode/SKILL.md#tuned-down)).
 
 ## 2. Ask, in one message
 - Their first name.
@@ -53,7 +53,8 @@ Wait until the run shows as completed, then read its job log. Put what it found 
 - **Obsidian:** Ctrl+G opens the map; the bookmarks panel has "Start here"; the brain icon on the left opens the brain graph (the first time, Ctrl+P, then "Reload app without saving"). [Obsidian setup](../../knowledge/systems/obsidian-setup.md) has the rest.
 - **What waits on them:** the [tasks index](../../knowledge/tasks/README.md), "Waiting on the owner" at the top.
 - **More skills:** they can ask "find me a skill for X" ([find-skills](../find-skills/SKILL.md)).
-- **Keys** (API keys for services, later): never pasted into a chat. When a job needs one, the agent says the name to use, and the owner adds it on GitHub: the repo, then Settings, then Secrets and variables, then Actions, then New repository secret. The full how is in [keys and accounts](../../knowledge/systems/keys-and-accounts.md).
+- **The upload point:** the "Upload point" shortcut on their desktop opens a small window for giving the brain files. They drag files or folders onto it, or right-click them in File Explorer and pick Send to, then My brain (on Windows 11, under "Show more options"), then tell you what to do with them ([upload-point](../upload-point/SKILL.md)). If the shortcut isn't there, give them the setup command in that skill.
+- **Keys** (API keys for services, later): never pasted into a chat. When a job needs one, the agent gives them one command to paste into PowerShell, which opens the page that makes the key, reads it in hidden and saves it in the brain's GitHub secrets ([add-a-key](../add-a-key/SKILL.md)). Adding one by hand on GitHub is in [keys and accounts](../../knowledge/systems/keys-and-accounts.md).
 - **When a site is blocked** in a Claude session, the agent will say which; the owner can allow it in the session's environment settings (the environment menu in the session's title bar, then Edit, then Network access).
 
 ## 6. Offer the weekly tidy-up

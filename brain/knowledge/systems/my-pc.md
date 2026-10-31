@@ -12,7 +12,8 @@ The PC is a GitHub Actions self-hosted runner for this brain's repo, labelled `m
 C:\AI-Brain-Link\
   _runner\        the Actions runner (its checkouts go in _runner\_work\)
   _logs\          pc-run output, one UTF-16 log per run
-  Tools\          shared tools, and watch-jobs.ps1 (the live jobs window)
+  _upload\        what was dropped at the upload point from a USB stick, until it's sorted
+  Tools\          shared tools, watch-jobs.ps1 (the live jobs window) and the upload point's icon
   <repo name>\    the owner's copy of this brain, opened in Obsidian
   <Project>\<Stage>\<job>\   a job's data, made when a job first needs it
 ```

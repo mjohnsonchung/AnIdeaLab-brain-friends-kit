@@ -22,3 +22,4 @@ Anything that runs, or falls due, on a beat.
 | Routine | Owner | Kind | When (NZ time) | What runs | Where it runs | Log |
 |---|---|---|---|---|---|---|
 | Brain update check | The brain | Code on a timer | Once a day, at the day's first session | `brain_update.py notice`, run by `reminders.py`: asks the kit repo, and says so only if an update is waiting | A session the owner starts (Claude Code's session-start hook) | [brain updates](brain-updates/README.md) |
+| Upload point check | The brain | Code on a timer | Every session the owner starts | `reminders.py` reads [the upload point's list](upload-point.md), and says so only if something's waiting | A session the owner starts (Claude Code's session-start hook) | [the upload point](upload-point.md) |

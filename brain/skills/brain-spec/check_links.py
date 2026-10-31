@@ -29,7 +29,7 @@ from urllib.parse import unquote
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # skills/brain-spec/ is two folders down
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 FENCE = re.compile(r"```.*?```", re.S)
-TEXT = {".md", ".py", ".js", ".mjs", ".cjs", ".css", ".json", ".yml", ".yaml", ".txt", ".html", ".gitignore", ".sh", ".ps1", ".gyroflow", ".xml", ".xsd", ".dtd", ".ent"}
+TEXT = {".md", ".py", ".js", ".mjs", ".cjs", ".css", ".json", ".yml", ".yaml", ".txt", ".html", ".gitignore", ".sh", ".ps1", ".gyroflow", ".xml", ".xsd", ".dtd", ".ent", ".patch"}
 SKILLS = "skills/"
 LISTS = "lists/"  # inside skills/: the lists by topic, linked from its README
 SOURCES = LISTS + "sources.md"  # the record of every copied skill and where it came from
