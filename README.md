@@ -15,11 +15,12 @@ irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/
 - installs Git, GitHub's command line and Obsidian if they're missing, and signs you in to GitHub in your browser;
 - makes your brain from [brain/](brain/), as of the newest update, with the day you install it as its start, and puts it in a new private repo on your GitHub account;
 - invites Matt's testing account to that repo, so he can see it and copy it while the kit is in testing (below), and says so on screen;
-- puts your copy in `C:\AI-Brain-Link\<your brain's name>` and opens it in Obsidian, with your edits syncing to GitHub;
+- puts your copy in `C:\AI-Brain-Link\<your brain's name>`, set up for Obsidian with your edits syncing to GitHub;
 - adds the upload point, a desktop shortcut and a Send to entry for giving your brain files, once the kit's brain has it;
-- sets up the PC runner, so AI agents can run jobs on your PC. It asks for admin rights and your Windows password.
+- sets up the PC runner, so AI agents can run jobs on your PC. It asks for admin rights and your Windows password;
+- opens your brain in Obsidian, last, so it can't hide a question in the PowerShell window.
 
-It's safe to run again: it skips what's already done. At the end it says what to send Claude to get started. Windows only for now. The steps in plain words, for sending a friend: [install/START-HERE.txt](install/START-HERE.txt).
+It's safe to run again: it skips what's already done. Its questions show in yellow, and a click in its window can't pause it. At the end it lists each step and how it went, keeps that in `C:\AI-Brain-Link\_logs\install.log` (which the brain's setup check reads), and says what to send Claude to get started. Windows only for now. The steps in plain words, for sending a friend: [install/START-HERE.txt](install/START-HERE.txt).
 
 ## Brain updates
 Matt sends fixes, new rules and new parts to brains started from the kit. A brain checks for new ones once a day, when its owner starts a session (since update 3), and its weekly tidy-up checks too; its agent reads the owner a short summary of each, and applies it only if they say go. After applying one, `brain_update.py compare` checks the whole brain against `brain/` as it is at that update, the exemplar.

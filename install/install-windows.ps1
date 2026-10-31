@@ -1,9 +1,10 @@
 # Sets up your own second brain on this Windows PC, from Matt's starter kit. It installs Git, GitHub's
 # command line (gh) and Obsidian if they're missing, signs you in to GitHub, makes your brain's private
 # repo (inviting Matt's testing account to it, to test the kit while it's in testing) and puts the brain
-# in it, puts your copy in C:\AI-Brain-Link and opens it in Obsidian with syncing on, adds the upload
-# point if the brain has one, then sets up the PC runner, so AI agents can run jobs on this PC. Safe to
-# run again: it skips what's already done.
+# in it, puts your copy in C:\AI-Brain-Link with Obsidian's syncing on, adds the upload point if the
+# brain has one, sets up the PC runner, so AI agents can run jobs on this PC, and opens Obsidian last.
+# Safe to run again: it skips what's already done. It ends with a list of which steps finished, and
+# keeps it in C:\AI-Brain-Link\_logs\install.log, which the setup check reads.
 # Where the brain comes from, first found:
 # - -Brain <a brain folder or a .bundle file>;
 # - a .bundle file next to this script (the zip make_starter.py makes);
@@ -20,11 +21,67 @@ $root = if ($check) { $check } else { 'C:\AI-Brain-Link' }
 $noBom = New-Object Text.UTF8Encoding $false # Obsidian can't read JSON that starts with a byte-order mark
 
 function Say($t) { Write-Host ''; Write-Host $t -ForegroundColor Cyan }
+# Each question in yellow on its own line, so it can't be missed among the installs' output.
 function Ask($q, $default) {
   if ($check) { return $default }
-  $a = Read-Host "$q [$default]"
+  Write-Host ''
+  Write-Host $q -ForegroundColor Yellow
+  $a = Read-Host "Type your answer, or press Enter for $default"
   if ([string]::IsNullOrWhiteSpace($a)) { return $default }
   return $a.Trim()
+}
+
+# The steps and how each went, kept in C:\AI-Brain-Link\_logs\install.log as it goes and listed at the end,
+# so if the setup stops, or its window is closed, the brain's agent and the setup check can see how far it
+# got. On Zak's PC (31 Oct 2026) it stopped after Obsidian with nothing on screen or on the PC to say why.
+$steps = [ordered]@{}
+$logFile = Join-Path (Join-Path $root '_logs') 'install.log'
+function Log($t) { try { [IO.File]::AppendAllText($logFile, ((Get-Date).ToString('yyyy-MM-dd HH:mm:ss') + "  $t`r`n"), $noBom) } catch { } }
+function Step($name, $state) { $steps[$name] = $state; Log "$state  $name" }
+function Show-Steps {
+  Write-Host ''
+  Write-Host 'The setup, step by step:' -ForegroundColor Cyan
+  foreach ($k in $steps.Keys) {
+    $s = $steps[$k]
+    $colour = if ($s -eq 'done') { 'Green' } elseif ($s -eq 'skipped') { 'Gray' } else { 'Yellow' }
+    $shown = if ($s -eq 'started') { 'stopped here' } else { $s }
+    Write-Host ('  {0,-12} {1}' -f $shown, $k) -ForegroundColor $colour
+  }
+  Write-Host "  (also kept in $logFile)"
+}
+
+# Clicking inside a Windows 10 PowerShell window starts a selection, which pauses the setup until a key is
+# pressed, with only "Select" in the title bar to say so. So QuickEdit is off while it runs, then put back.
+$script:consoleMode = $null
+function Set-QuickEdit([bool]$on) {
+  try {
+    if (-not ('KitConsole.Mode' -as [type])) {
+      Add-Type -Namespace KitConsole -Name Mode -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetStdHandle(int n);
+[DllImport("kernel32.dll")] public static extern bool GetConsoleMode(IntPtr h, out uint m);
+[DllImport("kernel32.dll")] public static extern bool SetConsoleMode(IntPtr h, uint m);
+'@
+    }
+    $h = [KitConsole.Mode]::GetStdHandle(-10)
+    if ($on) {
+      if ($null -ne $script:consoleMode) { [void][KitConsole.Mode]::SetConsoleMode($h, $script:consoleMode) }
+      return
+    }
+    $m = [uint32]0
+    if (-not [KitConsole.Mode]::GetConsoleMode($h, [ref]$m)) { return }
+    $script:consoleMode = $m
+    $new = [int64]$m
+    if ($new -band 0x40) { $new -= 0x40 }
+    [void][KitConsole.Mode]::SetConsoleMode($h, [uint32]($new -bor 0x80))
+  } catch { }
+}
+
+# A step that stops the setup: list the steps and where it stopped, then let the error show as before.
+trap {
+  Log "stopped: $($_.Exception.Message)"
+  Show-Steps
+  if (-not $check) { Set-QuickEdit $true }
+  break
 }
 function Yes($q) { return (Ask $q 'Y') -match '^\s*[Yy]' }
 # Runs a program without Windows PowerShell 5.1 turning what it writes to stderr into errors.
@@ -130,9 +187,13 @@ if (-not (Test-Path -LiteralPath $Brain)) { throw "There's no brain to set up: n
 $Brain = (Resolve-Path -LiteralPath $Brain).ProviderPath
 $fromFolder = (Get-Item -LiteralPath $Brain).PSIsContainer
 if ($fromFolder -and -not (Test-Path -LiteralPath (Join-Path $Brain 'CLAUDE.md'))) { throw "$Brain isn't a brain: it has no CLAUDE.md." }
-Say 'Setting up your second brain. It takes about 10 minutes, mostly installing.'
+try { New-Item -ItemType Directory -Force -Path (Split-Path $logFile -Parent) | Out-Null } catch { }
+Log "== The installer started, from $Brain (Windows PowerShell $($PSVersionTable.PSVersion))"
+if (-not $check) { Set-QuickEdit $false }
+Say 'Setting up your second brain. It takes about 10 minutes, mostly installing. Questions show in yellow.'
 
 # 1. The tools
+Step "The tools (Git, GitHub's command line, Obsidian)" 'started'
 if (-not $check) {
   if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw "winget (Windows' app installer) isn't on this PC. Install 'App Installer' from the Microsoft Store, then paste the same command again." }
   if (-not (Find-Git)) { Install-App 'Git.Git' 'Git' }
@@ -146,8 +207,10 @@ if (-not $git) { throw "Git is installed, but this window can't see it yet. Clos
 if (-not (Get-Command git -CommandType Application -ErrorAction SilentlyContinue)) { $env:Path = "$env:Path;$(Split-Path $git -Parent)" }
 $gh = Find-Gh
 if (-not $check -and -not $gh) { throw "GitHub's command line is installed, but this window can't see it yet. Close PowerShell, open it again and paste the same command." }
+Step "The tools (Git, GitHub's command line, Obsidian)" 'done'
 
 # 2. GitHub
+Step 'Signed in to GitHub' 'started'
 if ($check) { $owner = 'example' } else {
   $status = Native { & $gh auth status --hostname github.com 2>&1 } | Out-String
   if ($LASTEXITCODE -ne 0) {
@@ -171,9 +234,12 @@ if ($check) { $owner = 'example' } else {
     Native { & $git config --global user.email "$userId+$owner@users.noreply.github.com" }
   }
 }
+Step 'Signed in to GitHub' 'done'
+Log "signed in as $owner"
 
 # 3. Your brain's repo on GitHub
-$name = Ask 'A name for your brain on GitHub' 'my-brain'
+Step "Your brain's private repo on GitHub" 'started'
+$name = Ask 'A name for your brain on GitHub?' 'my-brain'
 while ($name -notmatch '^[A-Za-z0-9._-]+$') { $name = Ask 'Letters, numbers, dashes, dots and underscores only, please' 'my-brain' }
 $repo = "$owner/$name"
 $vault = Join-Path $root $name
@@ -190,6 +256,8 @@ if (-not $check) {
     $fresh = [bool]$j.isEmpty
   }
 }
+Step "Your brain's private repo on GitHub" 'done'
+Log "the repo is $repo"
 
 # 3b. Matt's testing account, while the kit is in testing (Matt, 27 Oct 2026). Only for a brain made now,
 # so a run again doesn't add it back after you've taken it off. A personal repo has no read-only option.
@@ -204,6 +272,7 @@ if ($fresh -and $owner -notin @('mjohnsonchung', $tester)) {
 }
 
 # 4. The brain on this PC, and on GitHub
+Step "Your brain on GitHub, and your copy in $vault" 'started'
 New-Item -ItemType Directory -Force -Path $root | Out-Null
 if (Test-Path (Join-Path $vault '.git')) {
   Say "Your brain is already on this PC, in $vault."
@@ -226,8 +295,11 @@ if (Test-Path (Join-Path $vault '.git')) {
   if ($LASTEXITCODE -ne 0) { throw "Copying $repo to this PC failed." }
   Native { & $git -C $vault config core.longpaths true }
 }
+Step "Your brain on GitHub, and your copy in $vault" 'done'
 
-# 5. Obsidian, with the Git plugin that syncs your edits (its code isn't kept in the repo)
+# 5. Obsidian, with the Git plugin that syncs your edits (its code isn't kept in the repo). It opens at the
+# end: opened here, it came up in front of this window while the runner's question waited behind it.
+Step 'Obsidian, with syncing on' 'started'
 $plugin = Join-Path (Join-Path (Join-Path $vault '.obsidian') 'plugins') 'obsidian-git'
 if (-not $check -and -not (Test-Path (Join-Path $plugin 'main.js'))) {
   Say 'Adding the Obsidian Git plugin, which syncs your edits with GitHub...'
@@ -255,38 +327,51 @@ if (-not ($data.vaults.PSObject.Properties | Where-Object { $_.Value.path -eq $v
   $data.vaults | Add-Member -NotePropertyName $id -NotePropertyValue ([pscustomobject]@{ path = $vault; ts = $ts; open = $true })
 }
 [IO.File]::WriteAllText($cfg, ($data | ConvertTo-Json -Depth 10 -Compress), $noBom)
-if (-not $check) {
-  try { Start-Process ('obsidian://open?path=' + [uri]::EscapeDataString($vault)) } catch { $o = Find-Obsidian; if ($o) { Start-Process $o } }
-  Say 'Obsidian is opening your brain. If it asks, choose "Trust author and enable plugins".'
-}
+Step 'Obsidian, with syncing on' 'done'
 
 # 5b. The upload point, if this brain has one (from the kit after brain update 3): your brain is fine without it.
 $uploadSetup = Inside $vault 'skills' 'upload-point' 'setup-upload-point.ps1'
 if (Test-Path -LiteralPath $uploadSetup) {
+  Step 'The upload point' 'started'
   Say 'Adding the upload point: a shortcut on your desktop and in Send to, for giving your brain files...'
   if (-not $check) {
     $uploadOk = $false
     try { Native { & powershell -NoProfile -ExecutionPolicy Bypass -File $uploadSetup }; $uploadOk = $LASTEXITCODE -eq 0 } catch { }
     if (-not $uploadOk) { Write-Host "The upload point didn't set up; your brain works without it. To try again later, paste: powershell -ExecutionPolicy Bypass -File `"$uploadSetup`"" -ForegroundColor Yellow }
-  }
+    Step 'The upload point' $(if ($uploadOk) { 'done' } else { 'not done' })
+  } else { Step 'The upload point' 'done' }
 }
 
 # 6. The PC runner
 $runnerSetup = Join-Path (Join-Path (Join-Path $vault 'skills') 'my-pc') 'setup-runner.ps1'
 $runnerOk = $true
+Step 'The PC runner' 'started'
 if (-not $check) {
-  if (Yes 'Set up the PC runner now, so AI agents can run jobs on this PC? It asks for admin rights and your Windows password') {
+  if (Yes 'Set up the PC runner now, so AI agents can run jobs on this PC? It asks for admin rights, then your Windows password, in a second window.') {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $runnerSetup -Repo $repo -Root $root
     # "All done" only once GitHub sees the runner online: on a friend's PC it said so after the
     # runner setup had stopped partway (22 Oct 2026).
     $runnerOk = $LASTEXITCODE -eq 0
     try { $list = Native { & $gh api "repos/$repo/actions/runners" } | Out-String | ConvertFrom-Json } catch { $list = $null }
     if (-not ($list.runners | Where-Object { $_.status -eq 'online' })) { $runnerOk = $false }
+    Step 'The PC runner' $(if ($runnerOk) { 'done' } else { 'not done' })
   } else {
+    Step 'The PC runner' 'skipped'
     Write-Host "Skipped. To set it up later, paste: powershell -ExecutionPolicy Bypass -File `"$runnerSetup`""
   }
-}
+} else { Step 'The PC runner' 'skipped' }
 
+# 7. Obsidian opens last, so it can't hide a question in this window.
+Step 'Obsidian opened on your brain' 'started'
+if (-not $check) {
+  try { Start-Process ('obsidian://open?path=' + [uri]::EscapeDataString($vault)) } catch { $o = Find-Obsidian; if ($o) { Start-Process $o } }
+  Start-Sleep -Seconds 3
+}
+Step 'Obsidian opened on your brain' 'done'
+
+Show-Steps
+if (-not $check) { Set-QuickEdit $true }
+Say 'Obsidian is opening your brain. If it asks, choose "Trust author and enable plugins". Then come back to this window for the last step, below.'
 if ($runnerOk) { Say 'All done on this PC.' } else {
   Write-Host ''
   Write-Host "Your brain is set up, but the PC runner isn't working yet, so agents can't run jobs on this PC." -ForegroundColor Yellow

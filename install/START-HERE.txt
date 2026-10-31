@@ -15,20 +15,22 @@ You need: a Windows PC, a Claude plan, and about 30 minutes, mostly waiting for 
 irm https://raw.githubusercontent.com/mjohnsonchung/AnIdeaLab-brain-friends-kit/main/install.ps1 | iex
 
    It installs Git, GitHub's command line and Obsidian, and Windows may ask you to allow each.
-   Then it asks you to:
+   Its questions show in yellow. It asks you to:
    - sign in to GitHub in your browser, copying a code from the window (no account yet? make
      one on that page, it's free);
    - name your brain (press Enter for my-brain). Your brain's repo is private, and Matt's
      testing account (GitHub: diagnostics-anidealab) is invited to it, so Matt can see it and
      copy it to test the kit while it's in testing. To take it off any time: your repo on
      GitHub, Settings, Collaborators;
-   - in Obsidian, choose "Trust author and enable plugins";
    - say yes to the PC runner. A second window asks for admin rights, then your Windows
      password: the one you type at the sign-in screen, NOT your PIN. With a Microsoft account,
      it's that account's password;
-   - say yes to keeping the PC awake while it's plugged in (jobs can't run while it sleeps).
+   - say yes to keeping the PC awake while it's plugged in (jobs can't run while it sleeps);
+   - last, Obsidian opens your brain: choose "Trust author and enable plugins", then come
+     back to the blue window, which lists each step and what to do next.
 
-   If it stops partway, paste the same line again: it skips what's already done.
+   If it stops partway, paste the same line again: it skips what's already done. What it
+   did is kept in C:\AI-Brain-Link\_logs\install.log.
 
 3. CONNECT CLAUDE:
    - Go to https://claude.ai/code. If it asks, connect GitHub and let Claude see your brain repo.
