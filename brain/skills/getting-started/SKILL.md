@@ -59,7 +59,7 @@ Wait until the run shows as completed, then read its job log. Put what it found 
 - **When a site is blocked** in a Claude session, the agent will say which; the owner can allow it in the session's environment settings (the environment menu in the session's title bar, then Edit, then Network access).
 
 ## 6. Offer the weekly tidy-up
-The [brain-audit skill](../brain-audit/SKILL.md) tidies the brain once a week. It's a reminder, not a scheduled job: nothing runs, and none of their plan is used, until they say yes to it in a session. Ask if they'd like it. If yes, add its row to [routines](../../knowledge/systems/routines.md) as the comment in that note shows, starting from the next Saturday, and commit.
+The [brain-audit skill](../brain-audit/SKILL.md) tidies the brain once a week. It's a reminder, not a scheduled job: nothing runs, and none of their plan is used, until they say yes to it in a session. Ask if they'd like it. If yes, add its row to the owner's own table in [routines](../../knowledge/systems/routines.md), as the comment there shows, starting from the next Saturday, and commit.
 
 ## 7. Finish
 - Take the "A new brain" paragraph out of the core, so this skill doesn't run again.

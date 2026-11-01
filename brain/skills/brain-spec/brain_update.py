@@ -446,8 +446,11 @@ def do_finish(args):
         if script != "library.py build":
             if mine:
                 line += " " + "; ".join(f"`{l}`" for l in mine[:15])
-            if len(detail) > len(mine):
-                line += f" (and {len(detail) - len(mine)} in the owner's own notes, not listed)"
+            others = len(detail) - len(mine)
+            if others:  # said so it can't read as more problems than the counts in the first line
+                line += (f" (and {others} more in the owner's own notes, not listed)" if mine else
+                         " (that one is in the owner's own notes, not listed)" if others == 1 else
+                         f" (all {others} are in the owner's own notes, not listed)")
         checks.append(line)
     diff = subprocess.run(["git", "-C", ROOT, "diff", "--shortstat", "HEAD"], capture_output=True, text=True).stdout.strip()
     today = f"{date.today().day} {date.today():%b %Y}"
@@ -479,7 +482,8 @@ def kind(rel):
     """Which of compare's three kinds a kit file is: filled in by the owner, the owner's settings, or the kit's own."""
     if rel in FILLED or rel.startswith(tuple(p for p in FILLED if p.endswith("/"))):
         return "filled"
-    if (rel.startswith(SETTINGS) or rel in SETTINGS) and not rel.startswith(".obsidian/plugins/brain-graph/"):
+    # The brain graph's own files are the kit's, but its data.json is the owner's setting, as apply keeps it.
+    if owner_setting(rel) or ((rel.startswith(SETTINGS) or rel in SETTINGS) and not rel.startswith(".obsidian/plugins/brain-graph/")):
         return "settings"
     return "kit"
 

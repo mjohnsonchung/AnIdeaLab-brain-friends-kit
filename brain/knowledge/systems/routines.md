@@ -13,13 +13,17 @@ Anything that runs, or falls due, on a beat.
    - **Reminder,** for work that needs an AI or the owner. Nothing runs until the owner says yes in a session, so it uses none of their plan until then. `reminders.py` tells the agent when one is due.
    - **Code on a timer,** for work a script can do alone (a GitHub Actions `schedule:`, or a Windows task on the PC). It uses no AI.
    - **Scheduled AI job,** which uses the owner's plan by itself, only with their yes for that routine.
-3. **Every routine has a row** in the table below.
+3. **Every routine has a row** in one of the two tables below: the brain's own, which brain updates from the kit add to, in "Running now", and the owner's in "The owner's own", so an update's new rows never meet theirs.
 
 ## Running now
-<!-- A reminder row looks like this (the weekly tidy-up, once the owner says yes to it):
-| Weekly tidy-up | The brain | Reminder | Saturdays 09:00, from 24 Oct 2026 | the brain-audit skill | A session the owner starts | [audit-log.md](../areas/the-brain/audit-log.md) |
--->
 | Routine | Owner | Kind | When (NZ time) | What runs | Where it runs | Log |
 |---|---|---|---|---|---|---|
 | Brain update check | The brain | Code on a timer | Once a day, at the day's first session | `brain_update.py notice`, run by `reminders.py`: asks the kit repo, and says so only if an update is waiting | A session the owner starts (Claude Code's session-start hook) | [brain updates](brain-updates/README.md) |
 | Upload point check | The brain | Code on a timer | Every session the owner starts | `reminders.py` reads [the upload point's list](upload-point.md), and says so only if something's waiting | A session the owner starts (Claude Code's session-start hook) | [the upload point](upload-point.md) |
+
+## The owner's own
+<!-- The owner's routines go in this table, at its end. A reminder row looks like this (the weekly tidy-up, once the owner says yes to it):
+| Weekly tidy-up | The brain | Reminder | Saturdays 09:00, from 24 Oct 2026 | the brain-audit skill | A session the owner starts | [audit-log.md](../areas/the-brain/audit-log.md) |
+-->
+| Routine | Owner | Kind | When (NZ time) | What runs | Where it runs | Log |
+|---|---|---|---|---|---|---|
