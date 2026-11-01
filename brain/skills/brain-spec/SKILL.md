@@ -16,14 +16,15 @@ Beside them: `README.md` (the owner's front door), `.github/` (the Actions), `.o
 
 **Skill or knowledge?** Know-how that works for any project, the same from job to job, is a skill. How one project does things, and anything true about the owner, their projects, people, systems or decisions, is knowledge, kept with that project or on its shelf. So "how to run an ad campaign" is a skill, and "the shop's ads may spend $50 a week" is knowledge.
 
-**Links run one way.** Notes may point at skills, but skills don't point at notes, so skills stay general. The exceptions are the skills that run the brain's own machinery (brain-spec, brain-audit, getting-started, guide-mode, my-pc), the skills list itself, and a skill citing the decision it comes from. `library.py check` reports any other.
+**Links run one way.** Notes may point at skills, but skills don't point at notes, so skills stay general. The exceptions are the skills that run the brain's own machinery (brain-spec, brain-audit, getting-started, guide-mode, handoff, my-pc, upload-point and add-a-key), the skills list itself, and a skill citing the decision it comes from. `library.py check` reports any other.
 
 ## The shelves
 | Shelf | What goes there |
 |---|---|
 | `knowledge/tasks/` | What's in flight, who holds it, what waits on the owner. One note per task. |
+| `knowledge/handoffs/` | Where a conversation or an agent's work stands, for whoever carries it on: session hand-offs, briefs and reports. One note each; its index is the board of open ones. |
 | `knowledge/ventures/` | Things with a goal: businesses, projects, client work. A note each, or a folder once it has several notes. |
-| `knowledge/areas/` | Ongoing things with no end: the brain itself (`the-brain/`), later money, health, home. |
+| `knowledge/areas/` | Ongoing things with no end: the brain itself (`the-brain/`), later money, health, home. Each has a dated "Where it stands", which the weekly tidy-up rewrites as it does a project's. |
 | `knowledge/decisions/` | What the owner decided, standing rules included, on a sub-shelf per project or area. |
 | `knowledge/people/` | The owner, customers, suppliers, contacts. One note per person. |
 | `knowledge/systems/` | Accounts, the PC, routines, Obsidian, the brain graph. |
@@ -34,7 +35,7 @@ Beside them: `README.md` (the owner's front door), `.github/` (the Actions), `.o
 - **The working shelves are fixed. Subjects grow,** and so does everything inside a shelf. A new subject, project or area starts as one note, and becomes a folder with its own `README.md` once it has several.
 - **Every folder in `knowledge/` has a `README.md`:** its card, a few hand-written lines, and the index between `<!-- index:start -->` and `<!-- index:end -->`, which the script fills.
 - **Old history goes in a `history/` sub-shelf** of the project or area it's about, marked `status: done`. Obsidian hides every `history/` folder. Current notes don't link into `history/`: say where a retired note is in words.
-- **A new project** is a note (later a folder) in `ventures/`: what it is, its goal in the owner's words, where it stands, its code repo and its look; decisions, tasks and people about it are tagged with its name.
+- **A new project** is a note (later a folder) in `ventures/`: what it is, its goal in the owner's words, where it stands, its code repo and its look; decisions, tasks and people about it are tagged with its name. Its "Where it stands" is short, dated and what's true now, linking the notes that hold the detail; the weekly tidy-up rewrites it each week the project moves ([its Part 4](../brain-audit/SKILL.md#4-the-report)).
 
 ## Cards
 Every note starts with a card in its front matter, which Obsidian shows as the note's properties:
@@ -50,19 +51,21 @@ updated: {KIT_DATE}
 |---|---|
 | `about` | One line, under 250 characters: what's in the note and **when you'd read it**. It's the line an agent picks by. Always in double quotes, with no double quotes or backslashes inside. |
 | `tags` | The projects, areas or subjects it's about, by their names. Optional. |
-| `status` | Tasks: `open`, `doing`, `waiting`, `done` or `dropped`. Decisions: `current` or `superseded`. Ideas: `raw`, `researching`, `parked`, `graduated` or `dropped` (turned down). Ventures: `current`, `parked` or `done`. Anything else: `current` (the default) or `done`. |
+| `status` | Tasks: `open`, `doing`, `waiting`, `done` or `dropped`. Decisions: `current` or `superseded`. Ideas: `raw`, `researching`, `parked`, `graduated` or `dropped` (turned down). Ventures: `current`, `parked` or `done`. Hand-offs: `open`, `picked-up` or `done`. Anything else: `current` (the default) or `done`. |
 | `updated` | When someone last made sure the note and its card are true, like `{KIT_DATE}`. |
 | `holder` | Tasks only: `owner`, `open`, or the session link of the agent holding it. |
 | `parent` | Tasks only, optional: the file name of the task it came from. |
+| `kind` | Hand-offs only: `session`, `brief` or `report`. |
+| `before` | Hand-offs only, optional: the file name of the hand-off it carries on from. |
 | `due` | Optional: a date. |
 
 The file name is the note's name, in lower-case words with hyphens. A decision's file name starts with its date (`{KIT_ISO}-...`). The body is free: a `# Title`, then dated, sourced writing.
 
 ## The indexes and the scripts
 All in this folder, plain Python 3 with nothing to install:
-- **`library.py build`** fills each `README.md`'s index from the cards in its folder; tasks are grouped under "Waiting on the owner", "Doing", "Waiting" and "Open", and finished notes are counted, not listed. A GitHub Action ([library.yml](../../.github/workflows/library.yml)) runs it on every push and commits the indexes, so never edit an index by hand.
+- **`library.py build`** fills each `README.md`'s index from the cards in its folder; tasks are grouped under "Waiting on the owner", "Doing", "Waiting" and "Open", hand-offs under "Open" and "Picked up", and finished notes are counted, not listed. A GitHub Action ([library.yml](../../.github/workflows/library.yml)) runs it on every push and commits the indexes, so never edit an index by hand.
 - **`library.py find`** answers questions from the cards: `find --tag my-shop`, `find --shelf tasks --holder owner`, `find --text "supplier"`; add `--all` for finished notes.
-- **`library.py check`** reports missing cards and fields, bad statuses, unknown tags, folders with no `README.md`, an index past about 60 entries, the core or the skills list over 6 KB, skills linking into notes, brain skills over 500 lines, skills with no line in a topic list, a source's commit line outside `skills/lists/sources.md`, and `LESSONS.md` files their skill doesn't link. `--strict` exits 1 if there's anything.
+- **`library.py check`** reports missing cards and fields, bad statuses, unknown tags, hand-offs with no kind or status or a `before` that isn't there, folders with no `README.md`, an index past about 60 entries, the core over 8 KB or the skills list over 6 KB, skills linking into notes, brain skills over 500 lines, skills with no line in a topic list, a source's commit line outside `skills/lists/sources.md`, and `LESSONS.md` files their skill doesn't link. `--strict` exits 1 if there's anything.
 - **`library.py audit --since <date>`**, for the weekly tidy-up: notes changed a lot since their card was checked, tasks finished since then, and skills with lessons.
 - **`check_links.py`**: broken links, notes nothing links to, big or binary files, and the core's and indexes' sizes.
 - **`move.py MAP`** moves files and folders and fixes every link to them (`--dry-run` first). Paths in plain text aren't links: backticked paths, workflows, script defaults and comments are listed in its report, for fixing by hand.
@@ -74,6 +77,7 @@ All in this folder, plain Python 3 with nothing to install:
 ## Tasks and hand-offs
 - **A task note** is for work that will outlive the session, waits on someone, or is handed on. A job finished in one go needs none: git has the change, and anything learned goes to the library.
 - **Whoever hands a task out makes the note,** and closes it when the work comes back. The agent doing the work can add dated lines under `## Progress`.
+- **A hand-off** says where a conversation or an agent's work stands, so the next chat or agent can carry it on: at the end of a stage, at the size nudge, as a brief to an agent and as its report. It's a note on the [hand-offs shelf](../../knowledge/handoffs/README.md), in the format the [handoff skill](../handoff/SKILL.md) gives, which also says what to do at the nudge and when you start from one. The task stays the record of the job; the hand-off links to it.
 - **Something only the owner can do** is a task with `holder: owner`. Ask them in your thread as well.
 - **When a task closes,** set its status to `done` or `dropped`, add a dated line, and save what was learned that should outlive it.
 - **One note per task** keeps git conflicts rare.
@@ -89,11 +93,11 @@ The core's "one or two agents at a time" ([the starting rules](../../knowledge/d
 - **Not** for a job smaller than its brief, where writing the brief and reading the report cost more than doing it; work whose detail you need for your next step; or work that needs the owner's answers along the way, since the agent can't ask them.
 
 Two kinds of hand-off:
-- **A fresh agent with a brief** is the default. It starts clean and sees only the brief and what it opens, so it costs least and gives real fresh eyes. The brief carries everything it needs: the goal, the owner's words, the files and repos, the gates that bear on it, and what to send back (a short report, with paths).
+- **A fresh agent with a brief** is the default. It starts clean and sees only the brief and what it opens, so it costs least and gives real fresh eyes. The brief carries everything it needs: the goal, the owner's words, the files and repos, the gates that bear on it, and what to send back. The brief and the report are both hand-offs, in the [handoff skill's](../handoff/SKILL.md#briefs-and-reports) format, saved on the hand-offs shelf.
 - **A copy of the conversation,** where the tool can make one, needs no brief and knows everything said so far. But it carries the whole conversation into each of its turns, so it uses more, and it can't be fresh eyes. Use it when the piece rests on a long talk with the owner that a brief would lose.
 - Either way, check what comes back once, the normal way: look at the page, read the diff.
 
-**Without an agent tool,** hand a big piece to a fresh session with a task note as its brief, or do the steps yourself and keep long output short: the tail of a log, the screenshots that matter, the part of a file you need.
+**Without an agent tool,** hand a big piece to a fresh session with a hand-off as its brief, or do the steps yourself and keep long output short: the tail of a log, the screenshots that matter, the part of a file you need.
 
 ## Saving knowledge
 - **The test:** would an agent starting cold next month need this, and would it be hard to get again? If yes, save it.

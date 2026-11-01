@@ -12,7 +12,9 @@ Written for the brain restructure (19 Oct 2026). The design is in the brain-spec
     ---
 
 Tasks also have `holder` (owner, open, or a session link), and may have `parent` and
-`due`. Every folder in knowledge/ is a shelf, and its README.md is its index.
+`due`. Hand-offs have `kind` (session, brief or report), and may have `before`, the file
+name of the hand-off before them. Every folder in knowledge/ is a shelf, and its README.md
+is its index.
 
 Usage: python3 skills/brain-spec/library.py COMMAND [options]
   build                     fill each README.md's list, between the index marks
@@ -45,14 +47,17 @@ STATUSES = {
     "decisions": {"current", "superseded"},
     "ideas": {"raw", "researching", "parked", "graduated", "dropped"},
     "ventures": {"current", "parked", "done"},
+    "handoffs": {"open", "picked-up", "done"},
 }
+HANDOFF_KINDS = ("session", "brief", "report")  # the handoff skill's one format, used three ways (1 Nov 2026)
+HANDOFF_GROUPS = [("Open", "open"), ("Picked up", "picked-up")]  # the shelf's index is the coordinator's board
 OTHER_STATUSES = {"current", "done"}
 TAG_SHELVES = ("ventures", "areas", "subjects")
-MACHINERY = {"brain-spec", "brain-audit", "getting-started", "guide-mode", "my-pc", "upload-point", "add-a-key"}  # skills that run the brain's own machinery, so may link into notes
+MACHINERY = {"brain-spec", "brain-audit", "getting-started", "guide-mode", "handoff", "my-pc", "upload-point", "add-a-key"}  # skills that run the brain's own machinery, so may link into notes
 TASK_GROUPS = [("Waiting on the owner", None), ("Doing", "doing"), ("Waiting", "waiting"), ("Open", "open")]
 MAX_ABOUT = 250
 MAX_INDEX = 60   # entries in an index
-MAX_CORE = 6 * 1024
+MAX_CORE = 8 * 1024  # CLAUDE.md, which every agent reads first: 8 KB since 31 Oct 2026, and the kit's own stays under 6 KB, leaving owners 2 KB
 MAX_SKILLS_LIST = 6 * 1024  # skills/README.md, which agents read next: past this, move skills into topic lists (26 Oct 2026)
 MAX_SKILL_LINES = 500  # Anthropic's skill-creator: "Keep SKILL.md under 500 lines"
 MAX_LESSONS = 20  # in a skill's LESSONS.md, before the audit must merge them
@@ -188,6 +193,9 @@ def line_for(lib, shelf, path, card, is_shelf=False):
     if lib.top(path) == "tasks" and not is_shelf:
         if card.get("due"):
             extra += f" Due {card['due']}."
+    elif lib.top(path) == "handoffs" and not is_shelf:
+        if card.get("kind"):
+            extra += f" *({card['kind']})*"  # the board groups them by status
     elif status and status not in ("current",) and status not in FINISHED:
         extra += f" *({status})*"
     tags = tags_of(card)
@@ -215,6 +223,16 @@ def index_for(lib, shelf):
                 lines += ["", f"### {title}"] + [line_for(lib, shelf, n, c) for n, c in group]
         if not live and not subs:
             lines.append("*No open tasks.*")
+    elif top == "handoffs":
+        named = [s for _, s in HANDOFF_GROUPS]
+        groups = HANDOFF_GROUPS + [("Other", None)]
+        for title, status in groups:
+            group = [(n, c) for n, c in live if c.get("status") == status or (status is None and c.get("status") not in named)]
+            group.sort(key=lambda nc: os.path.basename(nc[0]), reverse=True)
+            if group:
+                lines += ["", f"### {title}"] + [line_for(lib, shelf, n, c) for n, c in group]
+        if not live and not subs:
+            lines.append("*No open hand-offs.*")
     else:
         dated = [nc for nc in live if re.match(r"^\d{4}-\d{2}-\d{2}", os.path.basename(nc[0]))]
         live = sorted(dated, key=lambda nc: os.path.basename(nc[0]), reverse=True) + [nc for nc in live if nc not in dated]
@@ -334,6 +352,8 @@ def check(lib):
             h = card.get("holder", "")
             if not (h in ("owner", "open") or re.match(r"^https?://\S+$", str(h))):
                 problems.append(f'{rel}: holder "{h}" should be owner, open or a session link')
+        if top == "handoffs" and not readme:
+            problems += handoff_card(lib, rel, card)
     core = os.path.join(lib.root, "CLAUDE.md")
     if os.path.exists(core) and os.path.getsize(core) > MAX_CORE:
         problems.append(f"CLAUDE.md: the core is {os.path.getsize(core) / 1024:.1f} KB, over {MAX_CORE // 1024} KB")
@@ -346,6 +366,23 @@ def check(lib):
     problems += skill_lists(lib)
     problems += history_links(lib)
     return problems
+
+
+def handoff_card(lib, rel, card):
+    """A hand-off's card: its kind, a status, and the hand-off before it, if it names one, still there."""
+    out = []
+    if card.get("kind") not in HANDOFF_KINDS:
+        out.append(f'{rel}: kind "{card.get("kind", "")}" should be {", ".join(HANDOFF_KINDS[:-1])} or {HANDOFF_KINDS[-1]}')
+    if not card.get("status"):
+        out.append(f"{rel}: no status ({', '.join(sorted(STATUSES['handoffs']))})")
+    before = card.get("before")
+    if before:
+        name = os.path.basename(str(before))
+        name = name if name.endswith(".md") else name + ".md"
+        shelf = os.path.join(lib.know, "handoffs")
+        if not any(os.path.isfile(os.path.join(shelf, d, name)) for d in ("", "history")):
+            out.append(f'{rel}: before "{before}" isn\'t a hand-off on the shelf or in its history/')
+    return out
 
 
 def skill_links(lib):

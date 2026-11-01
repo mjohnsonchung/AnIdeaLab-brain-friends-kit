@@ -8,7 +8,7 @@ This is the record of which skills are copied: a skill with a line here is kept 
 - [sources/](../sources/): each other source's README and licence.
 
 ## addyosmani/agent-skills
-From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), commit `aeac41d`, copied 19 Oct 2026. Licence: MIT.
+From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills), commit `8bfcc1f`, copied 19 Oct 2026. Licence: MIT.
 
 - [addyosmani-code-review-and-quality](../addyosmani-code-review-and-quality/SKILL.md)
 - [addyosmani-context-engineering](../addyosmani-context-engineering/SKILL.md)
@@ -40,7 +40,7 @@ From [anthropics/skills](https://github.com/anthropics/skills), commit `dbd4588`
 - [webapp-testing](../webapp-testing/SKILL.md)
 
 ## coreyhaines31/marketingskills
-From [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills), commit `e85f3cb`, copied 19 Oct 2026. Licence: MIT.
+From [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills), commit `88c79f6`, copied 19 Oct 2026. Licence: MIT.
 
 - [marketingskills-copywriting](../marketingskills-copywriting/SKILL.md)
 - [marketingskills-customer-research](../marketingskills-customer-research/SKILL.md)
@@ -49,12 +49,12 @@ From [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketings
 - [marketingskills-pricing](../marketingskills-pricing/SKILL.md)
 
 ## Leonxlnx/taste-skill
-From [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill), commit `6010f91`, copied 19 Oct 2026. Licence: MIT.
+From [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill), commit `12af471`, copied 19 Oct 2026. Licence: MIT.
 
 - [taste-skill](../taste-skill/SKILL.md)
 
 ## mattpocock/skills
-From [mattpocock/skills](https://github.com/mattpocock/skills), commit `5beb35b`, copied 19 Oct 2026. Licence: MIT.
+From [mattpocock/skills](https://github.com/mattpocock/skills), commit `4ae2317`, copied 19 Oct 2026. Licence: MIT.
 
 - [mattpocock-grilling](../mattpocock-grilling/SKILL.md)
 - [mattpocock-prototype](../mattpocock-prototype/SKILL.md)
@@ -72,12 +72,12 @@ From [obra/superpowers](https://github.com/obra/superpowers), commit `2ce8aa1`, 
 - [superpowers-writing-plans](../superpowers-writing-plans/SKILL.md)
 
 ## pbakaus/impeccable
-From [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit `9368675`, copied 19 Oct 2026. Licence: Apache 2.0.
+From [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit `4f95649`, copied 19 Oct 2026. Licence: Apache 2.0.
 
 - [impeccable](../impeccable/SKILL.md)
 
 ## vercel-labs/agent-skills
-From [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`, copied 19 Oct 2026. Licence: MIT.
+From [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `1a2c79d`, copied 19 Oct 2026. Licence: MIT.
 
 - [vercel-deploy-to-vercel](../vercel-deploy-to-vercel/SKILL.md)
 - [vercel-web-design-guidelines](../vercel-web-design-guidelines/SKILL.md)

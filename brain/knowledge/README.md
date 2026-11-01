@@ -14,6 +14,7 @@ What the brain knows, as plain Markdown notes. How to do things is the other lib
 <!-- index:start -->
 - [areas/](areas/README.md): Ongoing things with no end: the brain itself, later others such as money, health or home. Read for the overall picture of an area.
 - [decisions/](decisions/README.md): What the owner decided, standing rules included, one note per decision on a sub-shelf per project or area. Read before changing anything a rule might cover.
+- [handoffs/](handoffs/README.md): Hand-offs: where a conversation or an agent's work stands, for whoever carries it on: session hand-offs, briefs and reports. The index is the board of open ones. Read when you start from a hand-off, or before you write one.
 - [ideas/](ideas/README.md): Ideas not started yet, the friction log included, one note each. Read before proposing something new, in case it's here already.
 - [people/](people/README.md): The owner, customers, suppliers and contacts, one note per person. Read before working with or writing to someone.
 - [subjects/](subjects/README.md): The open library, one note or folder per field of knowledge, kept when facts took effort to get. Read when a job needs facts about a field rather than about the owner's own work.

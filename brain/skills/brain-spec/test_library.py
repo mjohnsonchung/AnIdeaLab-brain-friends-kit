@@ -174,6 +174,41 @@ class LibraryTest(unittest.TestCase):
             "skills/tidy/LESSONS.md: 1 lesson (copied, keep short)",
         ])
 
+    def test_handoffs(self):
+        files = {
+            "knowledge/handoffs/README.md": SHELF.format(about="Where work stands.", title="Hand-offs"),
+            "knowledge/handoffs/history/README.md": SHELF.format(about="Old hand-offs.", title="History"),
+            "knowledge/handoffs/history/2026-10-30-first.md": note("The first session.", kind="session", status="done"),
+            "knowledge/handoffs/2026-10-31-second.md": note("The second session.", kind="session", status="picked-up",
+                                                            before="2026-10-30-first.md", tags="[drivermods]"),
+            "knowledge/handoffs/2026-11-01-third.md": note("The third session.", kind="session", status="open",
+                                                           before="2026-10-31-second"),
+            "knowledge/handoffs/2026-11-01-brief.md": note("A brief.", kind="brief", status="open"),
+            "knowledge/handoffs/2026-11-01-report.md": note("A report.", kind="report", status="done",
+                                                            before="2026-11-01-brief.md"),
+            "knowledge/handoffs/2026-11-01-odd.md": note("An odd one.", kind="letter", before="2026-09-01-lost.md"),
+        }
+        for rel, text in files.items():
+            path = os.path.join(self.tmp.name, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+        library.build(self.lib, quiet=True)
+        board = self.read("knowledge/handoffs/README.md")
+        self.assertIn("### Open\n- [2026-11-01-third](2026-11-01-third.md): The third session. *(session)*\n"
+                      "- [2026-11-01-brief](2026-11-01-brief.md): A brief. *(brief)*", board, "open ones first, newest first")
+        self.assertIn("### Picked up\n- [2026-10-31-second](2026-10-31-second.md): The second session. *(session)* [drivermods]", board)
+        self.assertIn("### Other\n- [2026-11-01-odd]", board, "a hand-off with no status still shows")
+        self.assertNotIn("2026-11-01-report", board)
+        self.assertIn("Finished, and not listed: 1.", board)
+        self.assertIn("- [history/](history/README.md): Old hand-offs.", board)
+        problems = "\n".join(library.check(self.lib))
+        self.assertIn('knowledge/handoffs/2026-11-01-odd.md: kind "letter" should be session, brief or report', problems)
+        self.assertIn("knowledge/handoffs/2026-11-01-odd.md: no status", problems)
+        self.assertIn('knowledge/handoffs/2026-11-01-odd.md: before "2026-09-01-lost.md" isn\'t a hand-off', problems)
+        for fine in ("2026-10-31-second", "2026-11-01-third", "2026-11-01-brief", "2026-11-01-report", "history/2026-10-30"):
+            self.assertNotIn(fine, problems)
+
     def test_one_way_decisions(self):
         def write(rel, text):
             with open(os.path.join(self.tmp.name, rel), "w", encoding="utf-8") as fh:

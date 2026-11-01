@@ -3,8 +3,8 @@
 AI agents working on my projects, and everything they know, kept as plain Markdown notes that any agent can read and I can read anywhere. It was started on {KIT_DATE} from a starter kit made from Matt's brain, and it has three parts:
 
 - **[The core](CLAUDE.md):** the one page every agent reads: what the brain is, guide mode, my defaults and the few gates (money, secrets, the sign-off, my voice).
-- **[The skills](skills/README.md):** how to do things, one folder per skill: 63 to start, and more whenever a job needs one.
-- **[The knowledge library](knowledge/README.md):** what the brain knows, on shelves: tasks, ventures, areas, decisions, people, systems, ideas and subjects. Every note starts with a one-line card saying what's in it and when to read it.
+- **[The skills](skills/README.md):** how to do things, one folder per skill: 64 to start, and more whenever a job needs one.
+- **[The knowledge library](knowledge/README.md):** what the brain knows, on shelves: tasks, hand-offs, ventures, areas, decisions, people, systems, ideas and subjects. Every note starts with a one-line card saying what's in it and when to read it.
 
 ## What waits on me
 The **[tasks index](knowledge/tasks/README.md)** is the "now" page: everything in flight, with what waits on me at the top.

@@ -43,7 +43,7 @@ Ways to keep a job smaller, worth telling the owner when they fit:
 - Check in at the planned points: what's done, what's next, anything that surprised you. A few lines.
 - If the job turns out bigger than you said, stop at the next sensible point, say so and what it's likely to take, and let the owner choose: carry on, cut it down, or stop here.
 - Don't add things they didn't ask for. Suggest them at the end instead.
-- When a session is getting long, finish the stage you're on, save where things stand (a task note if the work carries on, as the brain spec says) and suggest a fresh session for the next stage.
+- When a session is getting long, or the size nudge comes, finish the step you're on and hand off the way the [handoff skill](../handoff/SKILL.md) says: save what's lasting, write a hand-off on the hand-offs shelf, and give the owner its path to paste into a fresh chat for the next stage.
 
 ## Explaining
 - Plain words. Explain a technical term the first time you use it, in a few words.
@@ -60,7 +60,7 @@ When the owner has found their feet and wants less guiding (Matt, 31 Oct 2026: "
 What stays:
 - **Sizing:** size every job bigger than a quick answer, as the table says, and give the size and why in a line.
 - **Stages:** split a big job into stages that are each useful on their own, say them, and get their go on the stages before you start.
-- **A hand-off at the end of each stage:** save where things stand, in the task note's progress line (what's done, where it is, what's next, what you learned), and commit it, so the next stage can start clean: in this session, with an agent you hand it to with a brief, or in a fresh session when this one is long.
+- **A hand-off at the end of each stage,** the way the [handoff skill](../handoff/SKILL.md) says: save what's lasting, add a line to the job's task note, write the hand-off on the hand-offs shelf, and commit it, so the next stage can start clean: in this session, with an agent you hand it to as a brief, or in a fresh session when this one is long or the size nudge comes.
 - **Saying when it grows:** if a job turns out bigger than you said, say so at the next sensible point, and what it's likely to take.
 - **More than two agents at once** still needs their yes.
 - **Job sizes,** as in "After a job".

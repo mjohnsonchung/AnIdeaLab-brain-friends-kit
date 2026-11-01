@@ -4,7 +4,7 @@ updated: {KIT_DATE}
 ---
 # Ventures
 
-Each project's note says what it is, its goal in the owner's words, where it stands, its code repo and its look. Its tasks, decisions and people are on their own shelves, tagged with its name. A new project starts as one note and becomes a folder with its own `README.md` once it has several.
+Each project's note says what it is, its goal in the owner's words, where it stands, its code repo and its look. The weekly tidy-up rewrites where it stands, dated, each week the project moves. Its tasks, decisions and people are on their own shelves, tagged with its name. A new project starts as one note and becomes a folder with its own `README.md` once it has several.
 
 <!-- index:start -->
 *Nothing here yet.*

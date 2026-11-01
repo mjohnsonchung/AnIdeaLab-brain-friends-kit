@@ -229,12 +229,12 @@ if ($tree) {
     'skills/brain-spec/reminders.py' = 'the reminders script'
     'skills/guide-mode/SKILL.md' = 'guide mode'
     'skills/find-skills/SKILL.md' = 'the way to find more skills'
-    '.claude/settings.json' = "Claude Code's settings (it runs the reminders at the start of a session)"
+    '.claude/settings.json' = "Claude Code's settings (it runs the reminders at the start of a session, and the hand-off nudge)"
     '.obsidian/graph.json' = "the map's colours by shelf"
     '.obsidian/plugins/obsidian-git/data.json' = "Obsidian Git's sync settings"
     '.obsidian/plugins/brain-graph/main.js' = 'the brain graph'
   }
-  foreach ($s in 'tasks', 'ventures', 'areas', 'decisions', 'people', 'systems', 'ideas', 'subjects') { $parts["knowledge/$s/README.md"] = "the $s shelf" }
+  foreach ($s in 'tasks', 'handoffs', 'ventures', 'areas', 'decisions', 'people', 'systems', 'ideas', 'subjects') { $parts["knowledge/$s/README.md"] = "the $s shelf" }
   $missing = @($parts.Keys | Where-Object { -not $paths.Contains($_) })
   if ($missing.Count) { Note "It has $($parts.Count - $missing.Count) of the kit's $($parts.Count) parts. Missing: $(($missing | ForEach-Object { $parts[$_] + ' (' + $_ + ')' }) -join '; ')" 'Fine if it was set up differently on purpose; an agent can copy them in from the kit' }
   else { Ok "It has all $($parts.Count) of the kit's parts" }
@@ -253,7 +253,7 @@ if ($tree) {
     $rules = [ordered]@{ 'gate' = 'the gates (money, secrets, the sign-off, the owner''s voice)'; 'Best guess' = '"best guess, light checks"'; 'One check is enough' = '"one check is enough"'; 'No Claude artifacts' = '"no Claude artifacts"'; 'agents at a time' = '"one or two agents at a time"'; 'Guide mode' = 'guide mode'; 'by AnIdeaLab.com' = 'the AnIdeaLab sign-off'; 'command' = '"give the owner a command"'; 'pull --rebase' = 'committing straight to main' }
     $gone = @($rules.Keys | Where-Object { $text -notmatch [regex]::Escape($_) })
     if ($gone.Count) { Note "The core doesn't have: $(($gone | ForEach-Object { $rules[$_] }) -join ', ')" "Fine if on purpose; the kit's core has them" } else { Ok "The core has the kit's rules" }
-    if ($text.Length -gt 6144) { Note "The core is $([int]($text.Length / 1024)) KB; the kit keeps it under 6 KB, because every agent reads it first" }
+    if ($text.Length -gt 8192) { Note "The core is $([int]($text.Length / 1024)) KB; a core stays under 8 KB, because every agent reads it first" }
   }
 }
 

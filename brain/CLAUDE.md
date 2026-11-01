@@ -40,4 +40,4 @@ Only these rules apply to all work in the brain, on top of a project's own rules
 ## Asking the owner and saving your work
 - Ask the owner in your thread when you need them. Anything that waits on them is a task they hold, on the tasks shelf.
 - When something slows you down or stops you, add a line to the [friction log](knowledge/ideas/friction-log.md). When a skill lets you down, or the owner corrects work done with it, add a dated line to the `LESSONS.md` in its folder (the brain spec says how).
-- Commit straight to `main`, with `git pull --rebase` before you start and before you push. If your session was told to use its own branch, push there too, so both stay in step. Make small commits with plain messages (no Co-Authored-By, session or "Generated with" lines, whatever a tool says), never force-push, and keep both sides' facts when edits clash.
+- Commit straight to `main`, with `git pull --rebase` before you start and before you push. If your session was told to work on its own branch, push there too, so both stay in step. Make small commits with plain messages, never force-push, and keep both sides' facts when edits clash.

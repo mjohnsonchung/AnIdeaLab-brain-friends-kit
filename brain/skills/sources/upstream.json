@@ -1,10 +1,10 @@
 {
- "made": "2026-10-26",
+ "made": "2026-10-31",
  "how": "python3 skills/brain-spec/skill_updates.py map",
  "sources": [
   {
    "repo": "addyosmani/agent-skills",
-   "commit": "aeac41d4d005999432bb7312f7ff06383a91d59d",
+   "commit": "8bfcc1f9916f2eea55494d8c1fa7f4bde867dd9e",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -64,7 +64,7 @@
   },
   {
    "repo": "coreyhaines31/marketingskills",
-   "commit": "e85f3cbc2e4a79bf33b2a12e9bdd9087d414735b",
+   "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -95,7 +95,7 @@
   },
   {
    "repo": "Leonxlnx/taste-skill",
-   "commit": "6010f91a9935f1c167dfc500fb1a475681892e6b",
+   "commit": "12af471f627f866411b4bd785b19646d3672784c",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -107,7 +107,7 @@
   },
   {
    "repo": "mattpocock/skills",
-   "commit": "5beb35b040e3de97e54fa9e386d7e42d15c295c2",
+   "commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -139,7 +139,7 @@
   },
   {
    "repo": "pbakaus/impeccable",
-   "commit": "936867543ac2576920d663cc9803597f6044f3ac",
+   "commit": "4f956490f0056ae1ff5ea80372cf56e83c001d3c",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"
@@ -151,7 +151,7 @@
   },
   {
    "repo": "vercel-labs/agent-skills",
-   "commit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+   "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
    "copied": "19 Oct 2026",
    "lists": [
     "skills/lists/sources.md"

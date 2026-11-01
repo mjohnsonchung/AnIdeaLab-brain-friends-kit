@@ -16,3 +16,5 @@ Thumbs.db
 # Images and files pasted in Obsidian land here and stay on that device: big or binary files don't go in the repo
 attachments/
 __pycache__/
+# Agents' worktrees (Claude Code puts them here; each is its own checkout, never part of the repo)
+.claude/worktrees/

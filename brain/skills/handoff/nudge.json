@@ -1,0 +1,14 @@
+{
+  "_how": "Settings for nudge.py, which Claude Code's hooks run. The kit's policy (Matt, 1 Nov 2026): a nudge at 300,000 tokens and at each extra 100,000; urgent from 500,000; after 500,000, every message the owner sends comes with a reminder to start a fresh chat; and one nudge per sub-agent, at 450,000 tokens of its own conversation. What each setting does is at the top of nudge.py and in the handoff skill. 0 turns a setting off.",
+  "first_at": 300000,
+  "repeat_every": 100000,
+  "urgent_at": 500000,
+  "every_prompt_after": 500000,
+  "agent_at": 450000,
+  "tell_person": false,
+  "state_dir": "",
+  "message": "Hand-off nudge: this conversation is about {size} tokens, past the {mark} mark. It's a nudge, not a hard stop: finish what you're doing first. Then follow the handoff skill (skills/handoff/SKILL.md): save what's lasting to the library, write a session hand-off on the hand-offs shelf (knowledge/handoffs/), commit and push, and tell the owner its path to paste into a new chat with \"continue\". If they carry on here, the next nudge comes at the next 100,000 tokens.",
+  "urgent_message": "Hand-off nudge, urgent: this conversation is about {size} tokens, past {mark}. Long conversations get slower, use up the owner's plan faster and lose detail. Finish the step you're on, then hand off now, the way the handoff skill (skills/handoff/SKILL.md) says, and urge the owner to paste the hand-off's path into a new chat with \"continue\".",
+  "prompt_message": "This conversation is about {size} tokens, past {mark}. Before anything else, tell the owner it's time to start a fresh chat. If there's no hand-off yet, or it's out of date, write one the way the handoff skill (skills/handoff/SKILL.md) says, and give them its path to paste into the new chat with \"continue\".",
+  "agent_message": "Sub-agent hand-off nudge: your own conversation is about {size} tokens, past the {mark} mark for agents. Finish the step you're on, then write your report back the way the handoff skill (skills/handoff/SKILL.md, \"Briefs and reports\") says: what's done, what's left, and where everything is. Then stop: the session that started you picks up from your report. This is your only nudge."
+}
