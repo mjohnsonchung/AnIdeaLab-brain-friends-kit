@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Check which copied skills have changed where they came from, since the brain copied them.
 
-Matt, 20 Oct 2026: "how are you checking that these skills are out of date or not? Is
-there like an easy script to check?" This is it. Every set of copied skills has a heading
-in skills/lists/sources.md, the record of copied skills (26 Oct 2026; before, these lines
-were spread through the topic lists), with a line like
+Every set of copied skills has a heading in skills/lists/sources.md, the record of copied
+skills (26 Oct 2026; before, these lines were spread through the topic lists), with a line like
 
     From [obra/superpowers](https://github.com/obra/superpowers), commit `bb92a77`, copied 19 Oct 2026.
 

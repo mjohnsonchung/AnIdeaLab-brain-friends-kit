@@ -8,5 +8,5 @@ updated: {KIT_DATE}
 One note per decision, newest first. Superseded ones are counted at the end, not listed.
 
 <!-- index:start -->
-- [{KIT_ISO}-starting-rules]({KIT_ISO}-starting-rules.md): The rules this brain started with, from Matt's brain: the owner's defaults, the gates, guide mode, and what was left out and why. Read before changing a default or a gate, or to see where a rule came from. [the-brain]
+- [{KIT_ISO}-starting-rules]({KIT_ISO}-starting-rules.md): The rules this brain started with, from the AnIdeaLab brain kit: guide mode, the owner's defaults and the gates, each with why it's there, and what was left out. Read before changing a default or a gate, or to see why a rule is there. [the-brain]
 <!-- index:end -->

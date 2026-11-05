@@ -1,6 +1,6 @@
 # Where the copied skills came from
 
-One heading per source: its commit, when Matt's brain copied it, its licence, and the skills this brain has from it. `python3 skills/brain-spec/skill_updates.py` reads the "From" lines to check for updates ([find-skills](../find-skills/SKILL.md)). Each source's README and licence are kept in `skills/sources/` or, for Anthropic's plugins, `skills/anthropic-plugins/`.
+One heading per source: its commit, when it was copied, its licence, and the skills this brain has from it. `python3 skills/brain-spec/skill_updates.py` reads the "From" lines to check for updates ([find-skills](../find-skills/SKILL.md)). Each source's README and licence are kept in `skills/sources/` or, for Anthropic's plugins, `skills/anthropic-plugins/`.
 
 This is the record of which skills are copied: a skill with a line here is kept as it came and updated from its source, and any other is the brain's own (a link in these paragraphs doesn't count). `check_links.py` and `library.py` read it to tell them apart. When to use each is in the topic lists. Shared files the copied skills use, kept as they came:
 
@@ -91,7 +91,7 @@ From [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills), commit
 - [obsidian-markdown](../obsidian-markdown/SKILL.md)
 
 ## Anthropic, copied 18 Oct 2026
-Copied into Matt's brain from a Claude session's own copies of Anthropic's skills and plugins, with no commit. `skill_updates.py check` compares them with the copies in a Claude session (`/mnt/skills/`, `~/.claude/`). Licence: Apache 2.0 (a `LICENSE.txt` in each skill, or its plugin's in `skills/anthropic-plugins/`).
+Copied from a Claude session's own copies of Anthropic's skills and plugins, with no commit. `skill_updates.py check` compares them with the copies in a Claude session (`/mnt/skills/`, `~/.claude/`). Licence: Apache 2.0 (a `LICENSE.txt` in each skill, or its plugin's in `skills/anthropic-plugins/`).
 
 - [canvas-design](../canvas-design/SKILL.md)
 - [design-design-critique](../design-design-critique/SKILL.md)

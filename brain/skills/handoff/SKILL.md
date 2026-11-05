@@ -4,7 +4,7 @@ description: "How any agent in this brain hands work on, in one format used thre
 ---
 
 # Hand-offs
-Matt, whose brain this one was started from, built this in his own brain first, on 1 Nov 2026: "a proper handoff mechanism that can be reused and called upon by agents and sub-agents for how to handle work. And then also... a way that the coordinator would always be saving those handoffs in an efficient way into the brain so that it can call upon that or any future session." On what goes in one: "one format used, three ways... But also needs to tell them where it is."
+One way for every agent and sub-agent to hand work on, saved in the brain so the coordinator, or any later session, can pick it up: one format, used three ways, that always says where everything is.
 
 **Why it matters.** Everything said in a conversation is read again on every reply, so a long conversation uses more of the owner's plan with each turn, gets slower, and in the end gets summarised, which loses detail. A hand-off saved in the brain doesn't. The next chat or agent starts clean, reads one note, and carries on.
 
@@ -36,7 +36,7 @@ No hand-off is needed for a job finished in one go with nothing left for anyone 
 7. **Watch-outs:** what was tried and didn't work, and why; anything easy to get wrong; what not to redo.
 8. **Session hand-offs only: the last few messages, word for word.** The last exchanges with the owner, quoted exactly, so "yes, send it" still makes sense. Go back far enough to cover anything still open. Cut long tool output, never the owner's words.
 
-There's no length limit and no checker (Matt: "We'll just trust the agent to do what they want for the handoff... maybe one needs to be have longer than others"). Decide what each one needs, and skip a part that has nothing in it.
+There's no length limit and no checker: some hand-offs need to be longer than others, and the agent writing one is trusted to judge. Decide what each one needs, and skip a part that has nothing in it.
 
 ## Save what's lasting first
 Before you write the hand-off, put what should outlive it where it belongs, as the [brain spec](../brain-spec/SKILL.md#saving-knowledge) says: the owner's decisions on the decisions shelf, facts in their notes, lessons in a skill's `LESSONS.md` or the friction log, jobs still to do as tasks (the owner's with `holder: owner`), and a dated progress line in the job's task note. The hand-off links to them rather than copying them. So hand-offs stay short, the brain stays the memory, and a later chat finds a fact on its shelf, not buried in an old hand-off. What's left in the hand-off is where the conversation stands.
@@ -71,7 +71,7 @@ updated: {KIT_DATE}
 - **Whoever picks it up is told its path,** from the repo's root: `knowledge/handoffs/{KIT_ISO}-shop-website.md`.
 
 ## At the nudge
-In Claude Code, a hook tells you when the conversation passes 300,000 tokens, and again at 400,000 and each extra 100,000. From 500,000 the nudge is urgent, and after that every message the owner sends comes with a reminder to start a fresh chat (Matt, 1 Nov 2026, for brains started from his kit: "every extra 100k definetly. and at 500k, it urges you too. and every message sent after 500k it should tell you to start fresh instance"). Then:
+In Claude Code, a hook tells you when the conversation passes 300,000 tokens, and again at 400,000 and each extra 100,000. From 500,000 the nudge is urgent, and after that every message the owner sends comes with a reminder to start a fresh chat. Then:
 1. **Finish what you're doing.** It's a nudge, not a hard stop. Bring the step you're on to a safe point (a change that works, a message sent, an answer the owner is waiting for), but don't start a new piece. When it's urgent, stop at the first safe point.
 2. **Save what's lasting** ([above](#save-whats-lasting-first)).
 3. **Write a session hand-off,** with the last messages word for word.
@@ -82,7 +82,7 @@ In Claude Code, a hook tells you when the conversation passes 300,000 tokens, an
    ```
 6. **Then it's their call:** start the new chat, or carry on here. If you carry on, update the hand-off and push again at the next nudge, and before the chat ends.
 
-The agent never moves the owner to a new chat by itself, and nothing starts up on its own: the owner pastes the path (Matt, 1 Nov 2026: "it will just prompt the person to copy that handoff path, file path, to a new chat, and then say continue or whatever it wants to say"). The pasted path says exactly which hand-off, even with several chats going.
+The agent never moves the owner to a new chat by itself, and nothing starts up on its own: the owner pastes the path. The pasted path says exactly which hand-off, even with several chats going.
 
 ## Starting from a hand-off
 When someone gives you a hand-off's path, the owner pasting it or a coordinator in a brief:
@@ -93,7 +93,7 @@ When someone gives you a hand-off's path, the owner pasting it or a coordinator 
 5. **When its work is done,** or you hand it on in a new hand-off whose `before` names it, mark it `done`.
 
 ## Briefs and reports
-The chat the owner talks to is the coordinator, and the agents it hands work to are its helpers, each in a clean thread of its own (Matt: "the coordinator will just be like a normal thread, and then whatever agents it opens underneath that will be its task guys. And then they'll create handoffs to give the coordinator as well"). When to hand work to an agent at all, and how many at once, is in the brain spec ([handing work to an agent](../brain-spec/SKILL.md#handing-work-to-an-agent)).
+The chat the owner talks to is the coordinator, and the agents it hands work to are its helpers, each in a clean thread of its own, and each hands its work back to the coordinator in a hand-off of its own. When to hand work to an agent at all, and how many at once, is in the brain spec ([handing work to an agent](../brain-spec/SKILL.md#handing-work-to-an-agent)).
 - **A brief** is a hand-off with `kind: brief`, saved on the shelf and pushed; give the agent its path, with a line on the job in the prompt. Cut it to what the agent needs, add the gates that bear on the job, and say what to send back: a report on the shelf, and its path. The agent can't ask the owner, so put in what it would ask.
 - **A report** is a hand-off with `kind: report` and `before` naming the brief. The agent saves it on the shelf, commits only its own paths, pushes, and sends back its path and a few lines as its last message. An agent that can't write files sends the report itself, and the coordinator saves it.
 - **The coordinator** reads the report, checks the work once the normal way, saves what's lasting, and marks the brief and the report `done`.
@@ -101,7 +101,7 @@ The chat the owner talks to is the coordinator, and the agents it hands work to 
 - **The coordinator's own hand-off,** at the nudge like any chat, also says what's in flight (agents running, briefs out).
 
 ## The sub-agent nudge
-An agent you hand work to (a sub-agent) gets one nudge of its own, at 450,000 tokens of its own conversation (Matt, 1 Nov 2026: "We do need a sub-agent nudge. Let's have it trigger at 450, though. Just because it's quite task-based, so it's okay"). Sizing the job first ([guide mode](../guide-mode/SKILL.md)) stays the main way work is split; this is the safety net for when a job turns out bigger than you thought.
+An agent you hand work to (a sub-agent) gets one nudge of its own, at 450,000 tokens of its own conversation: later than the chat's, since its work is a single task. Sizing the job first ([guide mode](../guide-mode/SKILL.md)) stays the main way work is split; this is the safety net for when a job turns out bigger than you thought.
 - **The agent, at its nudge:** finish the step you're on, write your report back as above (what's done, what's left, and where everything is), and stop. The owner has nothing to paste, and there's no second nudge.
 - **The chat that started it** picks up from the report: it checks what's done, and carries on what's left itself or hands it to a fresh agent with the report as its brief.
 - **It's separate from the chat's own nudge:** an agent's nudge doesn't use up the chat's, and the chat's never reaches an agent.
@@ -112,7 +112,7 @@ The nudge only runs in Claude Code, in a chat started on a copy of this repo. An
 ## The nudge's settings
 Hooks in `.claude/settings.json` run [nudge.py](nudge.py) after each tool call (`PostToolUse`), when the agent finishes an answer (`Stop`) and when the owner sends a message (`UserPromptSubmit`). It reads the hook's input, takes the conversation's size from the newest main-thread assistant message in the session's log (its input, cache-write and cache-read tokens added up), and when that passes a mark it hasn't nudged for, hands the agent the message: as added context after a tool call or with the owner's message, or by keeping a finished answer going. It remembers which marks a session has had in a small file in the temp folder, named by the session's id. Inside a sub-agent, whose hook input carries `agent_id`, it measures that agent's own conversation instead, after each of its tool calls: from `agent_transcript_path` if the input gives it, or else from the log Claude Code keeps beside the session's, `<the session's log without .jsonl>/subagents/agent-<agent_id>.jsonl`, where every line is marked `isSidechain`. It remembers a sub-agent's one nudge in a file of its own, named by the session's and the agent's ids. It stays silent on a `Stop` already continuing because of a stop hook (`stop_hook_active`), and on any error it prints nothing and exits 0, so it can't break a chat. The hooks run through bash (on Windows, Git Bash, which comes with Git), trying `python3`, then `python`, as the session-start hook does, and doing nothing if neither is there: a claude.ai/code chat has Python, and a Claude Code chat on the owner's PC needs it installed.
 
-The policy is in [nudge.json](nudge.json), not the code; Matt's brain runs the same script with its own:
+The policy is in [nudge.json](nudge.json), not the code, so it can change without touching the script:
 
 | Setting | What it does | This brain's |
 |---|---|---|

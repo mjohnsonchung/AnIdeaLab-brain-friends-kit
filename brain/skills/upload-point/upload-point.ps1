@@ -7,8 +7,8 @@
 # The list is read and written with gh's contents API, never through the local copy, so it can't clash
 # with Obsidian Git or unsaved edits.
 # Started with paths (Send to does that), it adds them, says so in a message box and closes; an open
-# window picks them up within 30 seconds. Plain on purpose (Matt, 1 Nov 2026: "Just make it a
-# minimalist window... Something cheap, something reliable"). setup-upload-point.ps1 makes the shortcuts.
+# window picks them up within 30 seconds. Plain on purpose, so it's cheap and reliable.
+# setup-upload-point.ps1 makes the shortcuts.
 # Windows PowerShell 5.1, plain ASCII. Windows only for now: a Mac version is still to come.
 
 $given = @($args | ForEach-Object { "$_".Trim().Trim('"') } | Where-Object { $_ })

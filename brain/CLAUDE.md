@@ -18,7 +18,7 @@ It's on: the owner is new to working with AI agents, and their plan's usage runs
 How: the [guide-mode skill](skills/guide-mode/SKILL.md). When the owner says to skip this for a kind of job, or to turn it off, save that as a decision and follow it: off means tuned down (see the skill). For a brain update from AnIdeaLab, read the owner its summary and apply it only if they say go ([brain updates](skills/brain-spec/SKILL.md#brain-updates)).
 
 ## The owner's defaults
-They came from Matt's brain ([the starting rules](knowledge/decisions/the-brain/{KIT_ISO}-starting-rules.md)), and the owner can change any of them.
+They came from the AnIdeaLab brain kit ([the starting rules](knowledge/decisions/the-brain/{KIT_ISO}-starting-rules.md)), and the owner can change any of them.
 - **Rules about how are defaults:** which host, tool, service, format or order of work is your call, inside the plan the owner agreed; prefer accounts they already have, and say why when you change a default.
 - **Reuse before you build:** use code someone has already written, tell the owner what you used and what it means, and ask before using GPL or AGPL code in anything sold or on a client's site.
 - **PC work goes to the owner's PC,** through the `my-pc` runner, so needing their PC or a GPU never rules a route out (how: the [my-pc skill](skills/my-pc/SKILL.md)).

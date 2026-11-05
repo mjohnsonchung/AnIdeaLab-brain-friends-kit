@@ -4,23 +4,23 @@ description: "How to get a key or token that only the owner can make (a service'
 ---
 
 # Getting a key from the owner in one command
-From Matt's brain, where it started on 26 Oct 2026, after a key went in this way: "That was a very streamlined way of doing it... It might not be just for Vercel, just in general, that was quite useful. Being able to add a GitHub token that way. And whatever else, wherever else." He brought it to this kit on 31 Oct 2026 ([the starting rules](../../knowledge/decisions/the-brain/{KIT_ISO}-starting-rules.md)).
+One paste puts any key where it lives, for any service: a GitHub token, a site host's key, whatever a job needs ([the starting rules](../../knowledge/decisions/the-brain/{KIT_ISO}-starting-rules.md)).
 
 The secrets gate in the core still holds: a key never goes in a file, a commit or a message, and never in a chat, and the owner is the one who adds it. This keeps to that and costs them one paste. It's the "give the owner a command" default for keys: no clicking through GitHub's settings.
 
-## A service's API key for the brain's jobs
-[add-api-keys.ps1](add-api-keys.ps1), beside this skill, does it for each service named. Give the owner this to paste into PowerShell, with the services they need:
+## Any key for the brain's jobs
+[add-api-keys.ps1](add-api-keys.ps1), beside this skill, puts a key into this brain's GitHub Actions secrets from a PowerShell window, for any service: it knows none of them, so the command you give the owner says which key. Fill in the parts for the job, and give them this to paste:
 ```
-powershell -ExecutionPolicy Bypass -File "C:\AI-Brain-Link\<repo name>\skills\add-a-key\add-api-keys.ps1" -Services openai
+powershell -ExecutionPolicy Bypass -File "C:\AI-Brain-Link\<repo name>\skills\add-a-key\add-api-keys.ps1" -Secret OPENAI_API_KEY -Page "https://platform.openai.com/api-keys" -Tell "Sign in, press Create new secret key, and copy it." -Prefix "sk-" -Check "https://api.openai.com/v1/models"
 ```
-`C:\AI-Brain-Link\<repo name>` is where the installer put the brain's copy; a brain cloned somewhere else has its folder in [the PC's note](../../knowledge/systems/my-pc.md). For each service, the script opens the page that makes the key and says what to press, reads the key hidden, checks it by its start and with the service (only an answer that means a bad key stops it), and saves it in the GitHub Actions secrets of the repo that folder syncs with, under the service's usual name (`OPENAI_API_KEY`). It signs `gh` in first if it has to, and it's safe to run again: a key already there is replaced.
-- **The services it knows:** `elevenlabs`, `openai` and `gemini`, comma-separated for more than one. Matt keeps the list in his brain, and new ones come with brain updates. For another service, use the same shape (below), or add it to the script's `$known` table: its name, the secret's name, how its keys start, the page that makes them, what to press there, and a call that checks a key.
+`C:\AI-Brain-Link\<repo name>` is where the installer put the brain's copy; a brain cloned somewhere else has its folder in [the PC's note](../../knowledge/systems/my-pc.md). The script signs `gh` in first if it has to, opens `-Page`, prints `-Tell`, reads the key hidden, and saves it under `-Secret` in the GitHub Actions secrets of the repo that folder syncs with. It's safe to run again: a key already there is replaced.
+- **What to fill in:** only `-Secret` is needed: the name jobs will use, in capitals, usually the service's own (`OPENAI_API_KEY`). The rest help: `-Page`, the exact page that makes the key; `-Tell`, what to press there, plainly; `-Prefix`, how its keys start (comma-separated for more than one), so a wrong paste stops; `-Check`, a URL that answers 401 to a bad key, sent the key as `Authorization: Bearer <key>` (or in the header `-Header` names). Look the page, the start and the check up in the service's docs; leave out any you aren't sure of. One key a command: for two, give two commands.
 - **If PowerShell says the file isn't there,** the owner's copy hasn't caught up with GitHub (Obsidian Git syncs it while Obsidian is open): have them open Obsidian for a minute, or give them `git -C "C:\AI-Brain-Link\<repo name>" pull`.
 - **Not through the PC runner:** the sign-ins and the key's page need the owner's browser, and a job can't read what they type.
 - Then add the key's row to [keys and accounts](../../knowledge/systems/keys-and-accounts.md): its name, the service, the date and what it's for, never the value. Jobs that run through GitHub Actions, the PC runner's included, can use it from then on.
 
 ## Any other key, the same way
-When a job needs a key the script doesn't cover (a GitHub token, a site's key, a service without a row), write a short script that does everything except what only a person can do, in this order:
+When a key doesn't go in this brain's GitHub secrets, or needs more than one page (a GitHub token with a pre-filled page, a site host's key), write a short script that does everything except what only a person can do, in this order:
 1. **Install what it needs** if it's missing (`winget install -e --id GitHub.cli` and the like), and sign in to the service the first time, with its own tool's browser sign-in.
 2. **Open the page that makes the key, pre-filled** where it can be (below), with `Start-Process <url>`, and print the one or two choices the link can't make, plainly: "Under Repository access, choose Only select repositories and pick X."
 3. **Read the key hidden:** `Read-Host -AsSecureString`, turned into text only in memory, trimmed, and checked by how it starts (`github_pat_` for a fine-grained GitHub token), so a wrong paste stops with a plain message.
@@ -41,9 +41,9 @@ Save it in the brain beside the job it's for, push it, and give the owner the sa
 
 ## Where it goes
 - **A key for the brain's own jobs** goes in this repo's GitHub Actions secrets: `gh secret set NAME --repo <owner>/<repo> --body $key`. `gh` is a real program, so the key reaches GitHub exactly.
-- **A live site's runtime key** goes in its host's secret settings, through the host's own tool, but never with the key on a command line: on Windows, `npx.cmd`, `vercel.cmd` and the like run through cmd.exe, which changes `^ & | < > %` in an argument without a word (a password reached a site changed that way in Matt's brain, 30 Oct 2026). On Vercel, use [set-vercel-env.mjs](set-vercel-env.mjs), beside this skill, with the key in an environment variable: `$env:ENV_VALUE = $key; node set-vercel-env.mjs <project> <NAME>`, then `Remove-Item Env:ENV_VALUE`. Then deploy again so the site picks it up.
+- **A live site's runtime key** goes in its host's secret settings, through the host's own tool, but never with the key on a command line: on Windows, `npx.cmd`, `vercel.cmd` and the like run through cmd.exe, which changes `^ & | < > %` in an argument without a word (a password once reached a site changed that way). On Vercel, use [set-vercel-env.mjs](set-vercel-env.mjs), beside this skill, with the key in an environment variable: `$env:ENV_VALUE = $key; node set-vercel-env.mjs <project> <NAME>`, then `Remove-Item Env:ENV_VALUE`. Then deploy again so the site picks it up.
 - **A key a Claude session needs directly** (rare: jobs use the Actions secret): the owner adds it to the session's environment settings with the same name, as [keys and accounts](../../knowledge/systems/keys-and-accounts.md) says.
 
 ## When it goes wrong
-- **When a step says it failed,** check what it changed before running it again: a set-up step in Matt's brain set a key, then failed while tidying up and said the key hadn't gone in.
+- **When a step says it failed,** check what it changed before running it again: a set-up step once set a key, then failed while tidying up and said the key hadn't gone in.
 - **A token for a second GitHub account:** `gh auth login --web` signs in whatever account the browser is on, and git on the PC follows `gh`. Open the sign-in in a private window (`$env:GH_BROWSER = 'cmd /c start msedge --inprivate'`), check whose token it got with `gh api user`, and end with `gh auth switch` back to the owner's main account.

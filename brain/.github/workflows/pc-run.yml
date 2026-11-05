@@ -32,7 +32,7 @@ on:
 
 # No concurrency group on purpose. The PC has one runner, so jobs already run one at a time and
 # queue for it in order. A concurrency group keeps only one waiting run and cancels the others
-# (learnt on Matt's PC, 17 Oct 2026).
+# (learnt on a PC runner, 17 Oct 2026).
 
 permissions:
   contents: read

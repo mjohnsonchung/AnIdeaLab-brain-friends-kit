@@ -1,8 +1,8 @@
 /*
-  Brain graph colours (11 Oct 2026, HQ thread, at Matt's request).
+  Brain graph colours.
   What it does: calmer grey lines, a bright line highlight when you point at a note,
   clearer arrows, and the open note shown in white instead of the default purple
-  (which looks too much like the Law Office's violet).
+  (which looks too much like a shelf's own colour).
 
   How it works: Obsidian draws the graph on a canvas, so CSS can't style dots or lines
   directly. Instead the graph reads the `color` and `opacity` of these `.graph-view.color-*`

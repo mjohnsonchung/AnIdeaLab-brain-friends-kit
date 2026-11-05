@@ -8,8 +8,8 @@ main-thread assistant message in the session's log (the transcript), and when th
 passes a mark it hasn't nudged for yet, it prints the nudge for Claude Code to hand the
 agent. What the agent then does is in the handoff skill (skills/handoff/SKILL.md).
 
-A sub-agent gets one nudge of its own (Matt, 1 Nov 2026: "We do need a sub-agent nudge.
-Let's have it trigger at 450"). Inside one, the hook input carries `agent_id`, and after each
+A sub-agent gets one nudge of its own, later than the main chat's, since its work is a
+single task. Inside one, the hook input carries `agent_id`, and after each
 of its tool calls the script measures that sub-agent's own conversation, from its own log:
 `agent_transcript_path` if the input gives it, or else the log Claude Code keeps beside the
 main transcript, <dir>/<session>/subagents/agent-<agent_id>.jsonl for <dir>/<session>.jsonl,
@@ -17,9 +17,8 @@ where every line is marked `isSidechain`. At agent_at it tells the sub-agent, on
 its step, report back and stop. It remembers that in a state file of the sub-agent's own, so
 it never uses up the main chat's nudge, and the main chat's nudges never go to a sub-agent.
 
-The policy lives in nudge.json beside this script, not in the code, so another brain (the
-friends' kit) can use the same script with its own marks. Matt's brain (1 Nov 2026): one
-nudge per session, at 300,000 tokens, and one per sub-agent, at 450,000. The settings:
+The policy lives in nudge.json beside this script, not in the code, so a brain can change
+its marks without touching the script. The settings:
   first_at            tokens at the first nudge; 0 turns the nudge off
   repeat_every        tokens between later nudges; 0 means one nudge only
   urgent_at           from this size on, nudges use urgent_message; 0 means never

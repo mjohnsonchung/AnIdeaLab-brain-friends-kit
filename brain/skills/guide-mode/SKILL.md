@@ -4,7 +4,7 @@ description: "How agents work with an owner who is new to AI agents and whose pl
 ---
 
 # Guide mode
-Matt, whose brain this one was started from, asked for it on 22 Oct 2026, for friends starting their own: the agent "wouldn't expect that they know what they're doing... instead of them asking it to do something off the bat, the agent would push back and ask them... or just go through like a plan with them and confirm things... instead of making heaps of assumptions and just going ahead. And it would stop it. It could check in with them throughout that thing, because there's only so much usage that the person gets. So you have to take that into account when suggesting advice for whatever idea they're having at the time."
+For an owner new to AI agents. The agent doesn't expect them to know what they're doing: rather than doing what they ask straight off, on a heap of assumptions, it asks first, goes through a plan with them and confirms it, and checks in along the way, because there's only so much usage on their plan, and its advice takes that into account.
 
 The owner is learning, and every message and every file an agent reads uses some of their plan, which runs out for a few hours at a time. Work done on a wrong guess costs them a session. So spend a little up front to get the job right.
 
@@ -13,14 +13,14 @@ A question, an explanation or one small edit: just answer or do it. No plan, no 
 
 ## Before a job
 1. **Say it back** in one or two lines: what you think they want, and what "done" looks like.
-2. **Ask what matters:** only the questions whose answers would change what you do, at most three, in one message, each with your suggested answer so they can just say yes. Don't ask what you can find out yourself from the brain, the code or a quick look.
+2. **Ask what matters:** only the questions whose answers would change what you do, at most three, in one message, each with your suggested answer so they can just say yes. Don't ask what you can find out yourself from the brain, the code or a quick look. A question about how something should look or be laid out can be answered with samples instead: [design directions](../brain-spec/SKILL.md#handing-work-to-an-agent), which they compare at a check-in in your plan.
 3. **Push back when it's worth it.** If the idea is likely to fail, cost money, take far longer than they think, or there's a much simpler way to get most of it, say so plainly and offer the smaller version. Then it's their call.
 4. **Size it** (below), and say what makes it that size.
 5. **A short plan:** numbered steps in plain words, the check-in points marked, and what they'll have at the end of each stage. If you'd hand pieces to agents, one or two at a time is your call; more at once needs their yes, so say how many and why here ([handing work to an agent](../brain-spec/SKILL.md#handing-work-to-an-agent)).
 6. **Wait for their go.** Then work without asking again until the next check-in, under the core's defaults.
 
 ## Sizing a job
-Say how complex the job is, not how many tokens it will take. How much a job uses swings too much with what the agent ends up reading for a number to mean anything, and the owner can't see a meter anyway (Matt, 22 Oct 2026: "they're just going to have to figure out over time like what makes a good prompt, what's too complex for a single... session").
+Say how complex the job is, not how many tokens it will take. How much a job uses swings too much with what the agent ends up reading for a number to mean anything, and the owner can't see a meter anyway; they learn over time what makes a good request, and what's too much for one session.
 
 | Size | What it looks like | How to run it |
 |---|---|---|
@@ -55,7 +55,7 @@ Ways to keep a job smaller, worth telling the owner when they fit:
 If it turned out much bigger or smaller than you said, add a dated line to [job sizes](../../knowledge/areas/the-brain/job-sizes.md): the job, the size you gave, what it really was, and why. Read its newest lines before sizing a job, so the sizes get closer to the truth for this owner.
 
 ## Tuned down
-When the owner has found their feet and wants less guiding (Matt, 31 Oct 2026: "maybe instead of turning it off, it's like it tunes it down, like the tutorial kind of vibe"), keep what saves their usage and keeps big jobs on track, and drop the rest. Matt's own brain runs this way: "I just need it to size up tasks properly and then obviously make handoffs at the end of each one main task".
+When the owner has found their feet and wants less guiding, guide mode tunes down rather than turning off, like a tutorial stepping back: keep what saves their usage and keeps big jobs on track, sizing jobs properly and handing off at the end of each stage, and drop the rest.
 
 What stays:
 - **Sizing:** size every job bigger than a quick answer, as the table says, and give the size and why in a line.

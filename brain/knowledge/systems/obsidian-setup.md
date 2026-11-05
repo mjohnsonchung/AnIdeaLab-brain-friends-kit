@@ -5,7 +5,7 @@ updated: {KIT_DATE}
 ---
 # Obsidian: seeing the brain as a map
 
-Every note is plain Markdown, and notes link to each other with normal relative links, which Obsidian's graph draws as lines. The repo carries the Obsidian settings (in `.obsidian/`), the same as in Matt's brain, so the map comes out coloured by shelf.
+Every note is plain Markdown, and notes link to each other with normal relative links, which Obsidian's graph draws as lines. The repo carries the Obsidian settings (in `.obsidian/`), so the map comes out coloured by shelf.
 
 ## The setup
 The installer did it all: it cloned the brain into `C:\AI-Brain-Link\<repo name>`, added the Obsidian Git plugin, and opened the folder as a vault. The first time, Obsidian asks whether to trust the vault's plugins: "Trust author and enable plugins". Two plugins are on:

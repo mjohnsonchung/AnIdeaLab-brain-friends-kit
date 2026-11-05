@@ -1,38 +1,44 @@
 #!/usr/bin/env python3
 """Tell the agent, at the start of a session, which reminders in knowledge/systems/routines.md are due.
 
-Matt, 18 Oct 2026: work that needs an AI or Matt can be a reminder instead of a
-scheduled AI job. When he starts a session after one is due and it hasn't been done,
-the agent tells him, and he decides whether to run it. Each reminder is a row in the
+Work that needs an AI or the owner can be a reminder instead of a scheduled AI job.
+When the owner starts a session after one is due and it hasn't been done, the agent
+tells them, and they decide whether to run it. Each reminder is a row in the
 table in knowledge/systems/routines.md whose Kind is "Reminder":
-- its When cell gives a weekday and a time in NZ time, like "Saturdays 05:00", or the
-  first of a weekday in each month, like "First Saturday of each month, 06:00" (added
-  25 Oct 2026 for the monthly deep audit), and can add "from 24 Oct 2026" for the first
-  time it's due;
+- its When cell gives a weekday and a time in the owner's time zone, like "Saturdays 05:00",
+  or the first of a weekday in each month, like "First Saturday of each month, 06:00" (for
+  the monthly deep audit), and can add "from 24 Oct 2026" for the first time it's due;
 - its Log cell links to a note with one heading per run (or skipped week), newest
   first, starting "## <day> <month> <year>", like the audit log.
 
+The owner's time zone is the "**Time zone:**" line in routines.md, under "The owner's own":
+a time zone's name, like Pacific/Auckland or Europe/London, which getting-started asks for.
+Until it's set, or where Python can't read it (no time zone database, on some Windows
+installs), times are read in this computer's own time zone, which in a cloud session is UTC,
+and the agent is told to ask the owner where they live.
+
 A reminder counts as done when its log has a heading dated on or after the UTC date of
-the latest due time that has passed. For a morning in NZ that UTC date is the day
-before, so a run logged late the evening before counts. A heading dated after tomorrow
-is ignored, so a typo can't switch a reminder off for weeks.
+the latest due time that has passed. For a morning in a time zone ahead of UTC that UTC
+date can be the day before, so a run logged late the evening before counts. A heading
+dated after tomorrow is ignored, so a typo can't switch a reminder off for weeks.
 
 Any agent can run it: python3 skills/brain-spec/reminders.py. Claude Code runs it at the start of a
 session through a SessionStart hook in .claude/settings.json, and what it prints goes
 into the session. It prints nothing when nothing is due. It reads only this repo and
-needs nothing outside Python's standard library. In a brain started from the friends' starter
+needs nothing outside Python's standard library. In a brain started from the AnIdeaLab brain
 kit, it also runs brain_update.py notice beside it, which asks the kit repo at most once a day
-whether AnIdeaLab has sent an update, and prints only when one is waiting (Matt, 26 Oct 2026:
-"check daily for updates, but silently unless there is one"). In a kit brain it also says how many
+whether AnIdeaLab has sent an update, and prints only when one is waiting, so a day with no
+update costs the session nothing. In a kit brain it also says how many
 things are waiting at the upload point and since when (knowledge/systems/upload-point.md, which the
 owner's Upload point window writes; 31 Oct 2026), so the agent asks the owner what to do with them.
-It's silent when nothing's waiting, and in a brain without the note, like Matt's.
+It's silent when nothing's waiting, and in a brain without the note.
 Try it: python3 skills/brain-spec/reminders.py --now 2026-10-24T03:00Z
 """
 import os
 import re
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -52,12 +58,28 @@ LINK = re.compile(r"\[([^\]]*)\]\(([^)\s#]*)[^)]*\)")
 WAITING = re.compile(r"(?ms)^##\s+Waiting\s*$(.*?)(?=^#{1,2}\s|\Z)")
 ITEM = re.compile(r"(?m)^\s*[-*]\s+(`+)\s?(.+?)\s?\1(?!`)(.*)$")  # - `<path>`: <kind>, <size>, added <when>
 ADDED = re.compile(r"\badded\s+" + DATE + r"(?:\s+(\d{1,2}):(\d{2}))?", re.I)
+# The owner's time zone: a name from the time zone database (Area/City, like Pacific/Auckland), or UTC.
+# The kit's line says "not set yet" until getting-started fills it in, which this doesn't match.
+ZONE_LINE = re.compile(r"(?m)^\*\*Time zone:\*\*[ \t]*([A-Za-z][A-Za-z_]*(?:/[A-Za-z0-9_+-]+)+|UTC)\b")
 
-try:
-    from zoneinfo import ZoneInfo
-    NZ = ZoneInfo("Pacific/Auckland")
-except Exception:  # no time zone database (some Windows installs)
-    NZ = None
+
+def owner_zone():
+    """The owner's time zone from routines.md: (its name, or None if not set; the zone, or None if Python can't read it)."""
+    try:
+        with open(ROUTINES, encoding="utf-8") as fh:
+            m = ZONE_LINE.search(fh.read())
+    except OSError:
+        m = None
+    if not m:
+        return None, None
+    try:
+        from zoneinfo import ZoneInfo
+        return m.group(1), ZoneInfo(m.group(1))
+    except Exception:  # no time zone database (some Windows installs), or not a zone's name
+        return m.group(1), None
+
+
+ZONE_NAME, ZONE = owner_zone()
 
 
 def to_date(day, month, year):
@@ -67,61 +89,42 @@ def to_date(day, month, year):
         return None
 
 
-def nz_offset(utc):
-    """NZ's offset from UTC in hours at a UTC time, by the daylight saving rule.
-
-    Only used when Python has no time zone database. Daylight time starts on the last
-    Sunday in September at 02:00 NZST and ends on the first Sunday in April at 03:00
-    NZDT; both are Saturday 14:00 UTC.
-    """
-    y = utc.year
-    last_sun_sep = 30 - (date(y, 9, 30).weekday() + 1) % 7
-    first_sun_apr = 1 + (6 - date(y, 4, 1).weekday()) % 7
-    starts = datetime(y, 9, last_sun_sep, 14, tzinfo=UTC) - timedelta(days=1)
-    ends = datetime(y, 4, first_sun_apr, 14, tzinfo=UTC) - timedelta(days=1)
-    return 12 if ends <= utc < starts else 13
+def owner_wall(utc):
+    """The owner's clock time at a UTC time, without a time zone (this computer's, if theirs can't be read)."""
+    if ZONE is not None:
+        return utc.astimezone(ZONE).replace(tzinfo=None)
+    return utc.astimezone().replace(tzinfo=None)
 
 
-def nz_wall(utc):
-    """The NZ clock time at a UTC time, without a time zone."""
-    if NZ is not None:
-        return utc.astimezone(NZ).replace(tzinfo=None)
-    return (utc + timedelta(hours=nz_offset(utc))).replace(tzinfo=None)
-
-
-def nz_to_utc(wall):
-    """The UTC time when NZ clocks show a given time."""
-    if NZ is not None:
-        return wall.replace(tzinfo=NZ).astimezone(UTC)
-    for hours in (13, 12):
-        utc = wall.replace(tzinfo=UTC) - timedelta(hours=hours)
-        if nz_offset(utc) == hours:
-            return utc
-    return wall.replace(tzinfo=UTC) - timedelta(hours=12)  # an hour the clocks skip
+def owner_to_utc(wall):
+    """The UTC time when the owner's clocks show a given time (this computer's, if theirs can't be read)."""
+    if ZONE is not None:
+        return wall.replace(tzinfo=ZONE).astimezone(UTC)
+    return datetime.fromtimestamp(time.mktime(wall.timetuple()), UTC)
 
 
 def latest_due(now, weekday, hour, minute):
-    """The latest time at or before now when NZ clocks show that weekday and time, in UTC."""
-    local = nz_wall(now)
+    """The latest time at or before now when the owner's clocks show that weekday and time, in UTC."""
+    local = owner_wall(now)
     due = (local - timedelta(days=(local.weekday() - weekday) % 7)).replace(
         hour=hour, minute=minute, second=0, microsecond=0)
     if due > local:
         due -= timedelta(days=7)
-    return nz_to_utc(due)
+    return owner_to_utc(due)
 
 
 def latest_due_monthly(now, weekday, hour, minute):
-    """The latest time at or before now when NZ clocks show the first of that weekday in a month, in UTC."""
-    local = nz_wall(now)
+    """The latest time at or before now when the owner's clocks show the first of that weekday in a month, in UTC."""
+    local = owner_wall(now)
     year, month = local.year, local.month
     for _ in range(2):
         first = date(year, month, 1)
         day = first + timedelta(days=(weekday - first.weekday()) % 7)
         due = datetime(day.year, day.month, day.day, hour, minute)
         if due <= local:
-            return nz_to_utc(due)
+            return owner_to_utc(due)
         year, month = (year, month - 1) if month > 1 else (year - 1, 12)
-    return nz_to_utc(due)
+    return owner_to_utc(due)
 
 
 def last_logged(path, today):
@@ -220,10 +223,11 @@ def main(argv):
         now = datetime.fromisoformat(argv[2].replace("Z", "+00:00")).astimezone(UTC)
     rows, problems = read_reminders()
     due_lines = []
+    zone = f"{ZONE_NAME} time" if ZONE is not None else "this computer's time"
     for r in rows:
         due = (latest_due_monthly if r["monthly"] else latest_due)(now, r["weekday"], r["hour"], r["minute"])
-        nz = nz_wall(due)
-        if r["start"] is not None and nz.date() < r["start"]:
+        local = owner_wall(due)
+        if r["start"] is not None and local.date() < r["start"]:
             continue
         last = last_logged(r["log"], now.date())
         if last is not None and last >= due.date():
@@ -232,7 +236,7 @@ def main(argv):
         newest = "it has no entries yet" if last is None else (
             f"its newest entry is dated {last.day} {last:%b %Y}")
         due_lines.append(
-            f"- {r['name']} ({r['owner']}): due {nz:%A} {nz.day} {nz:%b %Y}, {nz:%H:%M} NZ time "
+            f"- {r['name']} ({r['owner']}): due {local:%A} {local.day} {local:%b %Y}, {local:%H:%M} {zone} "
             f"[UTC date {due.day} {due:%b %Y}]. What runs: {r['what']}. "
             f"Log: {log}; {newest}.")
     if due_lines:
@@ -247,6 +251,14 @@ def main(argv):
             "this if the owner didn't start this session (a scheduled run or another agent's session), "
             "or if, after you pull, the log has an entry dated on or after the UTC date given."
         )
+    if rows and ZONE is None:
+        problems.append(
+            ("the owner's time zone isn't set" if ZONE_NAME is None else
+             f"Python couldn't read the time zone {ZONE_NAME} (not a time zone's name, or no time zone database here: "
+             "on Windows, py -m pip install tzdata adds one)")
+            + ", so reminders were read in this computer's time, which in a cloud session is UTC. Ask the owner where "
+            "they live, in a line, and put their time zone's name on the \"Time zone\" line under \"The owner's own\" "
+            "in knowledge/systems/routines.md (like **Time zone:** Europe/London), then commit.")
     for p in problems:
         print("skills/brain-spec/reminders.py: " + p)
     waiting = upload_point()

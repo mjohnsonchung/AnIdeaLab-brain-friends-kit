@@ -6,7 +6,7 @@ updated: {KIT_DATE}
 ---
 # Friction log
 
-Where agents get stuck, one row each. The [weekly tidy-up](../../skills/brain-audit/SKILL.md#2-the-friction-log) turns open rows into skills where know-how would fix them, and moves those rows to "Solved". In Matt's brain these rows also feed ideas for tools worth building.
+Where agents get stuck, one row each. The [weekly tidy-up](../../skills/brain-audit/SKILL.md#2-the-friction-log) turns open rows into skills where know-how would fix them, and moves those rows to "Solved". They can also point to tools worth building.
 
 ## How to log
 - When something slows you down or stops you, add one row at the bottom of the "Open" table. Don't read this file at the start of a job; open it only to add a row.

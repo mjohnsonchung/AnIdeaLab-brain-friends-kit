@@ -15,7 +15,7 @@ What it does, in order:
    points at the same file after the move, from the linking file's new place. A
    "#heading" after the path is kept. Links in code blocks, http: and mailto: links,
    and links to a "#heading" alone are left as they are. A link whose words are the
-   old path, like [hq/routines.md](...), gets the new path as its words too (without
+   old path, like [systems/routines.md](...), gets the new path as its words too (without
    "knowledge/" in front). A file whose links don't change isn't touched, so copied
    skills stay as they came.
 2. Moving. It moves the files with git mv, making folders as needed, and removes

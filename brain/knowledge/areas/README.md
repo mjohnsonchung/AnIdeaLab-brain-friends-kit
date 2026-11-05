@@ -7,5 +7,5 @@ updated: {KIT_DATE}
 An area has no finish line. A new one starts as one note, and becomes a folder with its own `README.md` once it has several. Each has a dated "Where it stands", which the weekly tidy-up rewrites each week the area moves.
 
 <!-- index:start -->
-- [the-brain/](the-brain/README.md): The brain itself: how it was started, the job sizes agents have learned, and the weekly tidy-up's log. Read for the brain's overall state or before changing how it works. [the-brain]
+- [the-brain/](the-brain/README.md): The brain itself: how it was started, the job sizes agents have learned, and the logs of the weekly tidy-up and the monthly deep audit. Read for the brain's overall state or before changing how it works. [the-brain]
 <!-- index:end -->

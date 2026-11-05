@@ -5,7 +5,7 @@ updated: {KIT_DATE}
 ---
 # The brain graph
 
-A view inside Obsidian that shows the brain growing, built in Matt's brain (from 11 Oct 2026) and carried over with the kit. Every folder with more than one note is a circle, every note is a dot that appears when it was written, and every link is a line that forms when it was made. It all comes from the repo's git history, so agents don't log anything extra for it. This brain's history starts on {KIT_DATE}, so its graph grows from the first day.
+A view inside Obsidian that shows the brain growing, which came with the kit. Every folder with more than one note is a circle, every note is a dot that appears when it was written, and every link is a line that forms when it was made. It all comes from the repo's git history, so agents don't log anything extra for it. This brain's history starts on {KIT_DATE}, so its graph grows from the first day.
 
 ## Opening it
 - On the PC, click the brain icon in Obsidian's left ribbon, or press Ctrl+P and run "Brain graph: Open brain graph".
@@ -23,8 +23,7 @@ A view inside Obsidian that shows the brain growing, built in Matt's brain (from
 - **Point at a dot** to see its links; click it to open the note. Drag a dot and its circle follows (physics on).
 - **Zoom** with the scroll wheel; double-click or press F to recentre.
 - **Live:** while it's open it checks for new commits every 15 seconds and plays them in.
-- **Settings** (the sliders button, top right): theme, accent colour, speed, where the replay starts, and what to show. They save to `.obsidian/plugins/brain-graph/data.json`.
-- **A fresh start:** a commit whose message starts with "Fresh start" makes the replay begin there, with everything before it already in place.
+- **Options** (the sliders button, top right): speed, replay when opened, skill links on hover or always, physics and hold shape, theme and accent colour. They save to `.obsidian/plugins/brain-graph/data.json`. The replay always shows the whole history.
 
 ## For agents
 - The code is `.obsidian/plugins/brain-graph/main.js`, with its look in `styles.css`. Don't change it unless the owner asks.

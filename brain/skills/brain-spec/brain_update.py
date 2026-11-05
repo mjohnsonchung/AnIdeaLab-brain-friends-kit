@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Apply brain updates from AnIdeaLab, and send their reports to AnIdeaLab's inbox.
 
-This brain was started from a starter kit made from Matt's brain. Matt sends updates to it
-(fixes, new rules, new parts) through the public repo AnIdeaLab-brain-friends-kit:
+This brain was started from the AnIdeaLab brain kit, and AnIdeaLab sends updates to it
+(fixes, new rules, new parts) through the kit's public repo, AnIdeaLab/brain-kit:
 - brain/ holds the kit's brain as a fresh one would get it, with its two date placeholders
   left in for each brain's own start date;
 - updates/NNNN-<words>.md is each update's message: a summary for the owner, what changed and
@@ -25,7 +25,7 @@ changed the same lines, the update's lines go in, and it prints both sides of ea
 takes the whole clashing stretch, so a paragraph the brain added next to a line the update changed
 goes too, and the agent puts back what's the owner's own (but not the brain's own old fixes to kit parts,
 which give way to the kit's: the brain spec's "Brain updates" says why). Obsidian's settings files
-are the exception: there the brain's own lines stay, since the owner set them (two friends' brains,
+are the exception: there the brain's own lines stay, since the owner set them (two owners' brains,
 26 Oct 2026). A file the update adds is written, one it changed that this brain no longer has is
 written again, and one it deleted is deleted. Then it records the
 update in knowledge/systems/brain-updates/README.md and starts knowledge/systems/brain-updates/NNNN-report.md
@@ -60,7 +60,7 @@ import time
 import urllib.request
 from datetime import date
 
-GITHUB_REPO = "mjohnsonchung/AnIdeaLab-brain-friends-kit"
+GITHUB_REPO = "AnIdeaLab/brain-kit"
 SOURCE = os.environ.get("BRAIN_KIT_URL") or f"https://github.com/{GITHUB_REPO}"  # another copy, for testing an update
 AUDIENCE = "anidealab-brain-reports"  # the inbox only takes GitHub sign-in tokens made for it
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -98,7 +98,12 @@ def git(*args, repo=CACHE, check=True, text=True, timeout=None):
 def fetch(timeout=None):
     """Make or refresh the partial clone of the kit repo; return its newest commit on main.
     A new clone is made beside the cache and moved into place once it's whole, so one cut short
-    (the daily check gives git a few seconds) never leaves a broken cache."""
+    (the daily check gives git a few seconds) never leaves a broken cache. A cache cloned from somewhere else (the kit
+    repo before it moved to AnIdeaLab/brain-kit, or a test copy) is cloned again from SOURCE."""
+    if os.path.isdir(CACHE):
+        r = subprocess.run(["git", "-C", CACHE, "remote", "get-url", "origin"], capture_output=True, text=True, timeout=timeout)
+        if r.returncode or r.stdout.strip() != SOURCE:
+            shutil.rmtree(CACHE, ignore_errors=True)
     if not os.path.isdir(CACHE):
         os.makedirs(os.path.dirname(CACHE), exist_ok=True)
         part = CACHE + ".part"
@@ -721,8 +726,8 @@ def do_compare(args):
 
 def refresh_library(head, timeout):
     """Bring this brain's sign-off links up to the kit repo's copy, and say whether they changed. It's AnIdeaLab's file and
-    only changes which page a link goes to, so it's the one thing that changes without the owner's go (Matt, 31 Oct 2026;
-    the brain spec's "Brain updates"). Offline, blocked, or with no copy in the kit, the brain keeps the copy it has."""
+    only changes which page a link goes to, so it's the one thing that changes without the owner's go (the brain
+    spec's "Brain updates"). Offline, blocked, or with no copy in the kit, the brain keeps the copy it has."""
     try:
         r = subprocess.run(["git", "-C", CACHE, "show", f"{head}:{LIBRARY_IN_KIT}"], capture_output=True, timeout=timeout)
     except (subprocess.TimeoutExpired, OSError):
@@ -802,7 +807,7 @@ def do_notice(_args):
 def pushed(event):
     """The reports a push added or changed, or None if git can't say. GitHub leaves the file lists out of a
     push's commits for Actions (its changelog, 16 Oct 2019), so until 27 Oct 2026 no report went on a push
-    (Oscar's update 2 report). The commit before the push is fetched and compared with the one after."""
+    (an owner's update 2 report). The commit before the push is fetched and compared with the one after."""
     before, after = event.get("before") or "", event.get("after") or "HEAD"
     if not before.strip("0"):
         return None  # a new branch: nothing before it

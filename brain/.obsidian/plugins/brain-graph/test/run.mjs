@@ -1,6 +1,6 @@
 // Runs the brain graph in Chromium with a stand-in for Obsidian (stub.js) and this
 // repo's real git history, then takes a screenshot per scenario. For agents in cloud
-// threads, where Obsidian can't run (hq/brain-graph.md, "Testing").
+// threads, where Obsidian can't run (knowledge/systems/brain-graph.md).
 //
 //   node .obsidian/plugins/brain-graph/test/run.mjs <main.js> <out folder> 'name={"settings":{...}}' ...
 //

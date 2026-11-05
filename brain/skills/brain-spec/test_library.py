@@ -39,16 +39,16 @@ class LibraryTest(unittest.TestCase):
             "CLAUDE.md": "# The core\n",
             "knowledge/README.md": SHELF.format(about="The library.", title="Knowledge"),
             "knowledge/tasks/README.md": SHELF.format(about="What's in flight.", title="Tasks"),
-            "knowledge/tasks/send-pack.md": note("Matt sends the pack.", tags="[law-office]", status="open",
+            "knowledge/tasks/send-pack.md": note("The owner sends the pack.", tags="[plumbing]", status="open",
                                                  holder="owner", due="23 Oct 2026"),
-            "knowledge/tasks/build-site.md": note("Build the site.", tags="[drivermods]", status="doing",
+            "knowledge/tasks/build-site.md": note("Build the site.", tags="[bakery]", status="doing",
                                                   holder="https://claude.ai/code/session_x"),
             "knowledge/tasks/old-job.md": note("An old job.", status="done", holder="open"),
             "knowledge/tasks/bad-holder.md": note("Nobody knows.", status="open", holder="bob"),
             "knowledge/ventures/README.md": SHELF.format(about="Things with a goal.", title="Ventures"),
-            "knowledge/ventures/drivermods/README.md": SHELF.format(about="The store.", title="DriverMods"),
-            "knowledge/ventures/drivermods/order-flow.md": note("How an order flows.", tags="[drivermods, money]"),
-            "knowledge/ventures/law-office.md": note("The law venture."),
+            "knowledge/ventures/bakery/README.md": SHELF.format(about="The store.", title="Bakery"),
+            "knowledge/ventures/bakery/order-flow.md": note("How an order flows.", tags="[bakery, money]"),
+            "knowledge/ventures/plumbing.md": note("The plumbing venture."),
             "knowledge/ventures/lab/README.md": SHELF.format(about="The lab.", title="Lab"),
             "knowledge/ventures/lab/robot/README.md": SHELF.format(about="A project in the lab.", title="Robot"),
             "knowledge/ventures/lab/history/README.md": SHELF.format(about="Old notes.", title="History"),
@@ -56,7 +56,7 @@ class LibraryTest(unittest.TestCase):
                                                    holder="open"),
             "knowledge/areas/README.md": SHELF.format(about="Ongoing things.", title="Areas"),
             "knowledge/areas/money.md": note("The money picture."),
-            "knowledge/decisions/README.md": SHELF.format(about="What Matt decided.", title="Decisions"),
+            "knowledge/decisions/README.md": SHELF.format(about="What the owner decided.", title="Decisions"),
             "knowledge/decisions/2026-10-17-older.md": note("An older one.", status="current"),
             "knowledge/decisions/2026-10-18-newer.md": note("A newer one.", status="current", tags="[nowhere]"),
             "knowledge/decisions/2026-10-01-gone.md": note("Replaced.", status="superseded"),
@@ -106,9 +106,9 @@ class LibraryTest(unittest.TestCase):
             return fh.read()
 
     def test_card(self):
-        card = library.read_card(os.path.join(self.tmp.name, "knowledge/ventures/drivermods/order-flow.md"))
+        card = library.read_card(os.path.join(self.tmp.name, "knowledge/ventures/bakery/order-flow.md"))
         self.assertEqual(card["about"], "How an order flows.")
-        self.assertEqual(card["tags"], ["drivermods", "money"])
+        self.assertEqual(card["tags"], ["bakery", "money"])
         self.assertIsNone(library.read_card(os.path.join(self.tmp.name, "knowledge/ideas/no-card.md")))
         self.assertEqual(library.to_date("19 Oct 2026").isoformat(), "2026-10-19")
 
@@ -116,14 +116,14 @@ class LibraryTest(unittest.TestCase):
         changed = library.build(self.lib, quiet=True)
         self.assertIn("knowledge/tasks/README.md", changed)
         tasks = self.read("knowledge/tasks/README.md")
-        self.assertIn("### Waiting on the owner\n- [send-pack](send-pack.md): Matt sends the pack. Due 23 Oct 2026. [law-office]", tasks)
+        self.assertIn("### Waiting on the owner\n- [send-pack](send-pack.md): The owner sends the pack. Due 23 Oct 2026. [plumbing]", tasks)
         self.assertIn("### Doing\n- [build-site](build-site.md)", tasks)
         self.assertNotIn("old-job", tasks)
         self.assertIn("Finished, and not listed: 1.", tasks)
         top = self.read("knowledge/README.md")
         self.assertIn("- [tasks/](tasks/README.md): What's in flight.", top)
         ventures = self.read("knowledge/ventures/README.md")
-        self.assertLess(ventures.index("drivermods/"), ventures.index("law-office"))
+        self.assertLess(ventures.index("bakery/"), ventures.index("plumbing"))
         decisions = self.read("knowledge/decisions/README.md")
         self.assertLess(decisions.index("2026-10-18-newer"), decisions.index("2026-10-17-older"))
         self.assertNotIn("2026-10-01-gone", decisions)
@@ -131,10 +131,10 @@ class LibraryTest(unittest.TestCase):
 
     def test_find(self):
         self.assertEqual(library.find(self.lib, holder="owner"),
-                         ["knowledge/tasks/send-pack.md: Matt sends the pack."])
-        drivermods = library.find(self.lib, tag="drivermods")
-        self.assertIn("knowledge/ventures/drivermods/README.md: The store.", drivermods)
-        self.assertIn("knowledge/tasks/build-site.md: Build the site.", drivermods)
+                         ["knowledge/tasks/send-pack.md: The owner sends the pack."])
+        bakery = library.find(self.lib, tag="bakery")
+        self.assertIn("knowledge/ventures/bakery/README.md: The store.", bakery)
+        self.assertIn("knowledge/tasks/build-site.md: Build the site.", bakery)
         self.assertEqual(library.find(self.lib, shelf="tasks", text="old job"), [])
         self.assertEqual(len(library.find(self.lib, shelf="knowledge/tasks", text="old job", show_all=True)), 1)
         self.assertEqual(len(library.find(self.lib, status="superseded")), 1)
@@ -149,7 +149,7 @@ class LibraryTest(unittest.TestCase):
         self.assertIn("skills/other/SKILL.md: a skill links into the notes (../../knowledge/tasks/send-pack.md)", problems)
         self.assertNotIn("skills/brain-spec", problems)
         self.assertNotIn("2026-10-17-older.md)", problems)
-        self.assertNotIn("drivermods", problems)
+        self.assertNotIn("bakery", problems)
         self.assertNotIn("money", problems)
         self.assertNotIn('the tag "robot"', problems)
         self.assertNotIn("history", self.lib.known_tags())
@@ -167,11 +167,11 @@ class LibraryTest(unittest.TestCase):
     def test_lessons(self):
         self.assertEqual(library.own_skills(self.lib), ["brain-spec", "long", "other", "plain"], "every skill sources.md doesn't name")
         self.assertEqual(library.copied_skills(self.lib), {"copied", "tidy", "ghost"})
-        self.assertEqual(library.lessons(self.lib), [
+        self.assertEqual(library.lessons(self.lib), [  # every skill's, copied too
             "skills/brain-spec/LESSONS.md: 2 lessons (fold in)",
+            "skills/copied/LESSONS.md: 21 lessons (fold in)",
             "skills/other/LESSONS.md: 1 lesson (fold in)",
-            "skills/copied/LESSONS.md: 21 lessons (copied, keep short)",
-            "skills/tidy/LESSONS.md: 1 lesson (copied, keep short)",
+            "skills/tidy/LESSONS.md: 1 lesson (fold in)",
         ])
 
     def test_handoffs(self):
@@ -180,7 +180,7 @@ class LibraryTest(unittest.TestCase):
             "knowledge/handoffs/history/README.md": SHELF.format(about="Old hand-offs.", title="History"),
             "knowledge/handoffs/history/2026-10-30-first.md": note("The first session.", kind="session", status="done"),
             "knowledge/handoffs/2026-10-31-second.md": note("The second session.", kind="session", status="picked-up",
-                                                            before="2026-10-30-first.md", tags="[drivermods]"),
+                                                            before="2026-10-30-first.md", tags="[bakery]"),
             "knowledge/handoffs/2026-11-01-third.md": note("The third session.", kind="session", status="open",
                                                            before="2026-10-31-second"),
             "knowledge/handoffs/2026-11-01-brief.md": note("A brief.", kind="brief", status="open"),
@@ -197,7 +197,7 @@ class LibraryTest(unittest.TestCase):
         board = self.read("knowledge/handoffs/README.md")
         self.assertIn("### Open\n- [2026-11-01-third](2026-11-01-third.md): The third session. *(session)*\n"
                       "- [2026-11-01-brief](2026-11-01-brief.md): A brief. *(brief)*", board, "open ones first, newest first")
-        self.assertIn("### Picked up\n- [2026-10-31-second](2026-10-31-second.md): The second session. *(session)* [drivermods]", board)
+        self.assertIn("### Picked up\n- [2026-10-31-second](2026-10-31-second.md): The second session. *(session)* [bakery]", board)
         self.assertIn("### Other\n- [2026-11-01-odd]", board, "a hand-off with no status still shows")
         self.assertNotIn("2026-11-01-report", board)
         self.assertIn("Finished, and not listed: 1.", board)

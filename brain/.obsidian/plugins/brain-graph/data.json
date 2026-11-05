@@ -3,14 +3,7 @@
   "accent": "coral",
   "speed": 2,
   "replayOnOpen": true,
-  "startFrom": "beginning",
-  "steady": false,
   "physics": true,
   "hold": 0.3,
-  "hubLinks": "show",
-  "bridges": "hover",
-  "fadeDays": 0,
-  "hideExcluded": true,
-  "markMatt": true,
-  "quiet": true
+  "bridges": "hover"
 }

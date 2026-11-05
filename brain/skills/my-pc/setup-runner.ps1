@@ -73,7 +73,7 @@ try {
   # Git's installer can leave Git off the PC's PATH and its first-run setup undone, when it didn't run
   # as admin ("cannot remove /etc/post-install/*.post"). Jobs and gh need Git, and the service only
   # sees the PATH it starts with, so both are done here, before it starts; running the first-run setup
-  # again does no harm (a friend's PC, 22 Oct 2026).
+  # again does no harm (an owner's PC, 22 Oct 2026).
   $gitRoot = Join-Path $env:ProgramFiles 'Git'
   if (Test-Path (Join-Path $gitRoot 'cmd\git.exe')) {
     if (Add-MachinePath (Join-Path $gitRoot 'cmd')) { Write-Host "Added Git to this PC's PATH." }
@@ -83,7 +83,7 @@ try {
   Write-Host 'Letting your account run scripts (RemoteSigned), which the runner needs...'
   # It saves the setting, then throws "Security error." whenever a narrower scope overrides it, which
   # this script's own -ExecutionPolicy Bypass always does; -ErrorAction can't stop that kind of error,
-  # so it's caught, and only the check below counts (a friend's PC, 22 Oct 2026).
+  # so it's caught, and only the check below counts (an owner's PC, 22 Oct 2026).
   try { Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force -ErrorAction Stop } catch { }
   if ((Get-ExecutionPolicy -Scope CurrentUser) -notin 'RemoteSigned', 'Unrestricted', 'Bypass') {
     Write-Host "  It didn't change (a policy on this PC may set it). If jobs fail with a script policy error, tell an agent." -ForegroundColor Yellow

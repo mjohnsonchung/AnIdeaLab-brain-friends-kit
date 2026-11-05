@@ -1,5 +1,5 @@
 {
-  "_how": "Settings for nudge.py, which Claude Code's hooks run. The kit's policy (Matt, 1 Nov 2026): a nudge at 300,000 tokens and at each extra 100,000; urgent from 500,000; after 500,000, every message the owner sends comes with a reminder to start a fresh chat; and one nudge per sub-agent, at 450,000 tokens of its own conversation. What each setting does is at the top of nudge.py and in the handoff skill. 0 turns a setting off.",
+  "_how": "Settings for nudge.py, which Claude Code's hooks run. The kit's policy: a nudge at 300,000 tokens and at each extra 100,000; urgent from 500,000; after 500,000, every message the owner sends comes with a reminder to start a fresh chat; and one nudge per sub-agent, at 450,000 tokens of its own conversation. What each setting does is at the top of nudge.py and in the handoff skill. 0 turns a setting off.",
   "first_at": 300000,
   "repeat_every": 100000,
   "urgent_at": 500000,

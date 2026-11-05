@@ -5,7 +5,7 @@ description: "The traps in Windows PowerShell 5.1, the PowerShell every Windows 
 
 # Windows PowerShell 5.1
 
-From Matt's brain, which this one was started from: these traps kept breaking agents' scripts there, so on 27 Oct 2026 he asked for a skill with them all in one place ("it keeps tripping you up. I've seen it happen multiple times"). Every Windows PC has Windows PowerShell 5.1 (`powershell.exe`), and that's what runs the commands the owner pastes, the `my-pc` runner's jobs (its default shell) and this brain's own scripts. PowerShell 7 (`pwsh`) usually isn't installed, so write for 5.1. No provider's skill covers these traps (checked 27 Oct 2026: GitHub's awesome-copilot `powershell.instructions.md` is about cmdlet style, and the community PowerShell skills say nothing on quoting).
+These traps kept breaking agents' scripts, so this skill keeps them all in one place. Every Windows PC has Windows PowerShell 5.1 (`powershell.exe`), and that's what runs the commands the owner pastes, the `my-pc` runner's jobs (its default shell) and this brain's own scripts. PowerShell 7 (`pwsh`) usually isn't installed, so write for 5.1. No provider's skill covers these traps (checked 27 Oct 2026: GitHub's awesome-copilot `powershell.instructions.md` is about cmdlet style, and the community PowerShell skills say nothing on quoting).
 
 ## Before you hand one over
 1. **Read it against the traps below,** the quotes first. Two greps catch the commonest: `grep -nP '[^\x00-\x7F]' script.ps1` (anything not plain ASCII) and `grep -nE '"[^"]*\$[A-Za-z_]+:' script.ps1` (a `$name:` inside double quotes).
@@ -21,7 +21,7 @@ From Matt's brain, which this one was started from: these traps kept breaking ag
 ## Double quotes don't reach programs
 Windows PowerShell 5.1 passes arguments to programs (`gh`, `git`, `python`, `winget`, anything that's an `.exe`) the old way, which Microsoft's docs call "Legacy": it doesn't escape double quotes inside an argument, so the program never gets them ([about_Parsing](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parsing), "Passing arguments that contain quote characters"; PowerShell 7.3 changed it, and `$PSNativeCommandArgumentPassing` doesn't exist in 5.1). Cmdlets aren't affected; only programs.
 
-So `gh api user/repository_invitations --jq '.[] | "\(.id) \(.repository.full_name)"'` reaches `gh` as `.[] | \(.id) \(.repository.full_name)`, which it splits into several arguments: "accepts 1 arg(s), received 6". The same goes for `join(" | ")`, `// ""`, and JSON or a quoted string in any argument. It broke three jobs in Matt's brain in two days. Fixes, best first:
+So `gh api user/repository_invitations --jq '.[] | "\(.id) \(.repository.full_name)"'` reaches `gh` as `.[] | \(.id) \(.repository.full_name)`, which it splits into several arguments: "accepts 1 arg(s), received 6". The same goes for `join(" | ")`, `// ""`, and JSON or a quoted string in any argument. It once broke three jobs in two days. Fixes, best first:
 - **Write it with no double quotes inside.** For jq: build a list and join it with a tab, `[(.id|tostring), .repository.full_name] | @tsv`, then split in PowerShell (`$id, $name = $line -split "`t"`); `// empty` instead of `// ""`; or one call per field (`--jq .permission`).
 - **Pass the data through a file or stdin,** not an argument: `gh api --input body.json`, `-F field=@file.txt`, `python script.py` rather than `python -c "..."`.
 - **Escape each inner quote as `\"`** (`'.[] | \"\(.id)\"'`). That works in 5.1 but breaks in PowerShell 7.3 and later, which escapes for you, so use it only in a script that's for 5.1 alone, and say so in a comment.
@@ -58,7 +58,7 @@ So `gh api user/repository_invitations --jq '.[] | "\(.id) \(.repository.full_na
 - **After `winget install`,** the same window doesn't see the new program until you reload the PATH: `$env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')`. If it still isn't there, tell them to open PowerShell again and paste the same command.
 - **`gh auth login --web` signs in whatever account the browser is on.** When it must be one account, open the sign-in in a private window (`$env:GH_BROWSER = 'cmd /c start msedge --inprivate'` for that call), check `gh api user --jq .login` after, and end with `gh auth switch --user <main account>`: `gh` is git's sign-in too, as its active account, so leaving it on another account breaks pushes (Obsidian's syncing included).
 - **Edge isn't on the PATH,** but `Start-Process msedge` finds it through Windows' App Paths.
-- **Say little.** Print "Success", or one line saying what went wrong and what to do; no step headings (Matt, 27 Oct 2026, on a script for friends: "just have the word success").
+- **Say little.** Print "Success", or one line saying what went wrong and what to do; no step headings, since all the owner needs to know is whether it worked.
 
 ## Runner jobs on the owner's PC
 - **The runner's service sees the PATH from when it started,** so a program winget installed since isn't found: start the job with the PATH reload above, or restart the service.

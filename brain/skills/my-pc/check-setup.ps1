@@ -1,4 +1,4 @@
-# Checks a second brain's setup on this Windows PC against Matt's starter kit: the tools, the GitHub
+# Checks a second brain's setup on this Windows PC against the AnIdeaLab brain kit: the tools, the GitHub
 # sign-in, the brain's repo and its settings, the PC runner and its service, your copy of the brain
 # and Obsidian, and the PC's settings. It changes nothing, apart from saving its report. Each line
 # says OK, FIX (with what to do, as a command where there is one), NOTE or INFO. The report is saved
@@ -66,7 +66,7 @@ Section 'Tools'
 $script:git = Find-Git
 if ($git) { Ok "Git: $((& $git --version) -join ' ')" } else { Fix 'Git is not installed' 'winget install --id Git.Git -e' }
 if ($git) {
-  # Git's installer can leave it off the PATH, where gh, new windows and the runner's jobs look (a friend's PC, 22 Oct 2026).
+  # Git's installer can leave it off the PATH, where gh, new windows and the runner's jobs look (an owner's PC, 22 Oct 2026).
   $gitDir = Split-Path $git -Parent
   $saved = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
   if (@($saved -split ';' | ForEach-Object { $_.TrimEnd('\') }) -contains $gitDir.TrimEnd('\')) { Ok "Git is on this PC's PATH" }
@@ -109,10 +109,10 @@ foreach ($s in $services) {
   if ($m.Success -and -not $runnerDir) { $runnerDir = $m.Groups[1].Value }
 }
 if (-not $services) {
-  $dirs = @((Join-Path $Root '_runner'), 'C:\actions-runner', 'D:\AI-Brain-Link\_runner', 'D:\actions-runner')
+  $dirs = @((Join-Path $Root '_runner'), 'C:\actions-runner', 'D:\actions-runner')
   $runnerDir = $dirs | Where-Object { Test-Path (Join-Path $_ '.runner') } | Select-Object -First 1
   if ($runnerDir) { Fix "There's a runner in $runnerDir, but not as a Windows service, so it only runs while its window is open" 'Set it up as a service with setup-runner.ps1 (my-pc skill)' }
-  else { Fix 'No GitHub Actions runner is set up on this PC, so agents can''t run jobs here' "Set one up with setup-runner.ps1, from Matt's starter kit (skills\my-pc)" }
+  else { Fix 'No GitHub Actions runner is set up on this PC, so agents can''t run jobs here' "Set one up with setup-runner.ps1, from the AnIdeaLab brain kit (skills\my-pc)" }
 }
 if ($runnerDir) {
   $cfg = Join-Path $runnerDir '.runner'
@@ -130,7 +130,7 @@ if ($runnerDir) {
 
 # Which repo is the brain --------------------------------------------------------------------------
 # What you gave first, then the brain this script is in (the copy in C:\AI-Brain-Link\<brain>\skills\my-pc),
-# then the runner's repo, then Obsidian's vaults, those in C:\AI-Brain-Link first. On Zak's PC (31 Oct 2026)
+# then the runner's repo, then Obsidian's vaults, those in C:\AI-Brain-Link first. On an owner's PC (31 Oct 2026)
 # an older vault came first in Obsidian's list, and the check looked at that brain instead.
 $obsVaults = @()
 $obsCfg = Join-Path $env:APPDATA 'obsidian\obsidian.json'
@@ -176,16 +176,17 @@ else {
     $col = GhJson api "repos/$Repo/collaborators"
     if ($col) {
       $others = @($col | Where-Object { $_.login -ne $login })
-      # Matt's testing account: the installer invites it to a new brain while the kit is in testing (27 Oct 2026).
+      # AnIdeaLab's testing account: the installer invites it to a new brain while the kit is in testing (27 Oct 2026),
+      # unless the owner is one of AnIdeaLab's own people, a member of its GitHub organisation.
       $tester = 'diagnostics-anidealab'
-      if ($others | Where-Object { $_.login -eq $tester }) { Info "Matt's testing account ($tester) can see and change it, to test the kit; the installer invited it. To take it off: the repo's Settings, Collaborators" }
+      if ($others | Where-Object { $_.login -eq $tester }) { Info "AnIdeaLab's testing account ($tester) can see and change it, to test the kit; the installer invited it. To take it off: the repo's Settings, Collaborators" }
       $others = @($others | Where-Object { $_.login -ne $tester })
       if ($others.Count) { Note "Others can write to it ($(($others | ForEach-Object { $_.login }) -join ', ')), and anyone who can write can run commands on this PC through the runner" "Remove them in the repo's Settings, Collaborators, unless you'd trust them with your PC" }
       else { Ok 'Nobody else has access to it' }
     }
     $wf = @(GhJson api "repos/$Repo/contents/.github/workflows")
     $pcWorkflow = $null
-    if (-not $wf -or -not $wf[0]) { Fix "The repo has no workflows, so agents have no way to run jobs on the PC" "Add pc-run.yml from Matt's starter kit (.github/workflows)" }
+    if (-not $wf -or -not $wf[0]) { Fix "The repo has no workflows, so agents have no way to run jobs on the PC" "Add pc-run.yml from the AnIdeaLab brain kit (.github/workflows)" }
     else {
       foreach ($f in ($wf | Where-Object { $_.name -match '\.ya?ml$' })) {
         $c = GhJson api "repos/$Repo/contents/$($f.path)"
@@ -204,8 +205,8 @@ else {
           elseif ($pick) { Fix "$($f.name) waits for a runner labelled $($want -join ', '), and no runner on the repo has them all, so its jobs would queue forever" "Change runs-on in $($f.name) to [self-hosted, $its], or set the runner up again with those labels" }
         }
       }
-      if ($pcWorkflow) { Ok "$pcWorkflow lets agents run a command on the PC" } else { Fix 'No workflow lets agents run a command on the PC (workflow_dispatch with a command input, on the self-hosted runner)' "Add pc-run.yml from Matt's starter kit (.github/workflows)" }
-      if (@($wf | ForEach-Object { $_.name }) -contains 'library.yml') { Ok 'library.yml rebuilds the knowledge indexes on each push' } else { Note 'No library.yml, so the knowledge indexes update only when an agent runs library.py build' "Add library.yml from Matt's starter kit (.github/workflows)" }
+      if ($pcWorkflow) { Ok "$pcWorkflow lets agents run a command on the PC" } else { Fix 'No workflow lets agents run a command on the PC (workflow_dispatch with a command input, on the self-hosted runner)' "Add pc-run.yml from the AnIdeaLab brain kit (.github/workflows)" }
+      if (@($wf | ForEach-Object { $_.name }) -contains 'library.yml') { Ok 'library.yml rebuilds the knowledge indexes on each push' } else { Note 'No library.yml, so the knowledge indexes update only when an agent runs library.py build' "Add library.yml from the AnIdeaLab brain kit (.github/workflows)" }
     }
     $sec = GhJson api "repos/$Repo/actions/secrets"
     if ($sec) { if ($sec.total_count) { Info "Actions secrets, names only: $(($sec.secrets | ForEach-Object { $_.name }) -join ', ')" } else { Info 'No Actions secrets yet; keys get added when a job needs one' } }
@@ -215,7 +216,7 @@ else {
 
 # The brain's shape, against the kit ---------------------------------------------------------------
 if ($tree) {
-  Section "The brain's shape, compared with Matt's starter kit"
+  Section "The brain's shape, compared with the AnIdeaLab brain kit"
   $paths = New-Object 'System.Collections.Generic.HashSet[string]'
   foreach ($t in $tree.tree) { [void]$paths.Add($t.path) }
   if ($paths.Contains('CLAUDE.md')) { Ok 'The core (CLAUDE.md) is there' } else { Fix 'There is no core (CLAUDE.md), the page every agent reads first' "Copy the kit's CLAUDE.md in, and make it yours" }

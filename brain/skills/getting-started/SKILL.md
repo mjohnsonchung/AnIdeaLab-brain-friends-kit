@@ -1,10 +1,10 @@
 ---
 name: getting-started
-description: "The first session in a new brain: welcome the owner, learn who they are and what they want the brain for, write their first notes, test the PC runner and record what their PC has, show them Obsidian, skills and where keys go, offer the weekly tidy-up, then mark the brain set up. Use when the core says the brain is new, or when the owner asks to redo their setup."
+description: "The first session in a new brain: welcome the owner, learn who they are and what they want the brain for, write their first notes, test the PC runner and record what their PC has, show them Obsidian, skills and where keys go, offer the weekly tidy-up and monthly deep audit, then mark the brain set up. Use when the core says the brain is new, or when the owner asks to redo their setup."
 ---
 
 # Getting started
-This brain was started on {KIT_DATE} from a starter kit made from Matt's brain. On the owner's Windows PC, the installer has already:
+This brain was started on {KIT_DATE} from the AnIdeaLab brain kit. On the owner's Windows PC, the installer has already:
 - made this private GitHub repo and put the brain in it;
 - put a copy in `C:\AI-Brain-Link\<repo name>` and opened it in Obsidian, with the Obsidian Git plugin syncing it;
 - set up the PC runner (a GitHub Actions self-hosted runner with the label `my-pc`, running as a Windows service under the owner's account), unless they skipped it.
@@ -19,7 +19,7 @@ In a few lines, in plain words:
 - Guide mode: agents check a plan with them before bigger jobs, because their plan's usage runs out. Once they've found their feet they can tune it down: agents still size each job and hand off between stages, without the explaining ([guide-mode](../guide-mode/SKILL.md#tuned-down)).
 
 ## 2. Ask, in one message
-- Their first name.
+- Their first name, and where they live (a town and country is enough), so reminders fall due in their own time.
 - What they'd like the brain to help with: projects, a business, study, life admin, learning to build things. A few words is fine.
 - Any business or project names.
 - Their Claude plan (Pro, Max or another), and whether agents should check a plan with them before every job or only bigger ones (guide mode's default is bigger ones).
@@ -27,6 +27,7 @@ In a few lines, in plain words:
 ## 3. Write it down
 - `knowledge/people/<first-name>.md`: the owner's note, with a card ([brain spec](../brain-spec/SKILL.md#cards)), what they said in their words, their plan, and the date.
 - In the core, change "A second brain" at the top to "<Name>'s second brain".
+- In [routines](../../knowledge/systems/routines.md), put their time zone's name on the Time zone line under "The owner's own", in place of "not set yet": the name from the time zone database, like Pacific/Auckland, Europe/London or America/New_York.
 - One short note per project or business they named, `knowledge/ventures/<name>.md`: what it is and their goal, in their words. They grow into folders when work starts.
 - Anything they said about how agents should work goes in a decision note, `knowledge/decisions/the-brain/<date>-<what>.md`.
 - Run `python3 skills/brain-spec/library.py build`, then the checks in the brain spec's "Before you push", and commit and push.
@@ -58,8 +59,10 @@ Wait until the run shows as completed, then read its job log. Put what it found 
 - **Keys** (API keys for services, later): never pasted into a chat. When a job needs one, the agent gives them one command to paste into PowerShell, which opens the page that makes the key, reads it in hidden and saves it in the brain's GitHub secrets ([add-a-key](../add-a-key/SKILL.md)). Adding one by hand on GitHub is in [keys and accounts](../../knowledge/systems/keys-and-accounts.md).
 - **When a site is blocked** in a Claude session, the agent will say which; the owner can allow it in the session's environment settings (the environment menu in the session's title bar, then Edit, then Network access).
 
-## 6. Offer the weekly tidy-up
+## 6. Offer the weekly tidy-up and the monthly deep audit
 The [brain-audit skill](../brain-audit/SKILL.md) tidies the brain once a week. It's a reminder, not a scheduled job: nothing runs, and none of their plan is used, until they say yes to it in a session. Ask if they'd like it. If yes, add its row to the owner's own table in [routines](../../knowledge/systems/routines.md), as the comment there shows, starting from the next Saturday, and commit.
+
+Then offer [the monthly deep audit](../brain-audit/deep-audit.md), in a line: once a month it reads every decision in full for rules that clash, and asks a fresh agent questions about the brain to find notes that mislead. It uses more of their plan than the tidy-up, and also runs only when they say yes. If they'd like it, add its row the same way, from the first Saturday of next month.
 
 ## 7. Finish
 - Take the "A new brain" paragraph out of the core, so this skill doesn't run again.

@@ -20,53 +20,39 @@ const SETTLE = 2.4;           // beats after the last commit for its flashes to 
 const SPEEDS = [0.125, 0.25, 0.5, 1, 2, 4];
 const speedLabel = (s) => ({ 0.125: '⅛', 0.25: '¼', 0.5: '½' }[s] || String(s)) + '×';
 const POLL_MS = 15000;
-const FRESH_START = /^fresh start\b/i; // a commit whose message starts like this is a fresh start
-const STEADY_BEATS = 0.2;      // with One at a time on: beats between one new note, link or edit and the next
 const GLOW_BEATS = 9;          // how long a written note keeps its accent tint
 
-// Focus (added 17 Oct 2026, hq/brain-graph.md#focus). Hub notes are the ones nearly
-// every note links to ("see the rules"); their links can be faded or hidden so the
-// links that carry meaning stand out. Paths are from the vault root.
-// Since the 19 Oct 2026 restructure the hubs are the core and the README. The old hubs keep their place
-// under their retired paths, so a replay of the old layout stays readable.
-const HUBS = new Set([
-  'CLAUDE.md', 'README.md',
-  'knowledge/areas/the-brain/history/connections.md', 'knowledge/areas/the-brain/history/structure.md',
-  'knowledge/areas/the-brain/history/decisions-table-to-19-oct-2026.md', 'knowledge/areas/the-brain/history/hq-progress-to-19-oct-2026.md',
-]);
-// Folders of lists that link out to most of their library (Matt, 20 Oct 2026, of skills/lists: "no
-// links coming from that folder specifically, just for visual", and that it "should be surrounding
-// skills slash readme ... as like the second layer"). Their links show only on hover, or as a
-// flash that fades when one is made or the list is edited ("I just want the on hover behavior"),
-// and in Bubbles their notes sit as a ring in the middle of their parent folder.
+// Focus. Hub notes are the ones nearly every note links to ("see the rules"): the core and
+// the README. Their links are hidden so the links that carry meaning stand out. Paths are
+// from the vault root.
+const HUBS = new Set(['CLAUDE.md', 'README.md']);
+// Folders of lists that link out to most of their library, like skills/lists: they're there to be
+// seen, not to cover the view in lines. Their links show only on hover, or as a flash that fades
+// when one is made or the list is edited, and in Bubbles their notes sit as a ring in the middle of
+// their parent folder, round its README, as a second layer.
 const LIST_FOLDERS = new Set(['skills/lists']);
 const inList = (p) => LIST_FOLDERS.has(p.slice(0, p.lastIndexOf('/')));
-const MATT_EDIT = /^(?:Matt['’]s|My) edits in Obsidian/; // commits made by the Obsidian Git plugin on the owner's computers
-const BOT_AUTHOR = /^farm-brain\b|github-actions|\[bot\]/i; // the repo's own Actions (links sync, legislation refresh)
+const OWNER_EDIT = /^My edits in Obsidian/; // commits made by the Obsidian Git plugin on the owner's computers
+const BOT_AUTHOR = /github-actions|\[bot\]/i; // the repo's own Actions, like the index rebuild
 const SWEEP_NOTES = 24;        // a commit touching more notes than this is a big sweep
 const QUIET = 0.35;            // how bright a quiet commit's flashes are
-const FADE_FLOOR = 0.3;        // how faint an old link gets
-// A link between a skill and a knowledge note is a bridge: it shows only while you point at either end
-// (Matt, 20 Oct 2026).
+// A link between a skill and a knowledge note is a bridge: it shows only while you point at either end.
 const isBridge = (pa, pb) => { const a = pa.split('/')[0], b = pb.split('/')[0]; return (a === 'skills' && b === 'knowledge') || (a === 'knowledge' && b === 'skills'); };
-const EDIT_MATT = 1, EDIT_QUIET = 2; // flags on births, edits and links
+const EDIT_OWNER = 1, EDIT_QUIET = 2; // flags on births, edits and links
 
 const DEFAULT_SETTINGS = {
   theme: 'auto',      // auto (follow Obsidian), dark or light
   accent: 'violet',
   speed: 1,
   replayOnOpen: false,
-  startFrom: 'fresh', // the latest fresh start, or the beginning
-  steady: false,      // replay one thing at a time (a note, a link or an edit), each the same time apart
   physics: true,      // circles can be dragged and trail behind; off, they glide to their places
   hold: 0.04,         // physics: how strongly circles are pulled back to their places
-  hubLinks: 'faint',  // links to the hub notes: show, faint or hide
   bridges: 'hover',   // links between skills and knowledge notes: only on hover, or always
-  fadeDays: 14,       // a link fades once neither of its notes has been touched for this many days; 0 is off
-  hideExcluded: true, // leave out notes Obsidian's Excluded files setting hides, such as the history/ folders
-  markMatt: true,     // Matt's own edits light up in a second colour
-  quiet: true,        // bot commits and big sweeps flash softly and leave no afterglow
 };
+// Always on, with no option to turn them off, so the options panel stays short: the replay is the
+// whole history, links to the hub notes are hidden, links don't fade with age, notes Obsidian's
+// Excluded files setting hides are left out, the owner's own edits light up in a second colour, and
+// bot commits and big sweeps flash softly.
 
 const THEMES = {
   dark: { bg: '#09090b', fg: [244, 244, 245], edge: 0.13, node: 0.9, tipBg: 'rgba(24,24,27,0.86)' },
@@ -76,8 +62,11 @@ const THEMES = {
 const ACCENTS = {
   violet: { name: 'Violet', dark: '#8f7dff', light: '#5b3df5' },
   cyan: { name: 'Cyan', dark: '#2ee0ff', light: '#0a8db6' },
+  mint: { name: 'Mint', dark: '#3ee8a6', light: '#0b9468' },
   lime: { name: 'Lime', dark: '#c4f53a', light: '#4b9600' },
+  amber: { name: 'Amber', dark: '#ffbb3d', light: '#c47a00' },
   coral: { name: 'Coral', dark: '#ff6b57', light: '#e0412b' },
+  pink: { name: 'Pink', dark: '#ff6fbf', light: '#d02c85' },
 };
 
 /* ---------- small helpers ---------- */
@@ -316,7 +305,7 @@ async function readBlobs(git, shas) {
   return out;
 }
 
-async function readModel(git, startFrom, steady) {
+async function readModel(git) {
   const head = (await git.text(['rev-parse', 'HEAD'])).trim();
   const log = await git.run([
     '-c', 'core.quotepath=false', 'log', '--reverse', '--date-order', '--diff-merges=first-parent',
@@ -328,11 +317,7 @@ async function readModel(git, startFrom, steady) {
     for (const e of c.raw) if (e.status !== 'D' && e.mode !== '160000' && countsLines(kindOf(e.path))) want.add(e.sha);
   }
   const blobs = await readBlobs(git, [...want]);
-  let fresh = null;
-  for (const c of commits) if (FRESH_START.test(c.subject)) fresh = c;
-  const model = assemble(head, commits, blobs, startFrom === 'fresh' && fresh ? fresh.sha : null, steady);
-  model.freshStart = fresh ? { sha: fresh.sha, t: fresh.t } : null;
-  return model;
+  return assemble(head, commits, blobs, null); // the whole history (5 Nov 2026), never from a fresh start
 }
 
 /* ---------- from commits to a replay ---------- */
@@ -346,7 +331,7 @@ async function readModel(git, startFrom, steady) {
 // From a fresh start, the commits before it are the starting picture: they happen
 // well before the replay's zero, so their notes and links are already settled
 // there, and the timeline begins with the fresh start commit.
-function assemble(head, commits, blobs, startSha, steady) {
+function assemble(head, commits, blobs, startSha) {
   const startAt = startSha ? commits.findIndex((c) => c.sha === startSha) : -1;
   const recs = [];
   const live = new Map();
@@ -489,38 +474,22 @@ function assemble(head, commits, blobs, startSha, steady) {
     else if (startAt > 0 && !offset) { beat += GLOW_BEATS + 3; offset = beat; } // past every flash and glow
     s.b = beat;
     const order = birthOrder(s.born, s.linkAdd, alive, unionDeg);
-    // One at a time (Matt, 20 Oct 2026: "only one file or folder or link happened at a time... a set
-    // amount of time before the next one"): each edit, then each new note followed by the links it
-    // can make now, gets its own slot, so a big commit takes as long as what's in it.
-    let slot = null;
-    if (steady) {
-      slot = new Map();
-      let k = 0;
-      const up = new Set(alive), by = new Map();
-      for (const l of s.linkAdd) for (const r of [l.er.a, l.er.b]) { if (!by.has(r)) by.set(r, []); by.get(r).push(l); }
-      const ready = (ls) => { for (const l of ls || []) if (!slot.has(l) && up.has(l.er.a) && up.has(l.er.b)) slot.set(l, k++); };
-      for (const r of s.edited) slot.set(r, k++);
-      ready(s.linkAdd);
-      for (const r of order) { slot.set(r, k++); up.add(r); ready(by.get(r)); }
-      for (const l of s.linkAdd) if (!slot.has(l)) slot.set(l, k++);
-      s.span = 1 + STEADY_BEATS * k;
-    } else s.span = 1 + Math.min(14, 0.12 * s.born.length) + Math.min(2, 0.012 * s.linkAdd.length);
-    const at = (x) => 0.1 + STEADY_BEATS * slot.get(x);
+    s.span = 1 + Math.min(14, 0.12 * s.born.length) + Math.min(2, 0.012 * s.linkAdd.length);
     beat += s.span;
     const touched = [...s.born, ...s.edited].filter((r) => r.kind === 'note').length;
-    const flags = (MATT_EDIT.test(s.subject) ? EDIT_MATT : 0) | (BOT_AUTHOR.test(s.author) || touched > SWEEP_NOTES ? EDIT_QUIET : 0);
+    const flags = (OWNER_EDIT.test(s.subject) ? EDIT_OWNER : 0) | (BOT_AUTHOR.test(s.author) || touched > SWEEP_NOTES ? EDIT_QUIET : 0);
 
     const bornAt = new Map();
     order.forEach((r, k) => {
-      const off = slot ? at(r) : 0.1 + (order.length > 1 ? (s.span - 1) * k / order.length : 0);
+      const off = 0.1 + (order.length > 1 ? (s.span - 1) * k / order.length : 0);
       bornAt.set(r, off);
       r.bspans.push({ b: s.b + off, d: Infinity, t: s.t, f: flags });
     });
     for (const r of s.born) alive.add(r);
-    for (const r of s.edited) { r.bedits.push(s.b + (slot ? at(r) : 0.05)); r.eflags.push(flags); r.etimes.push(s.t); }
+    for (const r of s.edited) { r.bedits.push(s.b + 0.05); r.eflags.push(flags); r.etimes.push(s.t); }
     s.linkAdd.forEach((l, k) => {
       const { er, src } = l, oa = bornAt.get(er.a), ob = bornAt.get(er.b);
-      const off = slot ? at(l) : oa != null || ob != null
+      const off = oa != null || ob != null
         ? Math.max(oa || 0, ob || 0) + 0.18
         : 0.12 + 0.45 * k / Math.max(1, s.linkAdd.length);
       er.spans.push({ b: s.b + off, d: Infinity, src: src.node, t: s.t, f: flags });
@@ -620,24 +589,23 @@ function bundlePoints(T, a, b, ax, ay, bx, by) {
   return pts;
 }
 
-// The bubbles view (Matt, 20 Oct 2026): the core in the middle, and every folder holding more
+// The bubbles view: the core in the middle, and every folder holding more
 // than one note pops out as its own circle (a balloon tree). A folder's own note sits at its
 // circle's centre, its other notes round its rim, and the folders inside it pop out beyond the
 // rim. A one-note folder stays a dot on its parent's rim, and a folder holding nothing but one
 // folder is drawn as one circle with it. So is a folder holding only its own note and one folder,
 // such as a skill's SKILL.md and its references/: the SKILL.md in the middle and the references
-// round the rim (Matt, 20 Oct 2026: "just surround the skill ring"). Sizes come from what's
+// round the rim. Sizes come from what's
 // inside, so the scene grows as folders fill.
 //
 // Room comes from what's really there: each circle keeps the outline of everything beyond it,
 // so its neighbours sit just clear of it and folders inside folders add up rather than double.
-// That, and the two libraries each sitting their own distance from the core, came after 700
-// skills arrived in an hour and the skills wheel pushed everything out (Matt, 20 Oct 2026).
-// A crowded rim gets rows of notes ("maybe every second one sits low"); a folder with lots of
-// circles fills rows of the small ones one at a time, inside out, with the big ones further out,
-// "so it's got more space to expand ... while the other ones are like closer in"; and a folder's
-// first circles sit at least twice as far out as its rim, so the rim reads as "a core layer, but
-// ... it's like still got space".
+// That, and the two libraries each sitting their own distance from the core, keep a library that
+// grows fast, like hundreds of skills in an hour, from pushing everything else out.
+// A crowded rim gets rows of notes, every second one sitting lower; a folder with lots of circles
+// fills rows of the small ones one at a time, inside out, with the big ones further out, where
+// they've more room to grow; and a folder's first circles sit at least twice as far out as its
+// rim, so the rim reads as a core layer that still has space round it.
 const BUB_LEAF = 7;    // space between notes on a rim, in layout units
 const BUB_ROW = 6;     // space between rows of notes on a crowded rim
 const BUB_RIM = 200;   // a rim that would be bigger than this round gets rows, up to four
@@ -765,14 +733,12 @@ function bubbleLayout(model, skip) {
     };
     if (b === top && nk <= 3) {
       // The libraries face each other, the biggest as close in as it can be in its own part of the
-      // circle, and the others twice as far out as that, with room to grow (Matt, 20 Oct 2026: the
-      // knowledge base "like double the distance that Claude and README are from the skills README").
+      // circle, and the others twice as far out as that, with room to grow.
       const len = all.map((k) => clear[k] + fit((t) => { const [lo, hi] = wedge(kids[k], clear[k] + t); return 2 * Math.max(-lo, hi) * nk * BUB_FILL; }));
-      // Each library's own size sets how far out it sits, so one growing doesn't push the other away
-      // (Matt, 20 Oct 2026: "each one in size dictates how far away they are from the core").
+      // Each library's own size sets how far out it sits, so one growing doesn't push the other away.
       const far = all.map((k) => Math.max(len[k], kids[k].ext));
-      // In steps, so the libraries hold still while they grow, and jump out a step at a time (Matt,
-      // 20 Oct 2026: "when the skills base gets to a certain size, then it jumps up to the next distance").
+      // In steps, so the libraries hold still while they grow, and jump out a step at a time once
+      // they reach a certain size.
       const step = (L) => 100 * BUB_STEP ** Math.ceil(Math.log(Math.max(L, 100) / 100) / Math.log(BUB_STEP));
       return lay({ ang: all.map((k) => -Math.PI / 2 + (k * TAU) / nk), len: far.map(step) });
     }
@@ -784,9 +750,8 @@ function bubbleLayout(model, skip) {
       const shift = b === top ? -Math.PI / 2 : -(s.span + gap * (nk - 1)) / 2;
       return { len: all.map(() => first + t), ang: all.map((k) => s.ang.get(k) + shift + k * gap) };
     };
-    // Crowded (Matt, 20 Oct 2026: "building out a full row first and then another row outside of
-    // that", filling "from say like 12 to 1 o'clock... and then everything else just gets pushed
-    // closer and closer together... clockwise of it"). The small circles fill rows one at a time,
+    // Crowded: a full row first, then another row outside it, each filling clockwise from about
+    // 12 o'clock, with the rest pushed closer together as it fills. The small circles fill rows one at a time,
     // inside out, oldest first (by when each became a circle), BUB_FIRST in the first row and
     // BUB_MORE more in each row out, so which row a circle is in never depends on anything but its
     // age, and a full row doesn't change. Each row sits as close in as its circles fit. A row's
@@ -839,9 +804,8 @@ function bubbleLayout(model, skip) {
     if (b.mid) {
       // A folder of lists (skills): the lists in a ring a little inside where its rim would be, and
       // its rim, rows and all, out where the lists would be, so its notes have a little more room
-      // round it; its circles stay where they'd be (Matt, 20 Oct 2026: the lists as "the inner
-      // circle inside of the first skills row", the skills "slightly spaced out slightly", and "I
-      // don't need it to be a single ring"). Until then the lists sat outside the rim.
+      // round it; its circles stay where they'd be. So the lists are an inner circle inside the first
+      // row of skills, which spread out a little, in more than one ring if they need it.
       b.mid.sort((a, c) => (name(a) < name(c) ? -1 : 1));
       const out = Math.max(b.rim * 1.5, b.rim + BUB_GAP, (b.mid.length * BUB_LEAF) / TAU);
       b.midR = Math.max(20, b.rim * BUB_LISTS, (b.mid.length * BUB_LEAF) / TAU);
@@ -1063,7 +1027,7 @@ class BrainView extends ItemView {
       }
       const prev = this.model, prevSim = this.sim;
       this.excluded = await this.readExcluded();
-      const model = await readModel(this.git, this.settings.startFrom, this.settings.steady);
+      const model = await readModel(this.git);
       if (this.closed) return;
       const wasAtEnd = prev && this.tau >= prev.endBeat - 0.01;
       this.model = model;
@@ -1117,19 +1081,18 @@ class BrainView extends ItemView {
     return Array.isArray(f) ? f : [];
   }
 
-  // What the Focus settings mean for this model: which links are drawn all the time
-  // (hidden hub links, skill links on hover and the lists' links aren't), and which
-  // dots are left out.
+  // Which links are drawn all the time (hub links, skill links on hover and the lists'
+  // links aren't), and which dots are left out (the excluded notes).
   focusFor(model) {
     const set = this.settings, pre = this.prefix || '';
     const vaultPath = (p) => (pre && p.startsWith(pre) ? p.slice(pre.length) : p);
     return {
-      shown: Uint8Array.from(model.edges, (e) => ((e.bridge && set.bridges === 'hover') || e.list >= 0 || (e.hub && set.hubLinks === 'hide') ? 0 : 1)),
-      hidden: Uint8Array.from(model.nodes, (nd) => (set.hideExcluded && excludedBy(this.excluded || [], vaultPath(nd.path)) ? 1 : 0)),
+      shown: Uint8Array.from(model.edges, (e) => ((e.bridge && set.bridges === 'hover') || e.list >= 0 || e.hub ? 0 : 1)),
+      hidden: Uint8Array.from(model.nodes, (nd) => (excludedBy(this.excluded || [], vaultPath(nd.path)) ? 1 : 0)),
     };
   }
 
-  // A Focus setting changed: lay the circles out again for the notes now showing.
+  // The Skill links setting changed: lay the circles out again for the notes now showing.
   applyFocus() {
     if (!this.model || !this.sim) return;
     this.focus = this.focusFor(this.model);
@@ -1205,7 +1168,7 @@ class BrainView extends ItemView {
     const now = el(bar, 'div', 'bg-now');
     this.nowTitle = el(now, 'div', 'bg-now-title');
     this.nowMeta = el(now, 'div', 'bg-now-meta');
-    // Recentre (Matt, 20 Oct 2026: "a button... on the navigator down bottom"): the camera follows the
+    // Recentre, a button on the navigator at the bottom: the camera follows the
     // brain again as it moves and grows. It's lit while the camera is following.
     this.fitBtn = iconButton(bar, 'fit', 'Recentre: follow the brain as it moves and grows (F)', () => { this.autoCam = true; this.requestFrame(); });
     this.listBtn = iconButton(bar, 'list', 'Commits', () => this.toggleList());
@@ -1233,41 +1196,70 @@ class BrainView extends ItemView {
     this.updateSpeed();
   }
 
+  // The options panel (trimmed and redesigned 5 Nov 2026): Replay, Links, Bubbles, then Look last.
+  // Each section is a card of rows: a label (and a one-line hint) on the left, its control on the right.
   buildSettings() {
     const p = this.panel, set = this.settings;
     while (p.firstChild) p.removeChild(p.firstChild);
-    const section = (title) => el(p, 'div', 'bg-section', title);
-    const row = (label) => { const r = el(p, 'div', 'bg-row'); el(r, 'div', 'bg-row-label', label); return el(r, 'div', 'bg-row-control'); };
+    el(p, 'div', 'bg-panel-title', 'Options');
+    let card = null;
+    const section = (title) => { el(p, 'div', 'bg-section', title); card = el(p, 'div', 'bg-card'); };
+    const row = (label, hint, cls) => {
+      const r = el(card, 'div', 'bg-row' + (cls ? ' ' + cls : ''));
+      const text = el(r, 'div', 'bg-row-text');
+      el(text, 'div', 'bg-row-label', label);
+      if (hint) el(text, 'div', 'bg-row-hint', hint);
+      return r;
+    };
     const segmented = (parent, options, value, onPick) => {
       const seg = el(parent, 'div', 'bg-seg');
       for (const [v, label] of options) {
         const b = el(seg, 'button', v === value ? 'is-on' : '', label);
         b.addEventListener('click', () => onPick(v));
       }
+      return seg;
     };
     const toggle = (label, hint, key, after) => {
-      const t = el(p, 'div', 'bg-toggle');
-      const text = el(t, 'div', 'bg-toggle-text');
-      el(text, 'div', 'bg-toggle-label', label);
-      if (hint) el(text, 'div', 'bg-toggle-hint', hint);
-      const sw = el(t, 'button', 'bg-switch' + (set[key] ? ' is-on' : ''));
+      const r = row(label, hint, 'bg-row-toggle');
+      const sw = el(r, 'button', 'bg-switch' + (set[key] ? ' is-on' : ''));
       sw.setAttribute('role', 'switch');
       sw.setAttribute('aria-checked', String(!!set[key]));
+      sw.setAttribute('aria-label', label);
       el(sw, 'span', 'bg-knob');
-      t.addEventListener('click', () => { set[key] = !set[key]; if (after) after(); this.saveSettings(); });
+      r.addEventListener('click', () => { set[key] = !set[key]; if (after) after(); this.saveSettings(); });
     };
-    const slider = (label, key, min, max, step) => {
-      const r = el(p, 'div', 'bg-row bg-row-slider');
-      el(r, 'div', 'bg-row-label', label);
-      const input = el(r, 'input', 'bg-slider');
-      Object.assign(input, { type: 'range', min, max, step, value: set[key] });
-      input.addEventListener('input', () => { set[key] = Number(input.value); this.wake(); });
+
+    section('Replay');
+    segmented(row('Speed', null, 'bg-row-stack'), SPEEDS.map((s) => [s, speedLabel(s)]), set.speed, (v) => { set.speed = v; this.saveSettings(); }).classList.add('bg-seg-full');
+    toggle('Replay when opened', 'Play from the first commit each time', 'replayOnOpen');
+
+    section('Links');
+    segmented(row('Skill links', 'Between a skill and a knowledge note'), [['hover', 'On hover'], ['show', 'Always']], set.bridges, (v) => {
+      if (v === set.bridges) return;
+      set.bridges = v; this.applyFocus(); this.saveSettings();
+    });
+
+    section('Bubbles');
+    toggle('Physics', set.physics ? 'Drag a dot and its circle trails along' : 'Circles glide to their places', 'physics', () => {
+      if (this.sim) { this.sim.ride.fill(0); this.wake(); }
+    });
+    if (set.physics) {
+      const r = row('Hold shape', null, 'bg-row-stack');
+      const wrap = el(r, 'div', 'bg-slider-wrap');
+      const input = el(wrap, 'input', 'bg-slider');
+      Object.assign(input, { type: 'range', min: 0, max: 0.3, step: 0.005, value: set.hold });
+      const fill = () => input.style.setProperty('--fill', (set.hold / 0.3) * 100 + '%');
+      fill();
+      const ends = el(wrap, 'div', 'bg-slider-ends');
+      el(ends, 'span', '', 'Stays put');
+      el(ends, 'span', '', 'Springs back');
+      input.addEventListener('input', () => { set.hold = Number(input.value); fill(); this.wake(); });
       input.addEventListener('change', () => this.plugin.saveSettings());
-    };
+    }
 
     section('Look');
     segmented(row('Theme'), [['auto', 'Auto'], ['dark', 'Dark'], ['light', 'Light']], set.theme, (v) => { set.theme = v; this.saveSettings(); });
-    const sw = el(row('Accent'), 'div', 'bg-swatches');
+    const sw = el(row('Accent', null, 'bg-row-stack'), 'div', 'bg-swatches');
     for (const [key, acc] of Object.entries(ACCENTS)) {
       const b = el(sw, 'button', 'bg-accent' + (key === set.accent ? ' is-on' : ''));
       b.title = acc.name;
@@ -1275,43 +1267,6 @@ class BrainView extends ItemView {
       b.style.setProperty('--swatch', this.isDark() ? acc.dark : acc.light);
       b.addEventListener('click', () => { set.accent = key; this.saveSettings(); });
     }
-
-    section('Replay');
-    segmented(row('Speed'), SPEEDS.map((s) => [s, speedLabel(s)]), set.speed, (v) => { set.speed = v; this.saveSettings(); });
-    const fresh = this.model && this.model.freshStart;
-    segmented(row('Start from'), [['fresh', fresh ? 'Fresh start, ' + fmtDay(fresh.t) : 'Fresh start'], ['beginning', 'The beginning']], set.startFrom, (v) => {
-      if (v === set.startFrom) return;
-      set.startFrom = v;
-      this.saveSettings();
-      this.load(true);
-    });
-    if (this.model && !fresh) el(p, 'div', 'bg-toggle-hint', 'No fresh start yet, so the replay starts at the beginning.');
-    toggle('One at a time', 'Each new note, link and edit gets its own moment, the same time apart, so the brain grows steadily instead of in bursts. Big commits take as long as what’s in them; Speed sets the pace.', 'steady', () => this.load(true));
-    toggle('Replay when opened', null, 'replayOnOpen');
-
-    section('Focus');
-    segmented(row('Hub links'), [['show', 'Show'], ['faint', 'Faint'], ['hide', 'Hide']], set.hubLinks, (v) => {
-      if (v === set.hubLinks) return;
-      set.hubLinks = v; this.applyFocus(); this.saveSettings();
-    });
-    el(p, 'div', 'bg-toggle-hint', 'Links to the notes nearly every note points at: the core (CLAUDE.md) and the README, and in a replay of the old layout, connections.md, the decisions table, the brain structure and HQ’s progress.');
-    segmented(row('Skill links'), [['hover', 'On hover'], ['show', 'Always']], set.bridges, (v) => {
-      if (v === set.bridges) return;
-      set.bridges = v; this.applyFocus(); this.saveSettings();
-    });
-    el(p, 'div', 'bg-toggle-hint', 'Links between a skill and a knowledge note. On hover, they show only while you point at either end.');
-    segmented(row('Fade old links'), [[0, 'Off'], [7, '1 wk'], [14, '2 wks'], [30, '1 mo']], set.fadeDays, (v) => { set.fadeDays = v; this.saveSettings(); });
-    el(p, 'div', 'bg-toggle-hint', 'A link dims once neither of its notes has been edited for that long, and lights up again when one is.');
-    toggle('Hide excluded notes', 'The notes Obsidian’s Excluded files setting hides from its own graph, such as the history/ folders.', 'hideExcluded', () => this.applyFocus());
-    const mk = set.accent === 'cyan' ? 'coral' : 'cyan';
-    toggle('Your edits in their own colour', 'Commits named “My edits in Obsidian” light up in ' + ACCENTS[mk].name.toLowerCase() + '.', 'markMatt');
-    toggle('Quieter bots and big sweeps', 'Commits by the repo’s own Actions, and commits touching more than ' + SWEEP_NOTES + ' notes, flash softly, leave no afterglow, and don’t keep links from fading.', 'quiet');
-
-    section('Bubbles');
-    toggle('Physics', 'Drag a dot and its circle comes with it, and everything beyond trails behind on stems of set lengths; each folder’s notes stay evenly round its ring, and folders bump rather than overlap. Hold shape sets how strongly things go back to their places; at the lowest, they stay where you leave them. Off: circles glide to their places.', 'physics', () => {
-      if (this.sim) { this.sim.ride.fill(0); this.wake(); }
-    });
-    if (set.physics) slider('Hold shape', 'hold', 0, 0.3, 0.005);
   }
 
   buildList() {
@@ -1373,8 +1328,8 @@ class BrainView extends ItemView {
     const dark = this.isDark();
     const th = THEMES[dark ? 'dark' : 'light'];
     const acc = ACCENTS[this.settings.accent] || ACCENTS.violet;
-    const mattAcc = ACCENTS[this.settings.accent === 'cyan' ? 'coral' : 'cyan'];
-    this.theme = Object.assign({ dark, accent: hexRgb(dark ? acc.dark : acc.light), matt: hexRgb(dark ? mattAcc.dark : mattAcc.light) }, th);
+    const ownerAcc = ACCENTS[this.settings.accent === 'cyan' ? 'coral' : 'cyan'];
+    this.theme = Object.assign({ dark, accent: hexRgb(dark ? acc.dark : acc.light), owner: hexRgb(dark ? ownerAcc.dark : ownerAcc.light) }, th);
     const r = this.root.style;
     r.setProperty('--bg-bg', th.bg);
     r.setProperty('--bg-fg', rgba(th.fg, 1));
@@ -1532,7 +1487,7 @@ class BrainView extends ItemView {
 
   evaluate(tau) {
     const { nodes, edges } = this.model;
-    const N = this.ns, E = this.es, F = this.focus, set = this.settings, quiet = set.quiet;
+    const N = this.ns, E = this.es, F = this.focus, set = this.settings, quiet = true;
     for (let i = 0; i < nodes.length; i++) {
       const nd = nodes[i];
       N.on[i] = 0; N.deg[i] = 0; N.born[i] = -1; N.edit[i] = -1; N.dying[i] = 0; N.glow[i] = 0;
@@ -1571,9 +1526,6 @@ class BrainView extends ItemView {
       }
       N.on[i] = 1; N.s[i] = scale; N.a[i] = alpha;
     }
-    // The replay's clock time (the commit it's on), for the links' age.
-    const si = this.stepIndexAt(tau), now = this.model.steps.length ? this.model.steps[Math.max(0, si)].t : 0;
-    const fadeS = set.fadeDays > 0 ? set.fadeDays * 86400 : 0;
     let links = 0;
     for (let j = 0; j < edges.length; j++) {
       const e = edges[j];
@@ -1599,15 +1551,8 @@ class BrainView extends ItemView {
       if (e.list >= 0 && E.flash[j] < 0 && N.edit[e.list] >= 0) E.flash[j] = N.edit[e.list]; // its list was just edited
       E.src[j] = sp.src === e.b ? e.b : e.a;
       E.f[j] = sp.f || 0;
-      // How strongly it's drawn: hub links faint, old links faded.
-      let m = 1;
-      if (e.hub && set.hubLinks === 'faint') m *= 0.35;
-      if (e.list >= 0) m *= E.flash[j] >= 0 ? 1 - E.flash[j] / 2.2 : 0; // a list's link fades out after its flash
-      if (fadeS) {
-        const age = now - Math.max(N.touch[e.a], N.touch[e.b], sp.t || 0);
-        if (age > fadeS) m *= Math.max(FADE_FLOOR, 1 - ((age - fadeS) / fadeS) * (1 - FADE_FLOOR));
-      }
-      E.m[j] = m;
+      // How strongly it's drawn: a list's link fades out after its flash.
+      E.m[j] = e.list >= 0 ? (E.flash[j] >= 0 ? 1 - E.flash[j] / 2.2 : 0) : 1;
     }
     let notes = 0;
     for (let i = 0; i < nodes.length; i++) if (N.on[i] && !N.dying[i]) notes++;
@@ -1635,8 +1580,8 @@ class BrainView extends ItemView {
     this.requestFrame();
   }
 
-  // Physics off: the circles and dots glide to their places slowly, not twitchily (Matt,
-  // 20 Oct 2026: "more gradual"), and a new note grows out of its circle's middle.
+  // Physics off: the circles and dots glide to their places slowly, not twitchily, and a new note
+  // grows out of its circle's middle.
   glideTick(dt) {
     const S = this.sim, N = this.ns, T = this.tree, n = this.model.nodes.length, ease = 1 - Math.exp(-dt * 2);
     let moving = false;
@@ -1660,10 +1605,9 @@ class BrainView extends ItemView {
     return moving;
   }
 
-  // Physics on. Matt, 20 Oct 2026: "draggable, but also somehow still be able to
-  // hold its shape", and then, of a first try that sprang every circle back to its place, that
-  // things should trail like the old Graph view, nothing "too snappy", and "it shouldn't have to
-  // snap back into a certain shape" on the lowest Hold shape. So circles carry on a little as
+  // Physics on: things can be dragged and still hold their shape, trail behind rather than snap
+  // back (a first try sprang every circle back to its place), and on the lowest Hold shape don't
+  // have to go back to any shape at all. So circles carry on a little as
   // they move, heavily damped like the old Graph view, and a few gentle rules each put things a
   // little more right every step: each circle hangs off the one it popped out of on a stem of
   // its own length that's free to swing, so whatever you drag pulls the rest along behind it; a
@@ -1757,8 +1701,8 @@ class BrainView extends ItemView {
     // The notes. One that's just appeared glides to its circle (or grows out of its middle), then
     // rides it at its distance from the middle, drifting back to its place on its circle as hard
     // as Hold shape says. (Until 20 Oct 2026 that was its place in the whole layout, which pulled
-    // a ring's notes into a bunch on one side whenever the circle was away from its own place;
-    // Matt: "they're all clumped together and not spread out around that circle".) The ring
+    // a ring's notes into a bunch on one side whenever the circle was away from its own place,
+    // rather than spread out round it.) The ring
     // holding the dragged dot turns with it, so its notes never pass each other.
     const ox = S.ox || (S.ox = new Float64Array(n)), oy = S.oy || (S.oy = new Float64Array(n));
     const spin = held ? wrapAngle(Math.atan2(S.fy - held.y, S.fx - held.x) - Math.atan2(S.y[d] - held.py, S.x[d] - held.px)) : 0;
@@ -1811,8 +1755,8 @@ class BrainView extends ItemView {
 
   // Lay out the commit the replay is on: the notes there now and the ones it will add, so a
   // big commit's notes drop into seats already there instead of each new one rearranging the
-  // rest (Matt, 20 Oct 2026: the rows were "too twitchy... making and destroying those rows",
-  // and a new row needs "enough room on that new row for more to spawn in"). It's done again
+  // rest, which made rows twitch as they were made and unmade, and a new row has room for more to
+  // arrive in. It's done again
   // when the replay moves to another commit. Circles that were already there keep where the
   // physics had them, and a new one starts at its seat.
   followLayout() {
@@ -1839,16 +1783,15 @@ class BrainView extends ItemView {
         if (o) Object.assign(b, { x: o.x, y: o.y, vx: o.vx, vy: o.vy, live: o.live, trip: o.trip });
         else if (p) { b.x = p.x + b.hx - p.hx; b.y = p.y + b.hy - p.hy; }
         // A circle the new layout gives another seat travels straight there, carrying its own circles,
-        // rather than being pushed through the others, where it could get stuck (Matt, 20 Oct 2026: the
-        // rows "get jumbled up and not go back to their correct place").
+        // rather than being pushed through the others, where it could get stuck, and rows got jumbled
+        // up and didn't go back to their places.
         if (o && p && o.parent && Math.hypot(b.hx - p.hx - (o.hx - o.parent.hx), b.hy - p.hy - (o.hy - o.parent.hy)) > 1) {
           b.trip = { fx: b.x - p.x, fy: b.y - p.y, start: this.clock || 0, len: BUB_MOVE, beats: false };
         }
       }
     }
     // A circle shows once a note in it does. One that shows because a note was just written pops
-    // out of its parent's middle and travels to its seat (Matt: "they spawn all at the same point...
-    // and then travel to their spot"), so a circle grows out of the one it belongs to.
+    // out of its parent's middle and travels to its seat, so a circle grows out of the one it belongs to.
     const T = this.tree;
     for (const b of T.folders) { b.now = 0; b.fresh = 0; }
     for (let i = 0; i < n; i++) {
@@ -2093,8 +2036,8 @@ class BrainView extends ItemView {
   }
 
   // The colour and brightness of a birth, edit or link flash, from its commit's flags.
-  flagColor(f) { return this.settings.markMatt && (f & EDIT_MATT) ? this.theme.matt : this.theme.accent; }
-  flagK(f) { return this.settings.quiet && (f & EDIT_QUIET) ? QUIET : 1; }
+  flagColor(f) { return (f & EDIT_OWNER) ? this.theme.owner : this.theme.accent; }
+  flagK(f) { return (f & EDIT_QUIET) ? QUIET : 1; }
 
   /* ----- the activity curve ----- */
 

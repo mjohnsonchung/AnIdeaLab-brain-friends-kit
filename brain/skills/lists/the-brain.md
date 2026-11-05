@@ -7,7 +7,7 @@ The brain's own skills for running this brain: its first session, how to work wi
 - [guide-mode](../guide-mode/SKILL.md): how to work with an owner new to AI agents: say the ask back, size it, agree a plan, check in.
 - [brain-spec](../brain-spec/SKILL.md): where each kind of thing goes in the brain and what shape it takes, and how to apply a brain update from AnIdeaLab.
 - [handoff](../handoff/SKILL.md): hand work on in one format, three ways: a session hand-off to a fresh chat (at the end of a stage or when the size nudge says the chat is long), a brief to an agent, a report back; the hand-offs shelf, starting from a hand-off, and the nudge's settings.
-- [brain-audit](../brain-audit/SKILL.md): the weekly tidy-up, when the owner says yes to it.
+- [brain-audit](../brain-audit/SKILL.md): the weekly tidy-up, and the monthly deep audit in it, when the owner says yes to them.
 - [my-pc](../my-pc/SKILL.md): run commands and jobs on the owner's PC through the `my-pc` runner, and check or fix its setup.
 - [windows-powershell](../windows-powershell/SKILL.md): the traps in Windows PowerShell 5.1 that break scripts and commands for the owner's PC (double quotes stripped on the way to programs, `$name:` in strings, stderr as errors, encodings), and how to check a script first. Read before writing any PowerShell.
 - [add-a-key](../add-a-key/SKILL.md): get a key only the owner can make (a service's API key, a GitHub token) into this brain's GitHub secrets, or a site host's, with one command they paste: the page opened for them, the key read in hidden and checked.
