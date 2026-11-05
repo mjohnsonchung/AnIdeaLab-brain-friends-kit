@@ -1,5 +1,7 @@
 # AnIdeaLab brain friends kit
 
+**Moved, 5 Nov 2026:** the kit is now [AnIdeaLab/brain-kit](https://github.com/AnIdeaLab/brain-kit), AnIdeaLab's own repo. Brain update 5, the last one from here, moves brains made from this kit over, and the install line below now runs the new kit's installer. This repo stays as the record of updates 1 to 5.
+
 The starter kit for second brains shaped like Matt's, and the updates that brains started from it get.
 
 A second brain is a private GitHub repo of plain Markdown that AI agents work from: a core every agent reads (`CLAUDE.md`), a library of skills for how to do things, and a knowledge library of what the brain knows, with Obsidian to see it and a runner on the owner's PC for jobs that need it. A friend starts one with one command in PowerShell ([Install](#install)).
